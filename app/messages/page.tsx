@@ -11,7 +11,7 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Textarea } from "@/components/ui/textarea"
 import { Badge } from "@/components/ui/badge"
-import { Calendar, ArrowLeft, Send, User, MessageCircle, Paperclip } from "lucide-react"
+import { Send, User, MessageCircle, Paperclip } from "lucide-react"
 import Link from "next/link"
 
 interface Message {
@@ -213,27 +213,6 @@ export default function MessagesPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <header className="bg-white shadow-sm border-b">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center py-4">
-            <div className="flex items-center space-x-4">
-              <Link href={userData?.role === "client" ? "/dashboard/client" : "/dashboard/consultant"}>
-                <Button variant="outline" size="sm">
-                  <ArrowLeft className="h-4 w-4 mr-2" />
-                  Back to Dashboard
-                </Button>
-              </Link>
-              <div className="flex items-center">
-                <Calendar className="h-6 w-6 text-blue-600" />
-                <span className="ml-2 text-xl font-bold text-gray-900">Messages</span>
-              </div>
-            </div>
-            <span className="text-gray-700">{userData?.name}</span>
-          </div>
-        </div>
-      </header>
-
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 h-[600px]">
           {/* Conversations List */}
@@ -278,7 +257,7 @@ export default function MessagesPage() {
                           <div className="flex-1 min-w-0">
                             <p className="font-medium text-sm">
                               {userData?.role === "client"
-                                ? `Dr. ${conversation.consultantName}`
+                                ? `  ${conversation.consultantName}`
                                 : conversation.clientName}
                             </p>
                             <p className="text-xs text-gray-500 truncate">
@@ -312,7 +291,7 @@ export default function MessagesPage() {
                     <CardTitle className="flex items-center">
                       <User className="h-5 w-5 mr-2" />
                       {userData?.role === "client"
-                        ? `Dr. ${selectedConversation.consultantName}`
+                        ? `  ${selectedConversation.consultantName}`
                         : selectedConversation.clientName}
                     </CardTitle>
                   </CardHeader>

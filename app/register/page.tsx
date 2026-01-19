@@ -8,6 +8,7 @@ import Link from "next/link"
 import { createUserWithEmailAndPassword } from "firebase/auth"
 import { doc, setDoc } from "firebase/firestore"
 import { auth, db } from "@/lib/firebase"
+import { useAuth } from "@/lib/auth-context"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -59,12 +60,25 @@ const PasswordStrength = ({ password }: { password: string }) => {
 export default function RegisterPage() {
   const router = useRouter()
   const searchParams = useSearchParams()
+  const { user, userData, loading: authLoading } = useAuth()
   const [loading, setLoading] = useState(false)
   const [activeTab, setActiveTab] = useState("client")
   const [certificates, setCertificates] = useState<UploadedFile[]>([])
   const [profilePhoto, setProfilePhoto] = useState<UploadedFile[]>([])
   const [showPassword, setShowPassword] = useState(false)
   const [errors, setErrors] = useState<Record<string, string>>({})
+
+  useEffect(() => {
+    if (!authLoading && user && userData) {
+      if (userData.role === "client") {
+        router.push("/dashboard/client")
+      } else if (userData.role === "consultant") {
+        router.push("/dashboard/consultant")
+      } else if (userData.role === "admin") {
+        router.push("/dashboard/admin")
+      }
+    }
+  }, [user, userData, authLoading, router])
 
   // Client form data
   const [clientData, setClientData] = useState({

@@ -11,7 +11,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Badge } from "@/components/ui/badge"
-import { Calendar, ArrowLeft, Save, User, Mail, Phone, Lock } from "lucide-react"
+import { Calendar, Save, User, Mail, Phone, Lock } from "lucide-react"
 import Link from "next/link"
 import FileUpload from "@/components/file-upload"
 
@@ -157,36 +157,10 @@ export default function ClientProfilePage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <header className="bg-white shadow-sm border-b">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center py-4">
-            <div className="flex items-center space-x-4">
-              <Link href="/dashboard/client">
-                <Button variant="outline" size="sm">
-                  <ArrowLeft className="h-4 w-4 mr-2" />
-                  Back to Dashboard
-                </Button>
-              </Link>
-              <div className="flex items-center">
-                <Calendar className="h-6 w-6 text-blue-600" />
-                <span className="ml-2 text-xl font-bold text-gray-900">Client Profile</span>
-              </div>
-            </div>
-            <div className="flex items-center space-x-2">
-              <Badge variant="secondary" className="bg-blue-100 text-blue-800">
-                Client
-              </Badge>
-              <span className="text-gray-700">{userData?.name}</span>
-            </div>
-          </div>
-        </div>
-      </header>
-
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-8 md:h-screen">
           {/* Main Profile Form */}
-          <div className="lg:col-span-2 space-y-6">
+          <div className="md:col-span-2 space-y-6 md:overflow-y-auto">
             {/* Basic Information */}
             <Card>
               <CardHeader>
@@ -308,7 +282,7 @@ export default function ClientProfilePage() {
           </div>
 
           {/* Sidebar - Profile Preview */}
-          <div className="space-y-6">
+          <div className="space-y-6 md:overflow-y-auto">
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center">

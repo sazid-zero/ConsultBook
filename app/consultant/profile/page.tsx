@@ -12,7 +12,7 @@ import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Badge } from "@/components/ui/badge"
-import { Calendar, ArrowLeft, Save, Eye, MapPin, DollarSign, Clock, User } from "lucide-react"
+import { Save, Eye, MapPin, DollarSign, Clock, User } from "lucide-react"
 import Link from "next/link"
 import FileUpload from "@/components/file-upload"
 
@@ -210,38 +210,10 @@ export default function ConsultantProfilePage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <header className="bg-white shadow-sm border-b">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center py-4">
-            <div className="flex items-center space-x-4">
-              <Link href="/dashboard/consultant">
-                <Button variant="outline" size="sm">
-                  <ArrowLeft className="h-4 w-4 mr-2" />
-                  Back to Dashboard
-                </Button>
-              </Link>
-              <div className="flex items-center">
-                <Calendar className="h-6 w-6 text-blue-600" />
-                <span className="ml-2 text-xl font-bold text-gray-900">Consultant Profile</span>
-              </div>
-            </div>
-            <div className="flex items-center space-x-2">
-              {profile.published && (
-                <Badge variant="secondary" className="bg-green-100 text-green-800">
-                  Published
-                </Badge>
-              )}
-              <span className="text-gray-700">Dr. {userData?.name}</span>
-            </div>
-          </div>
-        </div>
-      </header>
-
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-8">
           {/* Main Profile Form */}
-          <div className="lg:col-span-2 space-y-6">
+          <div className="md:col-span-2 space-y-6 md:h-screen md:overflow-y-auto">
             {/* Basic Information */}
             <Card>
               <CardHeader>
@@ -386,7 +358,7 @@ export default function ConsultantProfilePage() {
           </div>
 
           {/* Sidebar */}
-          <div className="space-y-6">
+          <div className="space-y-6 md:h-screen md:overflow-y-auto">
             {/* Profile Preview */}
             <Card>
               <CardHeader>
@@ -410,7 +382,7 @@ export default function ConsultantProfilePage() {
                       </div>
                     )}
                   </div>
-                  <h3 className="font-semibold">Dr. {userData?.name}</h3>
+                  <h3 className="font-semibold">  {userData?.name}</h3>
                   <p className="text-sm text-gray-600">{userData?.specialty}</p>
                 </div>
 

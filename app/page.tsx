@@ -1,30 +1,23 @@
+"use client"
+
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Calendar, Users, Shield, Clock, Star, CheckCircle } from "lucide-react"
+import { useAuth } from "@/lib/auth-context"
+import { Navbar } from "@/components/navbar/Navbar"
 
 export default function HomePage() {
+  const { user, userData, loading } = useAuth()
+
+  const dashboardHref = userData?.role === 'admin' 
+    ? '/dashboard/admin' 
+    : userData?.role === 'consultant' 
+      ? '/dashboard/consultant' 
+      : '/dashboard/client'
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
-      {/* Header */}
-      <header className="bg-white shadow-sm">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center py-6">
-            <div className="flex items-center">
-              <Calendar className="h-8 w-8 text-blue-600" />
-              <span className="ml-2 text-2xl font-bold text-gray-900">ConsultBook</span>
-            </div>
-            <div className="flex space-x-4">
-              <Link href="/login">
-                <Button variant="outline">Login</Button>
-              </Link>
-              <Link href="/register">
-                <Button>Get Started</Button>
-              </Link>
-            </div>
-          </div>
-        </div>
-      </header>
 
       {/* Hero Section */}
       <section className="py-20">
@@ -38,16 +31,26 @@ export default function HomePage() {
             phone, or virtual consultations.
           </p>
           <div className="flex justify-center space-x-4">
-            <Link href="/register?type=client">
-              <Button size="lg" className="px-8 py-3">
-                Book a Consultation
-              </Button>
-            </Link>
-            <Link href="/register?type=consultant">
-              <Button variant="outline" size="lg" className="px-8 py-3">
-                Join as Consultant
-              </Button>
-            </Link>
+            {!loading && user ? (
+              <Link href={dashboardHref}>
+                <Button size="lg" className="px-8 py-3">
+                  Go to Dashboard
+                </Button>
+              </Link>
+            ) : (
+              <>
+                <Link href="/register?type=client">
+                  <Button size="lg" className="px-8 py-3">
+                    Book a Consultation
+                  </Button>
+                </Link>
+                <Link href="/register?type=consultant">
+                  <Button variant="outline" size="lg" className="px-8 py-3">
+                    Join as Consultant
+                  </Button>
+                </Link>
+              </>
+            )}
           </div>
         </div>
       </section>

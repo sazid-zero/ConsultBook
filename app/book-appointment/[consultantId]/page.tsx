@@ -249,26 +249,6 @@ export default function BookAppointmentPage({ params }: { params: { consultantId
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <header className="bg-white shadow-sm border-b">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center py-4">
-            <div className="flex items-center space-x-4">
-              <Link href="/book-consultant">
-                <Button variant="outline" size="sm">
-                  <ArrowLeft className="h-4 w-4 mr-2" />
-                  Back to Search
-                </Button>
-              </Link>
-              <div className="flex items-center">
-                <Calendar className="h-6 w-6 text-blue-600" />
-                <span className="ml-2 text-xl font-bold text-gray-900">Book Appointment</span>
-              </div>
-            </div>
-            <span className="text-gray-700">Welcome, {userData?.name}</span>
-          </div>
-        </div>
-      </header>
 
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -293,7 +273,7 @@ export default function BookAppointmentPage({ params }: { params: { consultantId
                       </div>
                     )}
                   </div>
-                  <h3 className="font-semibold text-lg">Dr. {consultant.consultantName}</h3>
+                  <h3 className="font-semibold text-lg">  {consultant.consultantName}</h3>
                   <p className="text-sm text-gray-600">{consultant.specialty}</p>
                 </div>
 

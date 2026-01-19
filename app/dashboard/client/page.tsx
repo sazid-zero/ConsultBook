@@ -31,7 +31,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
-import { Calendar, Clock, User, Search, LogOut, Plus, Star, MessageCircle, X, CalendarX, Settings } from "lucide-react"
+import { Calendar, Clock, User, Search, LogOut, Plus, Star, MessageCircle, X, CalendarX, Settings, Bell } from "lucide-react"
 import Link from "next/link"
 
 interface Appointment {
@@ -66,6 +66,16 @@ interface RescheduleData {
   newDate: string
   newTime: string
   reason: string
+}
+
+interface Notification {
+  id: string
+  type: string
+  title: string
+  message: string
+  appointmentId?: string
+  createdAt: string
+  read: boolean
 }
 
 export default function ClientDashboard() {
@@ -283,76 +293,6 @@ export default function ClientDashboard() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <header className="bg-white shadow-sm border-b">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center py-4">
-            <div className="flex items-center">
-              <Calendar className="h-8 w-8 text-blue-600" />
-              <span className="ml-2 text-2xl font-bold text-gray-900">ConsultBook</span>
-            </div>
-            <div className="flex items-center space-x-4">
-              <Link href="/messages">
-                <Button variant="outline" size="sm" className="relative">
-                  <MessageCircle className="h-4 w-4 mr-2" />
-                  Messages
-                  {unreadMessages > 0 && (
-                    <Badge variant="destructive" className="absolute -top-2 -right-2 h-5 w-5 text-xs p-0">
-                      {unreadMessages}
-                    </Badge>
-                  )}
-                </Button>
-              </Link>
-
-              {/* Profile Section with Photo */}
-              <div className="flex items-center space-x-3">
-                <div className="w-8 h-8 bg-gray-200 rounded-full overflow-hidden">
-                  {userData?.profilePhoto ? (
-                    <img
-                      src={userData.profilePhoto || "/placeholder.svg"}
-                      alt="Profile"
-                      className="w-full h-full object-cover"
-                    />
-                  ) : (
-                    <div className="w-full h-full flex items-center justify-center">
-                      <User className="h-4 w-4 text-gray-400" />
-                    </div>
-                  )}
-                </div>
-                <span className="text-gray-700">Welcome, {userData?.name}</span>
-                <Link href="/client/profile">
-                  <Button variant="outline" size="sm">
-                    <Settings className="h-4 w-4 mr-2" />
-                    Profile
-                  </Button>
-                </Link>
-              </div>
-
-              <AlertDialog>
-                <AlertDialogTrigger asChild>
-                  <Button variant="outline">
-                    <LogOut className="h-4 w-4 mr-2" />
-                    Logout
-                  </Button>
-                </AlertDialogTrigger>
-                <AlertDialogContent>
-                  <AlertDialogHeader>
-                    <AlertDialogTitle>Are you sure you want to logout?</AlertDialogTitle>
-                    <AlertDialogDescription>
-                      You will be signed out of your account.
-                    </AlertDialogDescription>
-                  </AlertDialogHeader>
-                  <AlertDialogFooter>
-                    <AlertDialogCancel>Cancel</AlertDialogCancel>
-                    <AlertDialogAction onClick={handleLogout}>Logout</AlertDialogAction>
-                  </AlertDialogFooter>
-                </AlertDialogContent>
-              </AlertDialog>
-            </div>
-          </div>
-        </div>
-      </header>
-
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Quick Actions */}
         <div className="mb-8">

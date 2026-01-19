@@ -2,12 +2,13 @@
 
 import type React from "react"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
 import { signInWithEmailAndPassword } from "firebase/auth"
 import { doc, getDoc } from "firebase/firestore"
 import { auth, db } from "@/lib/firebase"
+import { useAuth } from "@/lib/auth-context"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -18,6 +19,7 @@ import { toast } from "sonner"
 
 export default function LoginPage() {
   const router = useRouter()
+  const { user, userData, loading: authLoading } = useAuth()
   const [loading, setLoading] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
   const [email, setEmail] = useState("")
@@ -25,6 +27,18 @@ export default function LoginPage() {
   const [adminEmail, setAdminEmail] = useState("")
   const [adminPassword, setAdminPassword] = useState("")
   const [error, setError] = useState<string | null>(null)
+
+  useEffect(() => {
+    if (!authLoading && user && userData) {
+      if (userData.role === "client") {
+        router.push("/dashboard/client")
+      } else if (userData.role === "consultant") {
+        router.push("/dashboard/consultant")
+      } else if (userData.role === "admin") {
+        router.push("/dashboard/admin")
+      }
+    }
+  }, [user, userData, authLoading, router])
 
   const handleUserLogin = async (e: React.FormEvent) => {
     e.preventDefault()

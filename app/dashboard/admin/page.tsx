@@ -249,7 +249,7 @@ export default function AdminDashboard() {
                         <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
                           <DialogHeader>
                             <DialogTitle>Consultant Application Review</DialogTitle>
-                            <DialogDescription>Detailed information for Dr. {selectedApplication?.name}</DialogDescription>
+                            <DialogDescription>Detailed information for   {selectedApplication?.name}</DialogDescription>
                           </DialogHeader>
                           {selectedApplication && (
                             <div className="space-y-6 pt-4">

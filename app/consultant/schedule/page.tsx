@@ -165,32 +165,7 @@ export default function ConsultantSchedulePage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <header className="bg-white shadow-sm border-b">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center py-4">
-            <div className="flex items-center space-x-4">
-              <Link href="/dashboard/consultant">
-                <Button variant="outline" size="sm">
-                  <ArrowLeft className="h-4 w-4 mr-2" />
-                  Back to Dashboard
-                </Button>
-              </Link>
-              <div className="flex items-center">
-                <Calendar className="h-6 w-6 text-blue-600" />
-                <span className="ml-2 text-xl font-bold text-gray-900">Manage Schedule</span>
-              </div>
-            </div>
-            <div className="flex items-center space-x-2">
-              <Button onClick={handleSaveSchedule} disabled={saving}>
-                <Save className="h-4 w-4 mr-2" />
-                {saving ? "Saving..." : "Save Schedule"}
-              </Button>
-              <span className="text-gray-700">Dr. {userData?.name}</span>
-            </div>
-          </div>
-        </div>
-      </header>
+      
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="mb-6">

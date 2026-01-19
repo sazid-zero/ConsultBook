@@ -13,6 +13,10 @@ interface UserData {
   role: "client" | "consultant" | "admin"
   name: string
   approved?: boolean
+  profilePhoto?: string
+  phone?: string
+  specialty?: string
+  createdAt?: string
 }
 
 interface AuthContextType {

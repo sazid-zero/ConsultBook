@@ -32,7 +32,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
-import { Calendar, Clock, User, Settings, LogOut, DollarSign, MessageCircle, Bell, CalendarX, X } from "lucide-react"
+import { Calendar, Clock, User, Settings, LogOut, DollarSign, MessageCircle, Bell, CalendarX, X, Plus } from "lucide-react"
 import Link from "next/link"
 
 interface Appointment {
@@ -68,7 +68,6 @@ export default function ConsultantDashboard() {
   const { user, userData, loading } = useAuth()
   const router = useRouter()
   const [appointments, setAppointments] = useState<Appointment[]>([])
-  const [notifications, setNotifications] = useState<Notification[]>([])
   const [loadingAppointments, setLoadingAppointments] = useState(true)
   const [isAvailable, setIsAvailable] = useState(true)
   const [processingAction, setProcessingAction] = useState(false)
@@ -110,7 +109,6 @@ export default function ConsultantDashboard() {
     // Call fetchUnreadMessages in useEffect
     if (user) {
       fetchAppointments()
-      fetchNotifications()
       fetchUnreadMessages()
     }
   }, [user, userData, loading, router])
@@ -139,25 +137,6 @@ export default function ConsultantDashboard() {
       console.error("Error fetching appointments:", error)
     } finally {
       setLoadingAppointments(false)
-    }
-  }
-
-  const fetchNotifications = async () => {
-    try {
-      const notificationsRef = collection(db, "notifications")
-      const q = query(notificationsRef, where("recipientId", "==", user?.uid))
-      const querySnapshot = await getDocs(q)
-
-      const notificationsList: Notification[] = []
-      querySnapshot.forEach((doc) => {
-        notificationsList.push({ id: doc.id, ...doc.data() } as Notification)
-      })
-
-      // Sort by date
-      notificationsList.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
-      setNotifications(notificationsList)
-    } catch (error) {
-      console.error("Error fetching notifications:", error)
     }
   }
 
@@ -207,7 +186,7 @@ export default function ConsultantDashboard() {
         recipientType: "client",
         type: "appointment_cancelled",
         title: "Appointment Cancelled",
-        message: `Dr. ${userData?.name} has cancelled your appointment scheduled for ${appointment.date} at ${appointment.time}`,
+        message: `  ${userData?.name} has cancelled your appointment scheduled for ${appointment.date} at ${appointment.time}`,
         appointmentId: appointmentId,
         createdAt: new Date().toISOString(),
         read: false,
@@ -250,7 +229,7 @@ export default function ConsultantDashboard() {
         recipientType: "client",
         type: "appointment_rescheduled",
         title: "Appointment Rescheduled",
-        message: `Dr. ${userData?.name} has rescheduled your appointment to ${rescheduleData.newDate} at ${rescheduleData.newTime}. Reason: ${rescheduleData.reason}`,
+        message: `  ${userData?.name} has rescheduled your appointment to ${rescheduleData.newDate} at ${rescheduleData.newTime}. Reason: ${rescheduleData.reason}`,
         appointmentId: selectedAppointment!.id,
         createdAt: new Date().toISOString(),
         read: false,
@@ -276,23 +255,9 @@ export default function ConsultantDashboard() {
     }
   }
 
-  const markNotificationAsRead = async (notificationId: string) => {
-    try {
-      await updateDoc(doc(db, "notifications", notificationId), {
-        read: true,
-        readAt: new Date().toISOString(),
-      })
-
-      setNotifications(notifications.map((notif) => (notif.id === notificationId ? { ...notif, read: true } : notif)))
-    } catch (error) {
-      console.error("Error marking notification as read:", error)
-    }
-  }
-
   const upcomingAppointments = appointments.filter((apt) => apt.status === "upcoming")
   const completedAppointments = appointments.filter((apt) => apt.status === "completed")
   const totalEarnings = completedAppointments.reduce((sum, apt) => sum + apt.amount, 0)
-  const unreadNotifications = notifications.filter((notif) => !notif.read)
 
   if (loading) {
     return <div className="flex items-center justify-center min-h-screen">Loading...</div>
@@ -300,104 +265,6 @@ export default function ConsultantDashboard() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <header className="bg-white shadow-sm border-b">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center py-4">
-            <div className="flex items-center">
-              <Calendar className="h-8 w-8 text-blue-600" />
-              <span className="ml-2 text-2xl font-bold text-gray-900">ConsultBook</span>
-            </div>
-            <div className="flex items-center space-x-4">
-              {/* Update the Messages button in header */}
-              <Link href="/messages">
-                <Button variant="outline" size="sm" className="relative">
-                  <MessageCircle className="h-4 w-4 mr-2" />
-                  Messages
-                  {unreadMessages > 0 && (
-                    <Badge variant="destructive" className="absolute -top-2 -right-2 h-5 w-5 text-xs p-0">
-                      {unreadMessages}
-                    </Badge>
-                  )}
-                </Button>
-              </Link>
-
-              {/* Notifications */}
-              <Dialog>
-                <DialogTrigger asChild>
-                  <Button variant="outline" size="sm" className="relative">
-                    <Bell className="h-4 w-4 mr-2" />
-                    Notifications
-                    {unreadNotifications.length > 0 && (
-                      <Badge variant="destructive" className="absolute -top-2 -right-2 h-5 w-5 text-xs p-0">
-                        {unreadNotifications.length}
-                      </Badge>
-                    )}
-                  </Button>
-                </DialogTrigger>
-                <DialogContent className="max-w-md max-h-[80vh] overflow-y-auto">
-                  <DialogHeader>
-                    <DialogTitle>Notifications</DialogTitle>
-                    <DialogDescription>Recent updates and alerts</DialogDescription>
-                  </DialogHeader>
-                  <div className="space-y-3">
-                    {notifications.length === 0 ? (
-                      <div className="text-center py-8">
-                        <Bell className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                        <p className="text-gray-500">No notifications yet</p>
-                      </div>
-                    ) : (
-                      notifications.slice(0, 10).map((notification) => (
-                        <div
-                          key={notification.id}
-                          className={`p-3 border rounded-lg cursor-pointer ${
-                            !notification.read ? "bg-blue-50 border-blue-200" : "bg-gray-50"
-                          }`}
-                          onClick={() => markNotificationAsRead(notification.id)}
-                        >
-                          <div className="flex items-start justify-between">
-                            <div className="flex-1">
-                              <h4 className="font-medium text-sm">{notification.title}</h4>
-                              <p className="text-sm text-gray-600 mt-1">{notification.message}</p>
-                              <p className="text-xs text-gray-400 mt-2">
-                                {new Date(notification.createdAt).toLocaleString()}
-                              </p>
-                            </div>
-                            {!notification.read && <div className="w-2 h-2 bg-blue-600 rounded-full mt-1"></div>}
-                          </div>
-                        </div>
-                      ))
-                    )}
-                  </div>
-                </DialogContent>
-              </Dialog>
-
-              <span className="text-gray-700">Dr. {userData?.name}</span>
-              <AlertDialog>
-                <AlertDialogTrigger asChild>
-                  <Button variant="outline">
-                    <LogOut className="h-4 w-4 mr-2" />
-                    Logout
-                  </Button>
-                </AlertDialogTrigger>
-                <AlertDialogContent>
-                  <AlertDialogHeader>
-                    <AlertDialogTitle>Are you sure you want to logout?</AlertDialogTitle>
-                    <AlertDialogDescription>
-                      You will be signed out of your account.
-                    </AlertDialogDescription>
-                  </AlertDialogHeader>
-                  <AlertDialogFooter>
-                    <AlertDialogCancel>Cancel</AlertDialogCancel>
-                    <AlertDialogAction onClick={handleLogout}>Logout</AlertDialogAction>
-                  </AlertDialogFooter>
-                </AlertDialogContent>
-              </AlertDialog>
-            </div>
-          </div>
-        </div>
-      </header>
-
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Quick Actions */}
         <div className="mb-8">
