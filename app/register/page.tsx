@@ -80,7 +80,6 @@ export default function RegisterPage() {
     }
   }, [user, userData, authLoading, router])
 
-  // Client form data
   const [clientData, setClientData] = useState({
     name: "",
     email: "",
@@ -89,7 +88,6 @@ export default function RegisterPage() {
     confirmPassword: "",
   })
 
-  // Consultant form data
   const [consultantData, setConsultantData] = useState({
     name: "",
     email: "",
@@ -220,282 +218,341 @@ export default function RegisterPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
-      <Card className="w-full max-w-4xl">
-        <CardHeader className="text-center">
-          <div className="flex items-center justify-center mb-4 mr-6">
-            <Calendar className="h-8 w-8 text-blue-600" />
-            <span className="ml-2 text-2xl font-bold text-gray-900">ConsultBook</span>
+    <div className="min-h-screen bg-white flex overflow-hidden">
+      {/* Left Column: Branding (Hidden on mobile) */}
+      <div className="hidden lg:flex lg:w-1/2 bg-blue-600 justify-center p-12 text-white relative">
+        <div className="absolute inset-0 bg-gradient-to-br from-blue-700 to-indigo-800 opacity-90" />
+        <div className="relative z-10 w-full max-w-sm">
+          <Link href="/" className="flex items-center gap-3 mb-16">
+            <div className="bg-white p-2 rounded-xl">
+              <Calendar className="h-8 w-8 text-blue-600" />
+            </div>
+            <span className="text-3xl font-bold tracking-tight">ConsultBook</span>
+          </Link>
+          
+          <h1 className="text-4xl font-extrabold mb-6 leading-tight">
+            Start Your Journey <br /> 
+            <span className="text-blue-200">With Us Today.</span>
+          </h1>
+          
+          <p className="text-lg text-blue-100 mb-10 leading-relaxed">
+            Join a global network of professionals and clients. Seamless booking, secure payments, and expert advice at your fingertips.
+          </p>
+
+          <div className="space-y-6 pt-8 border-t border-blue-500/50">
+            <div className="flex items-center gap-4">
+              <div className="h-10 w-10 rounded-full bg-blue-500/30 flex items-center justify-center border border-blue-400/30">
+                <Check className="h-5 w-5" />
+              </div>
+              <p className="font-medium">Verified Professional Network</p>
+            </div>
+            <div className="flex items-center gap-4">
+              <div className="h-10 w-10 rounded-full bg-blue-500/30 flex items-center justify-center border border-blue-400/30">
+                <Check className="h-5 w-5" />
+              </div>
+              <p className="font-medium">Secure & Encrypted Platform</p>
+            </div>
           </div>
-          <CardTitle className="text-2xl">Create Your Account</CardTitle>
-          <CardDescription>Join our platform as a client or consultant</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <Tabs value={activeTab} onValueChange={setActiveTab}>
-            <TabsList className="grid w-full grid-cols-2">
-              <TabsTrigger value="client">Client</TabsTrigger>
-              <TabsTrigger value="consultant">Consultant</TabsTrigger>
-            </TabsList>
+        </div>
+      </div>
 
-            <TabsContent value="client">
-              <form onSubmit={handleClientRegister} className="space-y-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="client-name">Full Name</Label>
-                    <Input
-                      id="client-name"
-                      type="text"
-                      required
-                      value={clientData.name}
-                      onChange={(e) => setClientData({ ...clientData, name: e.target.value })}
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="client-email" className={errors.email ? "text-destructive" : ""}>Email</Label>
-                    <Input
-                      id="client-email"
-                      type="email"
-                      required
-                      className={errors.email ? "border-destructive" : ""}
-                      value={clientData.email}
-                      onChange={(e) => setClientData({ ...clientData, email: e.target.value })}
-                    />
-                    {errors.email && <p className="text-xs text-destructive font-medium">{errors.email}</p>}
-                  </div>
-                </div>
+      {/* Right Column: Registration Form */}
+      <div className="w-full lg:w-2/3 flex items-center justify-center p-4 sm:p-8 bg-gray-50/50 overflow-y-auto">
+        <div className="w-full max-w-2xl py-8">
+          <div className="lg:hidden flex items-center justify-center mb-8">
+            <Calendar className="h-10 w-10 text-blue-600" />
+            <span className="ml-3 text-3xl font-bold text-gray-900">ConsultBook</span>
+          </div>
 
-                <div className="space-y-2">
-                  <Label htmlFor="client-phone">Phone Number</Label>
-                  <Input
-                    id="client-phone"
-                    type="tel"
-                    required
-                    value={clientData.phone}
-                    onChange={(e) => setClientData({ ...clientData, phone: e.target.value })}
-                  />
-                </div>
+          <div className="text-center lg:text-left mb-8">
+            <h2 className="text-3xl font-bold tracking-tight text-gray-900">Create your account</h2>
+            <p className="text-gray-600 mt-2">Get started by choosing your account type below</p>
+          </div>
 
-                <div className="space-y-2">
-                  <Label>Profile Photo (Optional)</Label>
-                  <FileUpload
-                    userId="temp-client"
-                    fileType="profile"
-                    onUploadComplete={setProfilePhoto}
-                    multiple={false}
-                    accept="image/*"
-                    maxSize={5}
-                  />
-                </div>
+          <Card className="border-none shadow-xl lg:shadow-none lg:bg-transparent">
+            <CardContent className="p-0 sm:p-6 lg:p-0">
+              <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+                <TabsList className="grid w-full grid-cols-2 mb-8 bg-gray-100/80 p-1 rounded-xl">
+                  <TabsTrigger 
+                    value="client" 
+                    className="rounded-lg data-[state=active]:bg-white data-[state=active]:shadow-sm py-2.5"
+                  >
+                    Client
+                  </TabsTrigger>
+                  <TabsTrigger 
+                    value="consultant" 
+                    className="rounded-lg data-[state=active]:bg-white data-[state=active]:shadow-sm py-2.5"
+                  >
+                    Consultant
+                  </TabsTrigger>
+                </TabsList>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="client-password" className={errors.password ? "text-destructive" : ""}>Password</Label>
-                    <div className="relative">
-                      <Input
-                        id="client-password"
-                        type={showPassword ? "text" : "password"}
-                        required
-                        className={errors.password ? "border-destructive" : ""}
-                        value={clientData.password}
-                        onChange={(e) => setClientData({ ...clientData, password: e.target.value })}
-                      />
-                      <button
-                        type="button"
-                        onClick={() => setShowPassword(!showPassword)}
-                        className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
-                      >
-                        {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                      </button>
+                <TabsContent value="client">
+                  <form onSubmit={handleClientRegister} className="space-y-6">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="client-name">Full Name</Label>
+                        <Input
+                          id="client-name"
+                          type="text"
+                          required
+                          value={clientData.name}
+                          onChange={(e) => setClientData({ ...clientData, name: e.target.value })}
+                          className="h-11"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="client-email" className={errors.email ? "text-destructive" : ""}>Email</Label>
+                        <Input
+                          id="client-email"
+                          type="email"
+                          required
+                          className={`h-11 ${errors.email ? "border-destructive" : ""}`}
+                          value={clientData.email}
+                          onChange={(e) => setClientData({ ...clientData, email: e.target.value })}
+                        />
+                        {errors.email && <p className="text-xs text-destructive font-medium">{errors.email}</p>}
+                      </div>
                     </div>
-                    <PasswordStrength password={clientData.password} />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="client-confirm-password" className={errors.confirmPassword ? "text-destructive" : ""}>Confirm Password</Label>
-                    <Input
-                      id="client-confirm-password"
-                      type={showPassword ? "text" : "password"}
-                      required
-                      className={errors.confirmPassword ? "border-destructive" : ""}
-                      value={clientData.confirmPassword}
-                      onChange={(e) => setClientData({ ...clientData, confirmPassword: e.target.value })}
-                    />
-                    {clientData.confirmPassword && (
-                      <p className={`text-xs font-medium ${clientData.password === clientData.confirmPassword ? "text-green-600" : "text-destructive"}`}>
-                        {clientData.password === clientData.confirmPassword ? "Passwords match" : "Passwords do not match"}
-                      </p>
-                    )}
-                    {errors.confirmPassword && <p className="text-xs text-destructive font-medium">{errors.confirmPassword}</p>}
-                  </div>
-                </div>
 
-                <Button type="submit" className="w-full" disabled={loading}>
-                  {loading ? "Creating Account..." : "Register as Client"}
-                </Button>
-              </form>
-            </TabsContent>
-
-            <TabsContent value="consultant">
-              <form onSubmit={handleConsultantRegister} className="space-y-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="consultant-name">Full Name</Label>
-                    <Input
-                      id="consultant-name"
-                      type="text"
-                      required
-                      value={consultantData.name}
-                      onChange={(e) => setConsultantData({ ...consultantData, name: e.target.value })}
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="consultant-email" className={errors.email ? "text-destructive" : ""}>Email</Label>
-                    <Input
-                      id="consultant-email"
-                      type="email"
-                      required
-                      className={errors.email ? "border-destructive" : ""}
-                      value={consultantData.email}
-                      onChange={(e) => setConsultantData({ ...consultantData, email: e.target.value })}
-                    />
-                    {errors.email && <p className="text-xs text-destructive font-medium">{errors.email}</p>}
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="consultant-phone">Phone Number</Label>
-                    <Input
-                      id="consultant-phone"
-                      type="tel"
-                      required
-                      value={consultantData.phone}
-                      onChange={(e) => setConsultantData({ ...consultantData, phone: e.target.value })}
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="consultant-specialty">Specialty</Label>
-                    <Select onValueChange={(value) => setConsultantData({ ...consultantData, specialty: value })}>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select specialty" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="medical">Medical</SelectItem>
-                        <SelectItem value="legal">Legal</SelectItem>
-                        <SelectItem value="financial">Financial</SelectItem>
-                        <SelectItem value="technical">Technical</SelectItem>
-                        <SelectItem value="business">Business</SelectItem>
-                        <SelectItem value="education">Education</SelectItem>
-                        <SelectItem value="other">Other</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="consultant-address">Address</Label>
-                  <Input
-                    id="consultant-address"
-                    type="text"
-                    required
-                    value={consultantData.address}
-                    onChange={(e) => setConsultantData({ ...consultantData, address: e.target.value })}
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="consultant-qualifications">Qualifications</Label>
-                  <Textarea
-                    id="consultant-qualifications"
-                    required
-                    value={consultantData.qualifications}
-                    onChange={(e) => setConsultantData({ ...consultantData, qualifications: e.target.value })}
-                    placeholder="List your qualifications, degrees, certifications..."
-                    rows={3}
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label>Profile Photo *</Label>
-                  <FileUpload
-                    userId="temp-consultant"
-                    fileType="profile"
-                    onUploadComplete={setProfilePhoto}
-                    multiple={false}
-                    accept="image/*"
-                    maxSize={5}
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label>Upload Certificates *</Label>
-                  <FileUpload
-                    userId="temp-consultant"
-                    fileType="certificate"
-                    onUploadComplete={setCertificates}
-                    multiple={true}
-                    accept=".pdf,image/*"
-                    maxSize={10}
-                  />
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="consultant-password" className={errors.password ? "text-destructive" : ""}>Password</Label>
-                    <div className="relative">
+                    <div className="space-y-2">
+                      <Label htmlFor="client-phone">Phone Number</Label>
                       <Input
-                        id="consultant-password"
-                        type={showPassword ? "text" : "password"}
+                        id="client-phone"
+                        type="tel"
                         required
-                        className={errors.password ? "border-destructive" : ""}
-                        value={consultantData.password}
-                        onChange={(e) => setConsultantData({ ...consultantData, password: e.target.value })}
+                        value={clientData.phone}
+                        onChange={(e) => setClientData({ ...clientData, phone: e.target.value })}
+                        className="h-11"
                       />
-                      <button
-                        type="button"
-                        onClick={() => setShowPassword(!showPassword)}
-                        className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
-                      >
-                        {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                      </button>
                     </div>
-                    <PasswordStrength password={consultantData.password} />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="consultant-confirm-password" className={errors.confirmPassword ? "text-destructive" : ""}>Confirm Password</Label>
-                    <Input
-                      id="consultant-confirm-password"
-                      type={showPassword ? "text" : "password"}
-                      required
-                      className={errors.confirmPassword ? "border-destructive" : ""}
-                      value={consultantData.confirmPassword}
-                      onChange={(e) => setConsultantData({ ...consultantData, confirmPassword: e.target.value })}
-                    />
-                    {consultantData.confirmPassword && (
-                      <p className={`text-xs font-medium ${consultantData.password === consultantData.confirmPassword ? "text-green-600" : "text-destructive"}`}>
-                        {consultantData.password === consultantData.confirmPassword ? "Passwords match" : "Passwords do not match"}
-                      </p>
-                    )}
-                    {errors.confirmPassword && <p className="text-xs text-destructive font-medium">{errors.confirmPassword}</p>}
-                  </div>
-                </div>
 
-                <Button type="submit" className="w-full" disabled={loading}>
-                  {loading ? "Submitting Application..." : "Apply as Consultant"}
-                </Button>
-              </form>
-            </TabsContent>
-          </Tabs>
+                    <div className="space-y-2">
+                      <Label>Profile Photo (Optional)</Label>
+                      <FileUpload
+                        userId="temp-client"
+                        fileType="profile"
+                        onUploadComplete={setProfilePhoto}
+                        multiple={false}
+                        accept="image/*"
+                        maxSize={5}
+                      />
+                    </div>
 
-          <div className="mt-6 text-center">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="client-password" className={errors.password ? "text-destructive" : ""}>Password</Label>
+                        <div className="relative">
+                          <Input
+                            id="client-password"
+                            type={showPassword ? "text" : "password"}
+                            required
+                            className={`h-11 ${errors.password ? "border-destructive" : ""}`}
+                            value={clientData.password}
+                            onChange={(e) => setClientData({ ...clientData, password: e.target.value })}
+                          />
+                          <button
+                            type="button"
+                            onClick={() => setShowPassword(!showPassword)}
+                            className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
+                          >
+                            {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                          </button>
+                        </div>
+                        <PasswordStrength password={clientData.password} />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="client-confirm-password" className={errors.confirmPassword ? "text-destructive" : ""}>Confirm Password</Label>
+                        <Input
+                          id="client-confirm-password"
+                          type={showPassword ? "text" : "password"}
+                          required
+                          className={`h-11 ${errors.confirmPassword ? "border-destructive" : ""}`}
+                          value={clientData.confirmPassword}
+                          onChange={(e) => setClientData({ ...clientData, confirmPassword: e.target.value })}
+                        />
+                        {clientData.confirmPassword && (
+                          <p className={`text-xs font-medium ${clientData.password === clientData.confirmPassword ? "text-green-600" : "text-destructive"}`}>
+                            {clientData.password === clientData.confirmPassword ? "Passwords match" : "Passwords do not match"}
+                          </p>
+                        )}
+                        {errors.confirmPassword && <p className="text-xs text-destructive font-medium">{errors.confirmPassword}</p>}
+                      </div>
+                    </div>
+
+                    <Button type="submit" className="w-full h-11 bg-blue-600 hover:bg-blue-700 text-base font-semibold" disabled={loading}>
+                      {loading ? "Creating Account..." : "Register as Client"}
+                    </Button>
+                  </form>
+                </TabsContent>
+
+                <TabsContent value="consultant">
+                  <form onSubmit={handleConsultantRegister} className="space-y-6">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="consultant-name">Full Name</Label>
+                        <Input
+                          id="consultant-name"
+                          type="text"
+                          required
+                          value={consultantData.name}
+                          onChange={(e) => setConsultantData({ ...consultantData, name: e.target.value })}
+                          className="h-11"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="consultant-email" className={errors.email ? "text-destructive" : ""}>Email</Label>
+                        <Input
+                          id="consultant-email"
+                          type="email"
+                          required
+                          className={`h-11 ${errors.email ? "border-destructive" : ""}`}
+                          value={consultantData.email}
+                          onChange={(e) => setConsultantData({ ...consultantData, email: e.target.value })}
+                        />
+                        {errors.email && <p className="text-xs text-destructive font-medium">{errors.email}</p>}
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="consultant-phone">Phone Number</Label>
+                        <Input
+                          id="consultant-phone"
+                          type="tel"
+                          required
+                          value={consultantData.phone}
+                          onChange={(e) => setConsultantData({ ...consultantData, phone: e.target.value })}
+                          className="h-11"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="consultant-specialty">Specialty</Label>
+                        <Select onValueChange={(value) => setConsultantData({ ...consultantData, specialty: value })}>
+                          <SelectTrigger className="h-11">
+                            <SelectValue placeholder="Select specialty" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="medical">Medical</SelectItem>
+                            <SelectItem value="legal">Legal</SelectItem>
+                            <SelectItem value="financial">Financial</SelectItem>
+                            <SelectItem value="technical">Technical</SelectItem>
+                            <SelectItem value="business">Business</SelectItem>
+                            <SelectItem value="education">Education</SelectItem>
+                            <SelectItem value="other">Other</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="consultant-address">Address</Label>
+                      <Input
+                        id="consultant-address"
+                        type="text"
+                        required
+                        value={consultantData.address}
+                        onChange={(e) => setConsultantData({ ...consultantData, address: e.target.value })}
+                        className="h-11"
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="consultant-qualifications">Qualifications</Label>
+                      <Textarea
+                        id="consultant-qualifications"
+                        required
+                        value={consultantData.qualifications}
+                        onChange={(e) => setConsultantData({ ...consultantData, qualifications: e.target.value })}
+                        placeholder="List your qualifications, degrees, certifications..."
+                        rows={3}
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label>Profile Photo *</Label>
+                      <FileUpload
+                        userId="temp-consultant"
+                        fileType="profile"
+                        onUploadComplete={setProfilePhoto}
+                        multiple={false}
+                        accept="image/*"
+                        maxSize={5}
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label>Upload Certificates *</Label>
+                      <FileUpload
+                        userId="temp-consultant"
+                        fileType="certificate"
+                        onUploadComplete={setCertificates}
+                        multiple={true}
+                        accept=".pdf,image/*"
+                        maxSize={10}
+                      />
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="consultant-password" className={errors.password ? "text-destructive" : ""}>Password</Label>
+                        <div className="relative">
+                          <Input
+                            id="consultant-password"
+                            type={showPassword ? "text" : "password"}
+                            required
+                            className={`h-11 ${errors.password ? "border-destructive" : ""}`}
+                            value={consultantData.password}
+                            onChange={(e) => setConsultantData({ ...consultantData, password: e.target.value })}
+                          />
+                          <button
+                            type="button"
+                            onClick={() => setShowPassword(!showPassword)}
+                            className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
+                          >
+                            {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                          </button>
+                        </div>
+                        <PasswordStrength password={consultantData.password} />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="consultant-confirm-password" className={errors.confirmPassword ? "text-destructive" : ""}>Confirm Password</Label>
+                        <Input
+                          id="consultant-confirm-password"
+                          type={showPassword ? "text" : "password"}
+                          required
+                          className={`h-11 ${errors.confirmPassword ? "border-destructive" : ""}`}
+                          value={consultantData.confirmPassword}
+                          onChange={(e) => setConsultantData({ ...consultantData, confirmPassword: e.target.value })}
+                        />
+                        {consultantData.confirmPassword && (
+                          <p className={`text-xs font-medium ${consultantData.password === consultantData.confirmPassword ? "text-green-600" : "text-destructive"}`}>
+                            {consultantData.password === consultantData.confirmPassword ? "Passwords match" : "Passwords do not match"}
+                          </p>
+                        )}
+                        {errors.confirmPassword && <p className="text-xs text-destructive font-medium">{errors.confirmPassword}</p>}
+                      </div>
+                    </div>
+
+                    <Button type="submit" className="w-full h-11 bg-blue-600 hover:bg-blue-700 text-base font-semibold" disabled={loading}>
+                      {loading ? "Submitting Application..." : "Apply as Consultant"}
+                    </Button>
+                  </form>
+                </TabsContent>
+              </Tabs>
+            </CardContent>
+          </Card>
+
+          <div className="mt-8 text-center border-t border-gray-100 pt-8">
             <p className="text-sm text-gray-600">
               Already have an account?{" "}
-              <Link href="/login" className="text-blue-600 hover:text-blue-500">
-                Sign in
+              <Link href="/login" className="text-blue-600 font-semibold hover:text-blue-500">
+                Sign in here
               </Link>
             </p>
           </div>
-        </CardContent>
-      </Card>
+        </div>
+      </div>
     </div>
   )
 }
