@@ -259,13 +259,13 @@ export default function RegisterPage() {
       {/* Right Column: Registration Form */}
       <div className="w-full lg:w-2/3 flex items-center justify-center p-2 sm:p-8 bg-gray-50/50 overflow-y-auto">
         <div className="w-full max-w-2xl py-8">
-          <div className="lg:hidden flex items-center justify-center mb-8">
-            <Calendar className="h-10 w-10 text-blue-600" />
-            <span className="ml-3 text-3xl font-bold text-gray-900">ConsultBook</span>
+          <div className="lg:hidden flex items-center justify-center mb-8 mr-6">
+            <Calendar className="h-8 w-8 text-blue-600" />
+            <span className="ml-3 text-2xl font-bold text-gray-900">ConsultBook</span>
           </div>
 
           <div className="text-center lg:text-left mb-8">
-            <h2 className="text-3xl font-bold tracking-tight text-gray-900">Create your account</h2>
+            <h2 className="text-2xl font-bold tracking-tight text-gray-900">Create your account</h2>
             <p className="text-gray-600 mt-2">Get started by choosing your account type below</p>
           </div>
 
@@ -275,7 +275,7 @@ export default function RegisterPage() {
                 <TabsList className="grid w-full grid-cols-2 mb-8 bg-gray-100/80 p-1 rounded-xl">
                   <TabsTrigger 
                     value="client" 
-                    className="rounded-lg data-[state=active]:bg-white data-[state=active]:shadow-sm py-2.5"
+                    className="rounded-lg data-[state=active]:bg-white data-[state=active]:shadow-sm"
                   >
                     Client
                   </TabsTrigger>
