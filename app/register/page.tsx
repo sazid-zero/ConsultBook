@@ -257,7 +257,7 @@ export default function RegisterPage() {
       </div>
 
       {/* Right Column: Registration Form */}
-      <div className="w-full lg:w-2/3 flex items-center justify-center p-4 sm:p-8 bg-gray-50/50 overflow-y-auto">
+      <div className="w-full lg:w-2/3 flex items-center justify-center p-2 sm:p-8 bg-gray-50/50 overflow-y-auto">
         <div className="w-full max-w-2xl py-8">
           <div className="lg:hidden flex items-center justify-center mb-8">
             <Calendar className="h-10 w-10 text-blue-600" />
@@ -270,7 +270,7 @@ export default function RegisterPage() {
           </div>
 
           <Card className="border-none shadow-xl lg:shadow-none lg:bg-transparent">
-            <CardContent className="p-0 sm:p-6 lg:p-0">
+            <CardContent className="p-2 sm:p-6 lg:p-0">
               <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
                 <TabsList className="grid w-full grid-cols-2 mb-8 bg-gray-100/80 p-1 rounded-xl">
                   <TabsTrigger 
