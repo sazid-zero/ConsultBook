@@ -161,7 +161,11 @@ export function Navbar({ notifications: propNotifications = [], unreadCount: pro
       { name: "Dashboard", href: getDashboardHref(), icon: LayoutDashboard },
       ...(userData?.role === 'client' ? [{ name: "Find Consultants", href: "/book-consultant", icon: Search }] : []),
       { name: "Messages", href: "/messages", icon: MessageSquare },
-    ] : [{name: "How It Works", href: "/about", icon: MessageSquare}, {name: "Help", href: "/help", icon: MessageSquare}, {name: "Contact", href: "/contact", icon: MessageSquare}]),
+    ] : [
+      { name: "How It Works", href: "/#how-it-works", icon: MessageSquare },
+      { name: "Help", href: "/help", icon: MessageSquare },
+      { name: "Contact", href: "/contact", icon: MessageSquare }
+    ]),
   ]
 
   const isActive = (path: string) => pathname === path

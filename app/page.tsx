@@ -118,7 +118,7 @@ export default function HomePage() {
       </section>
 
       {/* How it Works */}
-      <section className="py-16 bg-gray-50">
+       <section id="how-it-works" className="py-16 bg-gray-50 scroll-mt-16">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12">
             <h2 className="text-3xl font-bold text-gray-900 mb-4">How It Works</h2>
@@ -199,15 +199,15 @@ export default function HomePage() {
             <div>
               <h3 className="text-lg font-semibold mb-4">Support</h3>
               <ul className="space-y-2 text-gray-400">
-                <li>Help Center</li>
-                <li>Contact Us</li>
-                <li>Privacy Policy</li>
+                <li><Link href="/help" className="hover:text-blue-400 transition-colors">Help Center</Link></li>
+                <li><Link href="/contact" className="hover:text-blue-400 transition-colors">Contact Us</Link></li>
+                <li><Link href="/privacy" className="hover:text-blue-400 transition-colors">Privacy Policy</Link></li>
               </ul>
             </div>
           </div>
 
           <div className="border-t border-gray-800 mt-8 pt-8 text-center text-gray-400">
-            <p>&copy; 2024 ConsultBook. All rights reserved.</p>
+            <p>&copy; {new Date().getFullYear()} ConsultBook. All rights reserved.</p>
           </div>
         </div>
       </footer>
