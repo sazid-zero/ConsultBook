@@ -42,12 +42,9 @@ export default function LoginPage() {
           toast.error("Account Pending Approval", {
             description: "Your consultant application is still pending approval."
           })
+          setLoading(false)
           return
         }
-
-        toast.success("Successfully signed in", {
-          description: "Welcome back! Redirecting to your dashboard..."
-        })
 
         // Redirect based on role
         if (userData.role === "client") {

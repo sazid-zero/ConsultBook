@@ -292,6 +292,11 @@ export default function ClientProfilePage() {
                     onChange={(e) => setPasswords({ ...passwords, confirm: e.target.value })}
                     placeholder="Confirm new password"
                   />
+                  {passwords.confirm && (
+                    <p className={`text-xs font-medium ${passwords.new === passwords.confirm ? "text-green-600" : "text-destructive"}`}>
+                      {passwords.new === passwords.confirm ? "Passwords match" : "Passwords do not match"}
+                    </p>
+                  )}
                 </div>
 
                 <Button onClick={handleUpdatePassword} disabled={updatingPassword} className="w-full">

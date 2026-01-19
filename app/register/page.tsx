@@ -145,6 +145,13 @@ export default function RegisterPage() {
     e.preventDefault()
     setErrors({})
 
+    if (activeTab === "consultant" && profilePhoto.length === 0) {
+      toast.error("Profile Photo Required", {
+        description: "Please upload a profile photo."
+      })
+      return
+    }
+
     if (consultantData.password !== consultantData.confirmPassword) {
       setErrors({ confirmPassword: "Passwords don't match" })
       return
@@ -186,10 +193,7 @@ export default function RegisterPage() {
         createdAt: new Date().toISOString(),
       })
 
-      toast.success("Application Submitted", {
-        description: "Your registration is submitted! Please wait for admin approval."
-      })
-      router.push("/login")
+      router.push("/register/success")
     } catch (error: any) {
       if (error.code === 'auth/email-already-in-use') {
         setErrors({ email: "Email already exists" })
@@ -301,6 +305,11 @@ export default function RegisterPage() {
                       value={clientData.confirmPassword}
                       onChange={(e) => setClientData({ ...clientData, confirmPassword: e.target.value })}
                     />
+                    {clientData.confirmPassword && (
+                      <p className={`text-xs font-medium ${clientData.password === clientData.confirmPassword ? "text-green-600" : "text-destructive"}`}>
+                        {clientData.password === clientData.confirmPassword ? "Passwords match" : "Passwords do not match"}
+                      </p>
+                    )}
                     {errors.confirmPassword && <p className="text-xs text-destructive font-medium">{errors.confirmPassword}</p>}
                   </div>
                 </div>
@@ -392,7 +401,7 @@ export default function RegisterPage() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label>Profile Photo (Optional)</Label>
+                  <Label>Profile Photo *</Label>
                   <FileUpload
                     userId="temp-consultant"
                     fileType="profile"
@@ -447,6 +456,11 @@ export default function RegisterPage() {
                       value={consultantData.confirmPassword}
                       onChange={(e) => setConsultantData({ ...consultantData, confirmPassword: e.target.value })}
                     />
+                    {consultantData.confirmPassword && (
+                      <p className={`text-xs font-medium ${consultantData.password === consultantData.confirmPassword ? "text-green-600" : "text-destructive"}`}>
+                        {consultantData.password === consultantData.confirmPassword ? "Passwords match" : "Passwords do not match"}
+                      </p>
+                    )}
                     {errors.confirmPassword && <p className="text-xs text-destructive font-medium">{errors.confirmPassword}</p>}
                   </div>
                 </div>

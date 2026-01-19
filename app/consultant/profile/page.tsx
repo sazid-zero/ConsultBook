@@ -74,6 +74,18 @@ export default function ConsultantProfilePage() {
     }
 
     if (user) {
+      // First try to fetch from userData which should have it if registered correctly
+      if (userData?.profilePhoto) {
+        setProfilePhoto([
+          {
+            id: "existing",
+            filename: "profile.jpg",
+            originalName: "Profile Photo",
+            url: userData.profilePhoto,
+            contentType: "image/jpeg",
+          },
+        ])
+      }
       fetchProfile()
     }
   }, [user, userData, loading, router])
