@@ -14,9 +14,22 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
+  DialogFooter,
 } from "@/components/ui/dialog"
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog"
 import { Calendar, User, FileText, CheckCircle, XCircle, Eye, LogOut, ExternalLink, Database } from "lucide-react"
 import Link from "next/link"
+import { toast } from "sonner"
 
 interface Certificate {
   id: string
@@ -70,6 +83,7 @@ export default function AdminDashboard() {
       setApplications(applicationsList)
     } catch (error) {
       console.error("Error fetching applications:", error)
+      toast.error("Failed to fetch applications")
     } finally {
       setLoading(false)
     }
@@ -77,7 +91,6 @@ export default function AdminDashboard() {
 
   const handleApproveApplication = async (uid: string) => {
     try {
-      // Use setDoc with merge to update the user document
       await setDoc(
         doc(db, "users", uid),
         {
@@ -87,32 +100,32 @@ export default function AdminDashboard() {
         { merge: true },
       )
 
-      // Update local state
       setApplications(applications.map((app) => (app.uid === uid ? { ...app, approved: true } : app)))
-
-      alert("Consultant application approved successfully!")
+      toast.success("Consultant Approved", {
+        description: "The consultant can now log in and provide services."
+      })
     } catch (error) {
       console.error("Error approving application:", error)
-      alert(`Error approving application: ${error instanceof Error ? error.message : "Unknown error"}`)
+      toast.error("Approval Failed")
     }
   }
 
   const handleRejectApplication = async (uid: string) => {
     try {
       await deleteDoc(doc(db, "users", uid))
-
-      // Update local state
       setApplications(applications.filter((app) => app.uid !== uid))
-
-      alert("Consultant application rejected and removed.")
+      toast.success("Consultant Rejected", {
+        description: "The application has been removed."
+      })
     } catch (error) {
       console.error("Error rejecting application:", error)
-      alert(`Error rejecting application: ${error instanceof Error ? error.message : "Unknown error"}`)
+      toast.error("Rejection Failed")
     }
   }
 
   const handleLogout = () => {
     localStorage.removeItem("adminSession")
+    toast.success("Logged out successfully")
     router.push("/")
   }
 
@@ -126,7 +139,7 @@ export default function AdminDashboard() {
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
-      <header className="bg-white shadow-sm border-b">
+      <header className="bg-white shadow-sm border-b sticky top-0 z-10">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center py-4">
             <div className="flex items-center">
@@ -134,11 +147,27 @@ export default function AdminDashboard() {
               <span className="ml-2 text-2xl font-bold text-gray-900">ConsultBook Admin</span>
             </div>
             <div className="flex items-center space-x-4">
-              <span className="text-gray-700">Admin Panel</span>
-              <Button variant="outline" onClick={handleLogout}>
-                <LogOut className="h-4 w-4 mr-2" />
-                Logout
-              </Button>
+              <span className="text-sm font-medium text-gray-700">Admin Panel</span>
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <Button variant="outline" size="sm">
+                    <LogOut className="h-4 w-4 mr-2" />
+                    Logout
+                  </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>Logout Confirmation</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      Are you sure you want to log out of the admin panel?
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                    <AlertDialogAction onClick={handleLogout}>Logout</AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
             </div>
           </div>
         </div>
@@ -180,25 +209,6 @@ export default function AdminDashboard() {
           </Card>
         </div>
 
-        {/* Test Data Link */}
-        <div className="mb-8">
-          <Card>
-            <CardHeader>
-              <CardTitle>Development Tools</CardTitle>
-              <CardDescription>Tools for testing and development</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <Link href="/admin/test-data">
-                <Button variant="outline" className="mr-4">
-                  <Database className="h-4 w-4 mr-2" />
-                  Generate Test Data
-                </Button>
-              </Link>
-              <span className="text-sm text-gray-600">Create sample completed appointments for testing reviews</span>
-            </CardContent>
-          </Card>
-        </div>
-
         {/* Pending Applications */}
         <Card className="mb-8">
           <CardHeader>
@@ -214,7 +224,7 @@ export default function AdminDashboard() {
             ) : (
               <div className="space-y-4">
                 {pendingApplications.map((application) => (
-                  <div key={application.uid} className="flex items-center justify-between p-4 border rounded-lg">
+                  <div key={application.uid} className="flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50 transition-colors">
                     <div className="flex items-center space-x-4">
                       <div className="bg-orange-100 p-2 rounded-full">
                         <User className="h-5 w-5 text-orange-600" />
@@ -233,99 +243,99 @@ export default function AdminDashboard() {
                         <DialogTrigger asChild>
                           <Button variant="outline" size="sm" onClick={() => setSelectedApplication(application)}>
                             <Eye className="h-4 w-4 mr-1" />
-                            View Details
+                            Review Application
                           </Button>
                         </DialogTrigger>
-                        <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+                        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
                           <DialogHeader>
-                            <DialogTitle>Dr. {selectedApplication?.name}</DialogTitle>
-                            <DialogDescription>{selectedApplication?.specialty}</DialogDescription>
+                            <DialogTitle>Consultant Application Review</DialogTitle>
+                            <DialogDescription>Detailed information for Dr. {selectedApplication?.name}</DialogDescription>
                           </DialogHeader>
                           {selectedApplication && (
-                            <div className="space-y-4">
-                              {/* Profile Photo */}
-                              {selectedApplication.profilePhoto && (
-                                <div className="text-center">
+                            <div className="space-y-6 pt-4">
+                              <div className="flex items-center space-x-4">
+                                {selectedApplication.profilePhoto ? (
                                   <img
-                                    src={selectedApplication.profilePhoto || "/placeholder.svg"}
+                                    src={selectedApplication.profilePhoto}
                                     alt="Profile"
-                                    className="w-24 h-24 rounded-full mx-auto object-cover"
+                                    className="w-20 h-20 rounded-full object-cover border-2 border-gray-100"
                                   />
+                                ) : (
+                                  <div className="w-20 h-20 rounded-full bg-gray-100 flex items-center justify-center">
+                                    <User className="h-8 w-8 text-gray-400" />
+                                  </div>
+                                )}
+                                <div>
+                                  <h3 className="text-xl font-bold">{selectedApplication.name}</h3>
+                                  <Badge>{selectedApplication.specialty}</Badge>
                                 </div>
-                              )}
+                              </div>
 
-                              {/* Basic Info */}
-                              <div className="grid grid-cols-2 gap-4">
+                              <div className="grid grid-cols-2 gap-6 bg-gray-50 p-4 rounded-lg">
                                 <div>
-                                  <label className="text-sm font-medium">Name</label>
-                                  <p className="text-sm text-gray-600">{selectedApplication.name}</p>
+                                  <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">Email</label>
+                                  <p className="text-sm text-gray-900 font-medium">{selectedApplication.email}</p>
                                 </div>
                                 <div>
-                                  <label className="text-sm font-medium">Email</label>
-                                  <p className="text-sm text-gray-600">{selectedApplication.email}</p>
+                                  <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">Phone</label>
+                                  <p className="text-sm text-gray-900 font-medium">{selectedApplication.phone}</p>
                                 </div>
-                                <div>
-                                  <label className="text-sm font-medium">Phone</label>
-                                  <p className="text-sm text-gray-600">{selectedApplication.phone}</p>
-                                </div>
-                                <div>
-                                  <label className="text-sm font-medium">Specialty</label>
-                                  <p className="text-sm text-gray-600">{selectedApplication.specialty}</p>
+                                <div className="col-span-2">
+                                  <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">Address</label>
+                                  <p className="text-sm text-gray-900 font-medium">{selectedApplication.address}</p>
                                 </div>
                               </div>
 
                               <div>
-                                <label className="text-sm font-medium">Address</label>
-                                <p className="text-sm text-gray-600">{selectedApplication.address}</p>
+                                <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">Qualifications</label>
+                                <div className="mt-1 p-3 bg-blue-50 text-blue-900 text-sm rounded-md italic">
+                                  "{selectedApplication.qualifications}"
+                                </div>
                               </div>
 
                               <div>
-                                <label className="text-sm font-medium">Qualifications</label>
-                                <p className="text-sm text-gray-600">{selectedApplication.qualifications}</p>
-                              </div>
-
-                              {/* Certificates */}
-                              <div>
-                                <label className="text-sm font-medium">Certificates</label>
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-2">
-                                  {selectedApplication.certificates?.map((cert, index) => (
-                                    <div key={cert.id} className="border rounded-lg p-3">
-                                      <div className="flex items-center justify-between">
-                                        <div>
-                                          <p className="text-sm font-medium">{cert.originalName}</p>
-                                          <p className="text-xs text-gray-500">Certificate {index + 1}</p>
-                                        </div>
-                                        <Button
-                                          variant="outline"
-                                          size="sm"
-                                          onClick={() => window.open(cert.url, "_blank")}
-                                        >
-                                          <ExternalLink className="h-4 w-4 mr-1" />
-                                          View
-                                        </Button>
+                                <label className="text-xs font-bold text-gray-500 uppercase tracking-wider block mb-2">Uploaded Certificates</label>
+                                <div className="grid grid-cols-1 gap-3">
+                                  {selectedApplication.certificates?.map((cert) => (
+                                    <div key={cert.id} className="flex items-center justify-between p-3 border rounded-lg bg-white shadow-sm">
+                                      <div className="flex items-center space-x-3">
+                                        <FileText className="h-5 w-5 text-blue-500" />
+                                        <span className="text-sm font-medium truncate max-w-[200px]">{cert.originalName}</span>
                                       </div>
+                                      <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        className="text-blue-600 hover:text-blue-700 hover:bg-blue-50"
+                                        onClick={() => window.open(cert.url, "_blank")}
+                                      >
+                                        <ExternalLink className="h-4 w-4 mr-1" />
+                                        View File
+                                      </Button>
                                     </div>
-                                  )) || <p className="text-sm text-gray-500">No certificates uploaded</p>}
+                                  )) || <p className="text-sm text-gray-500 italic">No certificates found</p>}
                                 </div>
                               </div>
+                              
+                              <DialogFooter className="gap-2 sm:gap-0 border-t pt-4 mt-6">
+                                <Button
+                                  variant="destructive"
+                                  onClick={() => handleRejectApplication(selectedApplication.uid)}
+                                >
+                                  <XCircle className="h-4 w-4 mr-2" />
+                                  Reject
+                                </Button>
+                                <Button
+                                  className="bg-green-600 hover:bg-green-700"
+                                  onClick={() => handleApproveApplication(selectedApplication.uid)}
+                                >
+                                  <CheckCircle className="h-4 w-4 mr-2" />
+                                  Approve Consultant
+                                </Button>
+                              </DialogFooter>
                             </div>
                           )}
                         </DialogContent>
                       </Dialog>
-
-                      <Button
-                        size="sm"
-                        onClick={() => handleApproveApplication(application.uid)}
-                        className="bg-green-600 hover:bg-green-700"
-                      >
-                        <CheckCircle className="h-4 w-4 mr-1" />
-                        Approve
-                      </Button>
-
-                      <Button variant="destructive" size="sm" onClick={() => handleRejectApplication(application.uid)}>
-                        <XCircle className="h-4 w-4 mr-1" />
-                        Reject
-                      </Button>
                     </div>
                   </div>
                 ))}
@@ -347,27 +357,28 @@ export default function AdminDashboard() {
                 <p className="text-gray-500">No approved consultants yet</p>
               </div>
             ) : (
-              <div className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {approvedConsultants.map((consultant) => (
-                  <div key={consultant.uid} className="flex items-center justify-between p-4 border rounded-lg">
+                  <div key={consultant.uid} className="flex items-center justify-between p-4 border rounded-lg bg-white">
                     <div className="flex items-center space-x-4">
-                      <div className="bg-green-100 p-2 rounded-full">
-                        <User className="h-5 w-5 text-green-600" />
-                      </div>
+                      {consultant.profilePhoto ? (
+                        <img src={consultant.profilePhoto} alt="" className="w-10 h-10 rounded-full object-cover" />
+                      ) : (
+                        <div className="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center text-green-600">
+                          <User className="h-5 w-5" />
+                        </div>
+                      )}
                       <div>
                         <h4 className="font-semibold">{consultant.name}</h4>
-                        <p className="text-sm text-gray-600">{consultant.email}</p>
-                        <div className="flex items-center space-x-2 mt-1">
-                          <Badge variant="secondary">{consultant.specialty}</Badge>
-                          <Badge variant="outline" className="text-green-600">
-                            Active
-                          </Badge>
+                        <div className="flex items-center space-x-2">
+                          <Badge variant="secondary" className="text-[10px]">{consultant.specialty}</Badge>
+                          <span className="text-[10px] text-gray-500">Active</span>
                         </div>
                       </div>
                     </div>
                     <div className="text-right">
-                      <p className="text-sm text-gray-500">
-                        Approved on {new Date(consultant.createdAt).toLocaleDateString()}
+                      <p className="text-[10px] text-gray-500">
+                        Since {new Date(consultant.createdAt).toLocaleDateString()}
                       </p>
                     </div>
                   </div>

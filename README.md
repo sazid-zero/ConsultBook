@@ -170,6 +170,4 @@ yarn type-check
 
 This project was developed by:
 
-- *Sharif Mahmud Sazid* - Registration No: 2020331042
-- *Sharmin Akther* - Registration No: 2020331076
-- *Jui Sultana* - Registration No: 2020331068
+- *Sharif Mahmud Sazid*
