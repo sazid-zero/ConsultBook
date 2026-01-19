@@ -40,12 +40,12 @@ export default function HomePage() {
             ) : (
               <>
                 <Link href="/register?type=client">
-                  <Button size="lg" className="px-8 py-3">
+                  <Button size="lg" className="sm:px-8 py-3 px-4 ">
                     Book a Consultation
                   </Button>
                 </Link>
                 <Link href="/register?type=consultant">
-                  <Button variant="outline" size="lg" className="px-8 py-3">
+                  <Button variant="outline" size="lg" className="sm:px-8 px-4 py-3">
                     Join as Consultant
                   </Button>
                 </Link>
