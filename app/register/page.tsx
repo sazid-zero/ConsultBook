@@ -272,7 +272,7 @@ export default function RegisterPage() {
           <Card className="border-none shadow-xl lg:shadow-none lg:bg-transparent">
             <CardContent className="p-2 sm:p-6 lg:p-0">
               <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-                <TabsList className="grid w-full grid-cols-2 mb-8 bg-gray-100/80 p-1 rounded-xl">
+                <TabsList className="grid w-full grid-cols-2 mb-8 bg-gray-100/80 rounded-xl">
                   <TabsTrigger 
                     value="client" 
                     className="rounded-lg data-[state=active]:bg-white data-[state=active]:shadow-sm"
@@ -281,7 +281,7 @@ export default function RegisterPage() {
                   </TabsTrigger>
                   <TabsTrigger 
                     value="consultant" 
-                    className="rounded-lg data-[state=active]:bg-white data-[state=active]:shadow-sm py-2.5"
+                    className="rounded-lg data-[state=active]:bg-white data-[state=active]:shadow-sm"
                   >
                     Consultant
                   </TabsTrigger>

@@ -141,21 +141,21 @@ export default function LoginPage() {
       </div>
 
       {/* Right Column: Login Card */}
-      <div className="w-full lg:w-1/2 flex items-center justify-center p-8 bg-gray-50/50">
+      <div className="w-full lg:w-1/2 flex items-center justify-center p-2 sm:p-8 bg-gray-50/50">
         <div className="w-full max-w-md">
-          <div className="lg:hidden flex items-center justify-center mb-8">
-            <Calendar className="h-10 w-10 text-blue-600" />
-            <span className="ml-3 text-3xl font-bold text-gray-900">ConsultBook</span>
+          <div className="lg:hidden flex items-center justify-center mb-8 mr-6">
+            <Calendar className="h-8 w-8 text-blue-600" />
+            <span className="ml-3 text-2xl font-bold text-gray-900">ConsultBook</span>
           </div>
 
           <Card className="border-none shadow-xl lg:shadow-none lg:bg-transparent">
-            <CardHeader className="space-y-1 px-0 pb-8 text-center lg:text-left">
-              <CardTitle className="text-3xl font-bold tracking-tight">Welcome Back</CardTitle>
+            <CardHeader className="space-y-1 px-2 pb-8 text-center lg:text-left">
+              <CardTitle className="text-2xl font-bold tracking-tight">Welcome Back</CardTitle>
               <CardDescription className="text-base">
                 Choose your login method and access your account
               </CardDescription>
             </CardHeader>
-            <CardContent className="px-0">
+            <CardContent className="px-2 sm:px-0">
               <Tabs defaultValue="user" className="w-full">
                 <TabsList className="grid w-full grid-cols-2 mb-8 bg-gray-100/80">
                   <TabsTrigger value="user" className="data-[state=active]:bg-white data-[state=active]:shadow-sm">User Login</TabsTrigger>
