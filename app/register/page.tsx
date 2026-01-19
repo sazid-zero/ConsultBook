@@ -223,7 +223,7 @@ export default function RegisterPage() {
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
       <Card className="w-full max-w-4xl">
         <CardHeader className="text-center">
-          <div className="flex items-center justify-center mb-4">
+          <div className="flex items-center justify-center mb-4 mr-6">
             <Calendar className="h-8 w-8 text-blue-600" />
             <span className="ml-2 text-2xl font-bold text-gray-900">ConsultBook</span>
           </div>
