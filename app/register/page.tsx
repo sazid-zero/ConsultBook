@@ -17,7 +17,6 @@ import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Calendar, Eye, EyeOff, Check, X } from "lucide-react"
-import FileUpload from "@/components/file-upload"
 import { toast } from "sonner"
 import { Trash2, Plus } from "lucide-react"
 
@@ -33,6 +32,7 @@ interface QualificationEntry {
   id: string
   name: string
   certificateFile: UploadedFile | null
+  certificateRawFile?: File // Store the actual File object for upload
 }
 
 // Global Consultant Type Categories (immutable)
@@ -85,7 +85,6 @@ export default function RegisterPage() {
   const [loading, setLoading] = useState(false)
   const [activeTab, setActiveTab] = useState("client")
   const [certificates, setCertificates] = useState<UploadedFile[]>([])
-  const [profilePhoto, setProfilePhoto] = useState<UploadedFile[]>([])
   const [showPassword, setShowPassword] = useState(false)
   const [errors, setErrors] = useState<Record<string, string>>({})
 
@@ -161,7 +160,6 @@ export default function RegisterPage() {
         email: clientData.email,
         phone: clientData.phone,
         role: "client",
-        profilePhoto: profilePhoto.length > 0 ? profilePhoto[0].url : null,
         createdAt: new Date().toISOString(),
       })
 
@@ -180,16 +178,45 @@ export default function RegisterPage() {
     }
   }
 
+  const uploadCertificateToCloudinary = async (file: File, qualId: string): Promise<string | null> => {
+    const formData = new FormData()
+    formData.append("file", file)
+    
+    const uploadPreset = process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET
+    const cloudName = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME || "duj3kbfhm"
+    
+    if (!uploadPreset) {
+      console.error("Cloudinary upload preset not configured")
+      return null
+    }
+    
+    formData.append("upload_preset", uploadPreset)
+    formData.append("folder", `consultbook/temp-qual-${qualId}/certificate`)
+    
+    try {
+      const response = await fetch(`https://api.cloudinary.com/v1_1/${cloudName}/auto/upload`, {
+        method: "POST",
+        body: formData,
+      })
+      
+      if (!response.ok) {
+        console.error("Upload failed:", response.statusText)
+        return null
+      }
+      
+      const data = await response.json()
+      return data.secure_url
+    } catch (error) {
+      console.error("Upload error:", error)
+      return null
+    }
+  }
+
+
   const handleConsultantRegister = async (e: React.FormEvent) => {
     e.preventDefault()
     setErrors({})
 
-    if (activeTab === "consultant" && profilePhoto.length === 0) {
-      toast.error("Profile Photo Required", {
-        description: "Please upload a profile photo."
-      })
-      return
-    }
 
     if (!consultantData.consultantType) {
       setErrors({ consultantType: "Please select a consultant type" })
@@ -237,13 +264,26 @@ export default function RegisterPage() {
         .map(s => s.trim())
         .filter(s => s.length > 0)
 
-      // Transform qualifications for Firestore
-      const qualificationsData = qualifications.map((qual) => ({
-        id: qual.id,
-        name: qual.name,
-        certificateUrl: qual.certificateFile?.url,
-        certificateFilename: qual.certificateFile?.filename,
-        status: "pending", // Will be reviewed by admin
+      // Upload certificates and transform qualifications for Firestore
+      const qualificationsData = await Promise.all(qualifications.map(async (qual) => {
+        let certificateUrl = qual.certificateFile?.url
+        let certificateFilename = qual.certificateFile?.filename
+        
+        // If we have a raw file, upload it to Cloudinary
+        if (qual.certificateRawFile && certificateUrl?.startsWith('blob:')) {
+          const uploadedUrl = await uploadCertificateToCloudinary(qual.certificateRawFile, qual.id)
+          if (uploadedUrl) {
+            certificateUrl = uploadedUrl
+          }
+        }
+        
+        return {
+          id: qual.id,
+          name: qual.name,
+          certificateUrl: certificateUrl,
+          certificateFilename: certificateFilename,
+          status: "pending",
+        }
       }))
 
       await setDoc(doc(db, "users", userCredential.user.uid), {
@@ -259,7 +299,6 @@ export default function RegisterPage() {
         state: consultantData.state,
         country: consultantData.country,
         qualifications: qualificationsData,
-        profilePhoto: profilePhoto.length > 0 ? profilePhoto[0].url : null,
         approved: false,
         createdAt: new Date().toISOString(),
       })
@@ -301,11 +340,20 @@ export default function RegisterPage() {
     setQualifications(qualifications.filter(q => q.id !== id))
   }
 
-  const handleQualificationCertificateUpload = (id: string, files: UploadedFile[]) => {
-    if (files.length > 0) {
+  const handleQualificationCertificateUpload = (id: string, event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0]
+    if (file) {
+      // Create a file object with the required properties
+      const uploadedFile: UploadedFile = {
+        id: `cert-${Date.now()}`,
+        filename: file.name,
+        originalName: file.name,
+        url: URL.createObjectURL(file), // Create a temporary URL for preview
+        contentType: file.type,
+      }
       setQualifications(
         qualifications.map(q => 
-          q.id === id ? { ...q, certificateFile: files[0] } : q
+          q.id === id ? { ...q, certificateFile: uploadedFile, certificateRawFile: file } : q
         )
       )
     }
@@ -313,9 +361,13 @@ export default function RegisterPage() {
 
   const handleRemoveCertificate = (id: string) => {
     setQualifications(
-      qualifications.map(q =>
-        q.id === id ? { ...q, certificateFile: null } : q
-      )
+      qualifications.map(q => {
+        if (q.id === id && q.certificateFile?.url.startsWith('blob:')) {
+          // Clean up blob URL
+          URL.revokeObjectURL(q.certificateFile.url)
+        }
+        return q.id === id ? { ...q, certificateFile: null, certificateRawFile: undefined } : q
+      })
     )
   }
 
@@ -429,17 +481,6 @@ export default function RegisterPage() {
                       />
                     </div>
 
-                    <div className="space-y-2">
-                      <Label>Profile Photo (Optional)</Label>
-                      <FileUpload
-                        userId="temp-client"
-                        fileType="profile"
-                        onUploadComplete={setProfilePhoto}
-                        multiple={false}
-                        accept="image/*"
-                        maxSize={5}
-                      />
-                    </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div className="space-y-2">
@@ -686,13 +727,16 @@ export default function RegisterPage() {
                                     </Button>
                                   </div>
                                 ) : (
-                                  <FileUpload
-                                    userId={`temp-qual-${qual.id}`}
-                                    fileType="certificate"
-                                    onUploadComplete={(files) => handleQualificationCertificateUpload(qual.id, files)}
-                                    multiple={false}
+                                  <input
+                                    type="file"
                                     accept=".pdf,.jpg,.jpeg,.png"
-                                    maxSize={10}
+                                    onChange={(e) => handleQualificationCertificateUpload(qual.id, e)}
+                                    className="block w-full text-sm text-gray-500
+                                      file:mr-4 file:py-2 file:px-4
+                                      file:rounded-md file:border-0
+                                      file:text-sm file:font-semibold
+                                      file:bg-blue-50 file:text-blue-700
+                                      hover:file:bg-blue-100"
                                   />
                                 )}
                               </div>
@@ -709,17 +753,6 @@ export default function RegisterPage() {
                       )}
                     </div>
 
-                    <div className="space-y-2">
-                      <Label>Profile Photo *</Label>
-                      <FileUpload
-                        userId="temp-consultant"
-                        fileType="profile"
-                        onUploadComplete={setProfilePhoto}
-                        multiple={false}
-                        accept="image/*"
-                        maxSize={5}
-                      />
-                    </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div className="space-y-2">
