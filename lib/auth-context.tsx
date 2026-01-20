@@ -6,18 +6,7 @@ import { createContext, useContext, useEffect, useState } from "react"
 import { type User, onAuthStateChanged } from "firebase/auth"
 import { doc, getDoc } from "firebase/firestore"
 import { auth, db } from "./firebase"
-
-interface UserData {
-  uid: string
-  email: string
-  role: "client" | "consultant" | "admin"
-  name: string
-  approved?: boolean
-  profilePhoto?: string
-  phone?: string
-  specialty?: string
-  createdAt?: string
-}
+import type { UserData } from "./types"
 
 interface AuthContextType {
   user: User | null

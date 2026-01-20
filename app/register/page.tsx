@@ -19,6 +19,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Calendar, Eye, EyeOff, Check, X } from "lucide-react"
 import FileUpload from "@/components/file-upload"
 import { toast } from "sonner"
+import { Trash2, Plus } from "lucide-react"
 
 interface UploadedFile {
   id: string
@@ -27,6 +28,26 @@ interface UploadedFile {
   url: string
   contentType: string
 }
+
+interface QualificationEntry {
+  id: string
+  name: string
+  certificateFile: UploadedFile | null
+}
+
+// Global Consultant Type Categories (immutable)
+const CONSULTANT_TYPES = [
+  { value: "medical", label: "Medical Consultant" },
+  { value: "legal", label: "Legal Consultant" },
+  { value: "financial", label: "Financial Advisor" },
+  { value: "technical", label: "Technical Consultant" },
+  { value: "business", label: "Business Consultant" },
+  { value: "career", label: "Career Coach" },
+  { value: "wellness", label: "Wellness Expert" },
+  { value: "education", label: "Education Specialist" },
+  { value: "marketing", label: "Marketing Consultant" },
+  { value: "other", label: "Other" },
+]
 
 const PasswordStrength = ({ password }: { password: string }) => {
   const checks = [
@@ -94,10 +115,16 @@ export default function RegisterPage() {
     phone: "",
     password: "",
     confirmPassword: "",
-    specialty: "",
+    consultantType: "",
+    specializations: "",
     address: "",
-    qualifications: "",
+    city: "",
+    state: "",
+    country: "",
   })
+
+  const [qualifications, setQualifications] = useState<QualificationEntry[]>([])
+  const [newQualName, setNewQualName] = useState("")
 
   useEffect(() => {
     const type = searchParams.get("type")
@@ -164,6 +191,32 @@ export default function RegisterPage() {
       return
     }
 
+    if (!consultantData.consultantType) {
+      setErrors({ consultantType: "Please select a consultant type" })
+      return
+    }
+
+    if (!consultantData.specializations.trim()) {
+      setErrors({ specializations: "Please enter at least one specialization" })
+      return
+    }
+
+    if (qualifications.length === 0) {
+      toast.error("Qualifications Required", {
+        description: "Please add at least one qualification with a certificate."
+      })
+      return
+    }
+
+    // Check all qualifications have both name and certificate
+    const invalidQual = qualifications.find(q => !q.name.trim() || !q.certificateFile)
+    if (invalidQual) {
+      toast.error("Incomplete Qualifications", {
+        description: "Each qualification must have a name and certificate uploaded."
+      })
+      return
+    }
+
     if (consultantData.password !== consultantData.confirmPassword) {
       setErrors({ confirmPassword: "Passwords don't match" })
       return
@@ -174,16 +227,24 @@ export default function RegisterPage() {
       return
     }
 
-    if (certificates.length === 0) {
-      toast.error("Required Documents Missing", {
-        description: "Please upload at least one certificate for review."
-      })
-      return
-    }
-
     setLoading(true)
     try {
       const userCredential = await createUserWithEmailAndPassword(auth, consultantData.email, consultantData.password)
+
+      // Transform specializations string to array
+      const specializationsList = consultantData.specializations
+        .split(",")
+        .map(s => s.trim())
+        .filter(s => s.length > 0)
+
+      // Transform qualifications for Firestore
+      const qualificationsData = qualifications.map((qual) => ({
+        id: qual.id,
+        name: qual.name,
+        certificateUrl: qual.certificateFile?.url,
+        certificateFilename: qual.certificateFile?.filename,
+        status: "pending", // Will be reviewed by admin
+      }))
 
       await setDoc(doc(db, "users", userCredential.user.uid), {
         uid: userCredential.user.uid,
@@ -191,21 +252,22 @@ export default function RegisterPage() {
         email: consultantData.email,
         phone: consultantData.phone,
         role: "consultant",
-        specialty: consultantData.specialty,
+        consultantType: consultantData.consultantType, // Global immutable category
+        specializations: specializationsList,
         address: consultantData.address,
-        qualifications: consultantData.qualifications,
-        certificates: certificates.map((cert) => ({
-          id: cert.id,
-          filename: cert.filename,
-          originalName: cert.originalName,
-          url: cert.url,
-        })),
+        city: consultantData.city,
+        state: consultantData.state,
+        country: consultantData.country,
+        qualifications: qualificationsData,
         profilePhoto: profilePhoto.length > 0 ? profilePhoto[0].url : null,
         approved: false,
         createdAt: new Date().toISOString(),
       })
 
-      router.push("/register/success")
+      toast.success("Application Submitted!", {
+        description: "Your application has been submitted for review. We'll notify you soon."
+      })
+      router.push("/dashboard/consultant")
     } catch (error: any) {
       if (error.code === 'auth/email-already-in-use') {
         setErrors({ email: "Email already exists" })
@@ -215,6 +277,46 @@ export default function RegisterPage() {
     } finally {
       setLoading(false)
     }
+  }
+
+  const handleAddQualification = () => {
+    if (!newQualName.trim()) {
+      toast.error("Enter Qualification Name", {
+        description: "Please enter a name for the qualification before adding."
+      })
+      return
+    }
+    
+    const newEntry: QualificationEntry = {
+      id: Date.now().toString(),
+      name: newQualName,
+      certificateFile: null,
+    }
+    
+    setQualifications([...qualifications, newEntry])
+    setNewQualName("")
+  }
+
+  const handleRemoveQualification = (id: string) => {
+    setQualifications(qualifications.filter(q => q.id !== id))
+  }
+
+  const handleQualificationCertificateUpload = (id: string, files: UploadedFile[]) => {
+    if (files.length > 0) {
+      setQualifications(
+        qualifications.map(q => 
+          q.id === id ? { ...q, certificateFile: files[0] } : q
+        )
+      )
+    }
+  }
+
+  const handleRemoveCertificate = (id: string) => {
+    setQualifications(
+      qualifications.map(q =>
+        q.id === id ? { ...q, certificateFile: null } : q
+      )
+    )
   }
 
   return (
@@ -427,22 +529,36 @@ export default function RegisterPage() {
                         />
                       </div>
                       <div className="space-y-2">
-                        <Label htmlFor="consultant-specialty">Specialty</Label>
-                        <Select onValueChange={(value) => setConsultantData({ ...consultantData, specialty: value })}>
-                          <SelectTrigger className="h-11">
-                            <SelectValue placeholder="Select specialty" />
+                        <Label htmlFor="consultant-type" className={errors.consultantType ? "text-destructive" : ""}>Consultant Type *</Label>
+                        <Select onValueChange={(value) => setConsultantData({ ...consultantData, consultantType: value })}>
+                          <SelectTrigger className={`h-11 ${errors.consultantType ? "border-destructive" : ""}`}>
+                            <SelectValue placeholder="Select your field" />
                           </SelectTrigger>
                           <SelectContent>
-                            <SelectItem value="medical">Medical</SelectItem>
-                            <SelectItem value="legal">Legal</SelectItem>
-                            <SelectItem value="financial">Financial</SelectItem>
-                            <SelectItem value="technical">Technical</SelectItem>
-                            <SelectItem value="business">Business</SelectItem>
-                            <SelectItem value="education">Education</SelectItem>
-                            <SelectItem value="other">Other</SelectItem>
+                            {CONSULTANT_TYPES.map(type => (
+                              <SelectItem key={type.value} value={type.value}>
+                                {type.label}
+                              </SelectItem>
+                            ))}
                           </SelectContent>
                         </Select>
+                        {errors.consultantType && <p className="text-xs text-destructive font-medium">{errors.consultantType}</p>}
                       </div>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="consultant-specializations" className={errors.specializations ? "text-destructive" : ""}>Specializations *</Label>
+                      <Input
+                        id="consultant-specializations"
+                        type="text"
+                        required
+                        placeholder="e.g., Cardiac Surgery, Taxation, Startup Strategy"
+                        value={consultantData.specializations}
+                        onChange={(e) => setConsultantData({ ...consultantData, specializations: e.target.value })}
+                        className={`h-11 ${errors.specializations ? "border-destructive" : ""}`}
+                      />
+                      <p className="text-xs text-gray-500">Separate multiple specializations with commas</p>
+                      {errors.specializations && <p className="text-xs text-destructive font-medium">{errors.specializations}</p>}
                     </div>
 
                     <div className="space-y-2">
@@ -457,16 +573,140 @@ export default function RegisterPage() {
                       />
                     </div>
 
-                    <div className="space-y-2">
-                      <Label htmlFor="consultant-qualifications">Qualifications</Label>
-                      <Textarea
-                        id="consultant-qualifications"
-                        required
-                        value={consultantData.qualifications}
-                        onChange={(e) => setConsultantData({ ...consultantData, qualifications: e.target.value })}
-                        placeholder="List your qualifications, degrees, certifications..."
-                        rows={3}
-                      />
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="consultant-city">City</Label>
+                        <Input
+                          id="consultant-city"
+                          type="text"
+                          required
+                          placeholder="e.g., New York"
+                          value={consultantData.city}
+                          onChange={(e) => setConsultantData({ ...consultantData, city: e.target.value })}
+                          className="h-11"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="consultant-state">State / Province</Label>
+                        <Input
+                          id="consultant-state"
+                          type="text"
+                          required
+                          placeholder="e.g., New York"
+                          value={consultantData.state}
+                          onChange={(e) => setConsultantData({ ...consultantData, state: e.target.value })}
+                          className="h-11"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="consultant-country">Country</Label>
+                        <Input
+                          id="consultant-country"
+                          type="text"
+                          required
+                          placeholder="e.g., United States"
+                          value={consultantData.country}
+                          onChange={(e) => setConsultantData({ ...consultantData, country: e.target.value })}
+                          className="h-11"
+                        />
+                      </div>
+                    </div>
+
+                    {/* Qualifications Section */}
+                    <div className="space-y-4 border-t pt-6">
+                      <div>
+                        <Label className="text-base font-semibold">Qualifications & Certificates *</Label>
+                        <p className="text-xs text-gray-500 mt-1">Add your qualifications with supporting certificates for admin review</p>
+                      </div>
+
+                      {/* Add New Qualification */}
+                      <div className="bg-blue-50 p-4 rounded-lg border border-blue-200 space-y-3">
+                        <Label htmlFor="qual-name" className="font-medium">Add New Qualification</Label>
+                        <Input
+                          id="qual-name"
+                          type="text"
+                          placeholder="e.g., MD in Cardiology, CFA Level 3"
+                          value={newQualName}
+                          onChange={(e) => setNewQualName(e.target.value)}
+                          onKeyPress={(e) => {
+                            if (e.key === "Enter") {
+                              e.preventDefault()
+                              handleAddQualification()
+                            }
+                          }}
+                          className="h-11"
+                        />
+                        <Button
+                          type="button"
+                          onClick={handleAddQualification}
+                          variant="outline"
+                          className="w-full border-blue-300 text-blue-600 hover:bg-blue-100"
+                        >
+                          <Plus className="h-4 w-4 mr-2" />
+                          Add Qualification
+                        </Button>
+                      </div>
+
+                      {/* Listed Qualifications */}
+                      {qualifications.length > 0 && (
+                        <div className="space-y-3 border-t pt-4">
+                          {qualifications.map((qual, idx) => (
+                            <div key={qual.id} className="bg-gray-50 p-4 rounded-lg border border-gray-200 space-y-3">
+                              <div className="flex justify-between items-start">
+                                <div className="flex-1">
+                                  <p className="font-semibold text-gray-900">{idx + 1}. {qual.name}</p>
+                                </div>
+                                <Button
+                                  type="button"
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => handleRemoveQualification(qual.id)}
+                                  className="text-red-600 hover:bg-red-50"
+                                >
+                                  <Trash2 className="h-4 w-4" />
+                                </Button>
+                              </div>
+
+                              <div className="space-y-2">
+                                <Label className="text-sm">Upload Certificate (PDF or Image)</Label>
+                                {qual.certificateFile ? (
+                                  <div className="bg-white p-3 rounded border border-green-200 flex items-center justify-between">
+                                    <div className="flex items-center gap-2">
+                                      <Check className="h-4 w-4 text-green-600" />
+                                      <span className="text-sm text-green-700 font-medium">{qual.certificateFile.originalName}</span>
+                                    </div>
+                                    <Button
+                                      type="button"
+                                      variant="ghost"
+                                      size="sm"
+                                      onClick={() => handleRemoveCertificate(qual.id)}
+                                      className="text-red-600 hover:bg-red-50"
+                                    >
+                                      <Trash2 className="h-3 w-3" />
+                                    </Button>
+                                  </div>
+                                ) : (
+                                  <FileUpload
+                                    userId={`temp-qual-${qual.id}`}
+                                    fileType="certificate"
+                                    onUploadComplete={(files) => handleQualificationCertificateUpload(qual.id, files)}
+                                    multiple={false}
+                                    accept=".pdf,.jpg,.jpeg,.png"
+                                    maxSize={10}
+                                  />
+                                )}
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+
+                      {/* Empty State */}
+                      {qualifications.length === 0 && (
+                        <div className="text-center py-8 bg-gray-50 rounded-lg border-2 border-dashed border-gray-300">
+                          <p className="text-gray-600 text-sm">No qualifications added yet</p>
+                        </div>
+                      )}
                     </div>
 
                     <div className="space-y-2">
@@ -478,18 +718,6 @@ export default function RegisterPage() {
                         multiple={false}
                         accept="image/*"
                         maxSize={5}
-                      />
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label>Upload Certificates *</Label>
-                      <FileUpload
-                        userId="temp-consultant"
-                        fileType="certificate"
-                        onUploadComplete={setCertificates}
-                        multiple={true}
-                        accept=".pdf,image/*"
-                        maxSize={10}
                       />
                     </div>
 

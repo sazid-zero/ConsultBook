@@ -1,8 +1,8 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 import { useRouter } from "next/navigation"
-import { doc, getDoc, setDoc } from "firebase/firestore"
+import { doc, getDoc, setDoc, updateDoc } from "firebase/firestore"
 import { db } from "@/lib/firebase"
 import { useAuth } from "@/lib/auth-context"
 import { Button } from "@/components/ui/button"
@@ -12,19 +12,41 @@ import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Badge } from "@/components/ui/badge"
-import { Save, Eye, MapPin, DollarSign, Clock, User } from "lucide-react"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { Save, Eye, MapPin, DollarSign, Clock, User, Upload, Trash2 } from "lucide-react"
 import Link from "next/link"
-import FileUpload from "@/components/file-upload"
+import Image from "next/image"
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog"
 
 interface ConsultantProfile {
   bio: string
   hourlyRate: number
+  address: string
   city: string
+  state: string
+  country: string
   experience: string
   languages: string[]
   consultationModes: string[]
   published: boolean
   profilePhoto?: string
+  coverPhoto?: string
+  // New portfolio fields
+  certifications?: Array<{ name: string; issuer: string; year: number }>
+  qualifications?: Array<{ degree: string; university: string; year: number }>
+  specializations?: string[]
+  portfolioItems?: Array<{ title: string; description: string; imageUrl?: string }>
+  socialLinks?: { linkedin?: string; twitter?: string; website?: string; instagram?: string }
+  hoursDelivered?: number
+  verified?: boolean
   availability: {
     [key: string]: string[] // day: time slots
   }
@@ -43,10 +65,14 @@ export default function ConsultantProfilePage() {
   const router = useRouter()
   const [saving, setSaving] = useState(false)
   const [profilePhoto, setProfilePhoto] = useState<UploadedFile[]>([])
+  const [coverPhoto, setCoverPhoto] = useState<UploadedFile[]>([])
   const [profile, setProfile] = useState<ConsultantProfile>({
     bio: "",
     hourlyRate: 0,
+    address: "",
     city: "",
+    state: "",
+    country: "",
     experience: "",
     languages: [],
     consultationModes: [],
@@ -61,6 +87,21 @@ export default function ConsultantProfilePage() {
       sunday: [],
     },
   })
+  const [uploading, setUploading] = useState(false)
+  const [profileHover, setProfileHover] = useState(false)
+  const [coverHover, setCoverHover] = useState(false)
+  const [removeConfirmOpen, setRemoveConfirmOpen] = useState(false)
+  const [certifications, setCertifications] = useState<Array<{ id: string; name: string; issuer: string; year: number }>>([])
+  const [qualifications, setQualifications] = useState<Array<{ id: string; degree: string; university: string; year: number }>>([])
+  const [specializations, setSpecializations] = useState<string[]>([])
+  const [portfolioItems, setPortfolioItems] = useState<Array<{ id: string; title: string; description: string; imageUrl?: string }>>([])
+  const [socialLinks, setSocialLinks] = useState<{ linkedin?: string; twitter?: string; website?: string; instagram?: string }>({ linkedin: '', twitter: '', website: '', instagram: '' })
+  const [certInput, setCertInput] = useState({ name: '', issuer: '', year: new Date().getFullYear() })
+  const [qualInput, setQualInput] = useState({ degree: '', university: '', year: new Date().getFullYear() })
+  const [specInput, setSpecInput] = useState('')
+  const [portItem, setPortItem] = useState({ title: '', description: '' })
+  const profileFileInputRef = useRef<HTMLInputElement>(null)
+  const coverFileInputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
     if (!loading && (!user || userData?.role !== "consultant")) {
@@ -90,24 +131,223 @@ export default function ConsultantProfilePage() {
     }
   }, [user, userData, loading, router])
 
+  // Helper function to remove undefined values from object
+  const removeUndefinedValues = (obj: Record<string, any>): Record<string, any> => {
+    const cleaned: Record<string, any> = {}
+    for (const [key, value] of Object.entries(obj)) {
+      if (value !== undefined) {
+        cleaned[key] = value
+      }
+    }
+    return cleaned
+  }
+
+  const uploadToCloudinary = async (file: File, fileType: "cover" | "profile"): Promise<string | null> => {
+    const formData = new FormData()
+    formData.append("file", file)
+    
+    const uploadPreset = process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET
+    const cloudName = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME || "duj3kbfhm"
+    
+    if (!uploadPreset) {
+      console.error("Cloudinary upload preset not configured")
+      alert("Upload configuration error. Please contact support.")
+      return null
+    }
+    
+    formData.append("upload_preset", uploadPreset)
+    formData.append("folder", `consultbook/${user?.uid}/${fileType}-photo`)
+
+    try {
+      const response = await fetch(`https://api.cloudinary.com/v1_1/${cloudName}/image/upload`, {
+        method: "POST",
+        body: formData,
+      })
+
+      const data = await response.json()
+      
+      if (!response.ok) {
+        console.error("Cloudinary error:", data)
+        throw new Error(data.error?.message || "Upload failed")
+      }
+      
+      return data.secure_url
+    } catch (error) {
+      console.error("Error uploading to Cloudinary:", error)
+      alert(`Upload failed: ${error instanceof Error ? error.message : "Unknown error"}`)
+      return null
+    }
+  }
+
+  const handleProfilePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    setUploading(true)
+    try {
+      const url = await uploadToCloudinary(file, "profile")
+      if (url) {
+        const profileData = removeUndefinedValues({
+          ...profile,
+          profilePhoto: url,
+          consultantId: user!.uid,
+          consultantName: userData!.name,
+          consultantEmail: userData!.email,
+          updatedAt: new Date().toISOString(),
+        })
+        await setDoc(doc(db, "consultantProfiles", user!.uid), profileData, { merge: true })
+        setProfile(prev => ({ ...prev, profilePhoto: url }))
+        setProfilePhoto([{
+          id: "existing",
+          filename: "profile.jpg",
+          originalName: "Profile Photo",
+          url: url,
+          contentType: "image/jpeg",
+        }])
+      }
+    } catch (error) {
+      console.error("Error updating profile photo:", error)
+    } finally {
+      setUploading(false)
+      if (profileFileInputRef.current) profileFileInputRef.current.value = ""
+    }
+  }
+
+  const handleCoverPhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    setUploading(true)
+    try {
+      const url = await uploadToCloudinary(file, "cover")
+      if (url) {
+        const profileData = removeUndefinedValues({
+          ...profile,
+          coverPhoto: url,
+          consultantId: user!.uid,
+          consultantName: userData!.name,
+          consultantEmail: userData!.email,
+          updatedAt: new Date().toISOString(),
+        })
+        await setDoc(doc(db, "consultantProfiles", user!.uid), profileData, { merge: true })
+        setProfile(prev => ({ ...prev, coverPhoto: url }))
+        setCoverPhoto([{
+          id: "existing",
+          filename: "cover.jpg",
+          originalName: "Cover Photo",
+          url: url,
+          contentType: "image/jpeg",
+        }])
+      }
+    } catch (error) {
+      console.error("Error updating cover photo:", error)
+    } finally {
+      setUploading(false)
+      if (coverFileInputRef.current) coverFileInputRef.current.value = ""
+    }
+  }
+
+  const handleRemoveCoverPhoto = async () => {
+    setUploading(true)
+    try {
+      const profileData = removeUndefinedValues({
+        ...profile,
+        coverPhoto: null,
+        consultantId: user!.uid,
+        consultantName: userData!.name,
+        consultantEmail: userData!.email,
+        updatedAt: new Date().toISOString(),
+      })
+      await setDoc(doc(db, "consultantProfiles", user!.uid), profileData, { merge: true })
+      setProfile(prev => ({ ...prev, coverPhoto: undefined }))
+      setCoverPhoto([])
+    } catch (error) {
+      console.error("Error removing cover photo:", error)
+    } finally {
+      setUploading(false)
+    }
+  }
+
   const fetchProfile = async () => {
     try {
       const profileDoc = await getDoc(doc(db, "consultantProfiles", user!.uid))
+      let dataToLoad = null
+      
       if (profileDoc.exists()) {
-        const data = profileDoc.data() as ConsultantProfile
-        setProfile(data)
-        if (data.profilePhoto) {
+        dataToLoad = profileDoc.data() as ConsultantProfile
+      } else {
+        // If consultantProfiles doesn't exist, load from users collection (registration data)
+        const userDoc = await getDoc(doc(db, "users", user!.uid))
+        if (userDoc.exists()) {
+          dataToLoad = userDoc.data() as any
+        }
+      }
+      
+      if (dataToLoad) {
+        // Merge with defaults to ensure all fields exist
+        setProfile({
+          bio: dataToLoad.bio || "",
+          hourlyRate: dataToLoad.hourlyRate || 0,
+          address: dataToLoad.address || "",
+          city: dataToLoad.city || "",
+          state: dataToLoad.state || "",
+          country: dataToLoad.country || "",
+          experience: dataToLoad.experience || "",
+          languages: dataToLoad.languages || [],
+          consultationModes: dataToLoad.consultationModes || [],
+          published: dataToLoad.published || false,
+          profilePhoto: dataToLoad.profilePhoto,
+          coverPhoto: dataToLoad.coverPhoto,
+          certifications: dataToLoad.certifications,
+          qualifications: dataToLoad.qualifications,
+          specializations: dataToLoad.specializations,
+          portfolioItems: dataToLoad.portfolioItems,
+          socialLinks: dataToLoad.socialLinks,
+          hoursDelivered: dataToLoad.hoursDelivered,
+          verified: dataToLoad.verified,
+          availability: dataToLoad.availability || {
+            monday: [],
+            tuesday: [],
+            wednesday: [],
+            thursday: [],
+            friday: [],
+            saturday: [],
+            sunday: [],
+          },
+        })
+        if (dataToLoad.certifications) setCertifications((dataToLoad.certifications as any[]).map((c, i) => ({ id: String(i), ...c })))
+        if (dataToLoad.qualifications) setQualifications((dataToLoad.qualifications as any[]).map((q, i) => ({ id: String(i), ...q })))
+        // Handle specializations - if it's a string (from registration), split by comma; if array, use as-is
+        if (dataToLoad.specializations) {
+          const specs = typeof dataToLoad.specializations === 'string'
+            ? dataToLoad.specializations.split(',').map((s: string) => s.trim()).filter((s: string) => s)
+            : dataToLoad.specializations as string[]
+          setSpecializations(specs)
+        }
+        if (dataToLoad.portfolioItems) setPortfolioItems((dataToLoad.portfolioItems as any[]).map((p, i) => ({ id: String(i), ...p })))
+        if (dataToLoad.socialLinks) setSocialLinks(dataToLoad.socialLinks)
+        if (dataToLoad.profilePhoto) {
           setProfilePhoto([
             {
               id: "existing",
               filename: "profile.jpg",
               originalName: "Profile Photo",
-              url: data.profilePhoto,
+              url: dataToLoad.profilePhoto,
               contentType: "image/jpeg",
             },
           ])
         }
-      } else {
+        if (dataToLoad.coverPhoto) {
+          setCoverPhoto([
+            {
+              id: "existing",
+              filename: "cover.jpg",
+              originalName: "Cover Photo",
+              url: dataToLoad.coverPhoto,
+              contentType: "image/jpeg",
+            },
+          ])
+        }
       }
     } catch (error) {
       console.error("Error fetching profile:", error)
@@ -116,7 +356,7 @@ export default function ConsultantProfilePage() {
 
   const handleSaveProfile = async () => {
     if (!profile.bio.trim() || profile.hourlyRate <= 0 || !profile.city.trim()) {
-      alert("Please fill in all required fields!")
+      alert("Please fill in all required fields (Bio, Hourly Rate, City)!")
       return
     }
 
@@ -127,18 +367,32 @@ export default function ConsultantProfilePage() {
 
     setSaving(true)
     try {
-      const profileData = {
+      const profileData = removeUndefinedValues({
         ...profile,
         profilePhoto: profilePhoto.length > 0 ? profilePhoto[0].url : null,
+        coverPhoto: coverPhoto.length > 0 ? coverPhoto[0].url : null,
+        certifications: certifications.map(({ id, ...rest }) => rest),
+        qualifications: qualifications.map(({ id, ...rest }) => rest),
+        specializations,
+        portfolioItems: portfolioItems.map(({ id, ...rest }) => rest),
+        socialLinks,
         consultantId: user.uid,
         consultantName: userData!.name,
         consultantEmail: userData!.email,
-        specialty: userData!.specialty,
         updatedAt: new Date().toISOString(),
-      }
+      })
 
       // Use setDoc instead of updateDoc to create document if it doesn't exist
       await setDoc(doc(db, "consultantProfiles", user.uid), profileData, { merge: true })
+
+      // Also update the users collection with location data
+      await setDoc(doc(db, "users", user.uid), {
+        address: profile.address,
+        city: profile.city,
+        state: profile.state,
+        country: profile.country,
+        updatedAt: new Date().toISOString(),
+      }, { merge: true })
 
       alert("Profile saved successfully!")
     } catch (error) {
@@ -162,20 +416,34 @@ export default function ConsultantProfilePage() {
 
     setSaving(true)
     try {
-      const profileData = {
+      const profileData = removeUndefinedValues({
         ...profile,
         published: true,
         profilePhoto: profilePhoto.length > 0 ? profilePhoto[0].url : null,
+        coverPhoto: coverPhoto.length > 0 ? coverPhoto[0].url : null,
+        certifications: certifications.map(({ id, ...rest }) => rest),
+        qualifications: qualifications.map(({ id, ...rest }) => rest),
+        specializations,
+        portfolioItems: portfolioItems.map(({ id, ...rest }) => rest),
+        socialLinks,
         consultantId: user.uid,
         consultantName: userData!.name,
         consultantEmail: userData!.email,
-        specialty: userData!.specialty,
         publishedAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
-      }
+      })
 
       // Use setDoc instead of updateDoc to create document if it doesn't exist
       await setDoc(doc(db, "consultantProfiles", user.uid), profileData, { merge: true })
+
+      // Also update the users collection with location data
+      await setDoc(doc(db, "users", user.uid), {
+        address: profile.address,
+        city: profile.city,
+        state: profile.state,
+        country: profile.country,
+        updatedAt: new Date().toISOString(),
+      }, { merge: true })
 
       setProfile({ ...profile, published: true })
       alert("Profile published successfully! You are now available for bookings.")
@@ -213,7 +481,7 @@ export default function ConsultantProfilePage() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-8">
           {/* Main Profile Form */}
-          <div className="md:col-span-2 space-y-6 md:h-screen md:overflow-y-auto">
+          <div className="md:col-span-2 space-y-6">
             {/* Basic Information */}
             <Card>
               <CardHeader>
@@ -226,15 +494,106 @@ export default function ConsultantProfilePage() {
               <CardContent className="space-y-4">
                 <div className="space-y-2">
                   <Label>Profile Photo</Label>
-                  <FileUpload
-                    userId={user?.uid || ""}
-                    fileType="profile"
-                    onUploadComplete={setProfilePhoto}
-                    multiple={false}
-                    accept="image/*"
-                    maxSize={5}
-                  />
+                  <div 
+                    className="relative w-32 h-32 group"
+                    onMouseEnter={() => setProfileHover(true)}
+                    onMouseLeave={() => setProfileHover(false)}
+                  >
+                    <Avatar className="h-32 w-32 border-4 border-gray-200">
+                      <AvatarImage src={profilePhoto.length > 0 ? profilePhoto[0].url : profile.profilePhoto} className="object-cover" />
+                      <AvatarFallback className="bg-blue-100 text-blue-700 text-2xl font-bold">
+                        {userData?.name.charAt(0) || 'C'}
+                      </AvatarFallback>
+                    </Avatar>
+                    
+                    {/* Hover Overlay */}
+                    {profileHover && (
+                      <div className="absolute inset-0 bg-black bg-opacity-50 rounded-full flex items-center justify-center cursor-pointer"
+                        onClick={() => profileFileInputRef.current?.click()}
+                      >
+                        <Upload className="h-8 w-8 text-white" />
+                      </div>
+                    )}
+
+                    {/* Hidden Profile File Input */}
+                    <input
+                      ref={profileFileInputRef}
+                      type="file"
+                      accept="image/*"
+                      className="hidden"
+                      onChange={handleProfilePhotoUpload}
+                      disabled={uploading}
+                    />
+                  </div>
                 </div>
+
+                <div className="space-y-2">
+                  <Label>Cover Photo</Label>
+                  <div 
+                    className="relative w-full h-32 group rounded-lg overflow-hidden border-2 border-gray-200"
+                    onMouseEnter={() => setCoverHover(true)}
+                    onMouseLeave={() => setCoverHover(false)}
+                  >
+                    {profile.coverPhoto ? (
+                      <Image
+                        src={profile.coverPhoto}
+                        alt="Cover Photo"
+                        layout="fill"
+                        objectFit="cover"
+                        className="rounded-lg"
+                      />
+                    ) : (
+                      <div className="w-full h-full bg-gradient-to-r from-blue-500 via-blue-600 to-indigo-600 rounded-lg" />
+                    )}
+                    
+                    {/* Hover Overlay */}
+                    {coverHover && (
+                      <div className="absolute inset-0 bg-black bg-opacity-40 rounded-lg flex items-center justify-center gap-4">
+                        <Button 
+                          className="bg-white text-gray-900 hover:bg-gray-100 gap-2"
+                          onClick={() => coverFileInputRef.current?.click()}
+                        >
+                          <Upload className="h-4 w-4" />
+                          {profile.coverPhoto ? "Change Photo" : "Upload Photo"}
+                        </Button>
+                        {profile.coverPhoto && (
+                          <Button 
+                            className="bg-red-500 text-white hover:bg-red-600 gap-2"
+                            onClick={() => setRemoveConfirmOpen(true)}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                            Remove
+                          </Button>
+                        )}
+                      </div>
+                    )}
+
+                    {/* Hidden Cover File Input */}
+                    <input
+                      ref={coverFileInputRef}
+                      type="file"
+                      accept="image/*"
+                      className="hidden"
+                      onChange={handleCoverPhotoUpload}
+                      disabled={uploading}
+                    />
+                  </div>
+                </div>
+
+                <AlertDialog open={removeConfirmOpen} onOpenChange={setRemoveConfirmOpen}>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>Remove cover photo?</AlertDialogTitle>
+                      <AlertDialogDescription>
+                        This will permanently remove your cover photo. You can upload a new one anytime.
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <div className="flex justify-end gap-3">
+                      <AlertDialogCancel>Cancel</AlertDialogCancel>
+                      <AlertDialogAction onClick={handleRemoveCoverPhoto} className="bg-red-600 hover:bg-red-700">Remove</AlertDialogAction>
+                    </div>
+                  </AlertDialogContent>
+                </AlertDialog>
 
                 <div className="space-y-2">
                   <Label htmlFor="bio">Professional Bio *</Label>
@@ -268,6 +627,37 @@ export default function ConsultantProfilePage() {
                       onChange={(e) => setProfile({ ...profile, city: e.target.value })}
                       placeholder="Dhaka"
                       required
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="address">Address</Label>
+                  <Input
+                    id="address"
+                    value={profile.address}
+                    onChange={(e) => setProfile({ ...profile, address: e.target.value })}
+                    placeholder="Street address"
+                  />
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="state">State / Province</Label>
+                    <Input
+                      id="state"
+                      value={profile.state}
+                      onChange={(e) => setProfile({ ...profile, state: e.target.value })}
+                      placeholder="e.g., Dhaka"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="country">Country</Label>
+                    <Input
+                      id="country"
+                      value={profile.country}
+                      onChange={(e) => setProfile({ ...profile, country: e.target.value })}
+                      placeholder="e.g., Bangladesh"
                     />
                   </div>
                 </div>
@@ -320,6 +710,204 @@ export default function ConsultantProfilePage() {
                       <SelectItem value="Arabic">Arabic</SelectItem>
                     </SelectContent>
                   </Select>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Consultation Modes */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Certifications & Education</CardTitle>
+                <CardDescription>Build your professional credentials</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                {/* Certifications Section */}
+                <div className="space-y-3">
+                  <h3 className="font-semibold text-gray-900">Certifications</h3>
+                  <div className="space-y-2">
+                    {certifications.map((cert) => (
+                      <div key={cert.id} className="flex items-center justify-between p-3 bg-blue-50 rounded-lg border border-blue-200">
+                        <div>
+                          <p className="font-medium text-gray-900">{cert.name}</p>
+                          <p className="text-sm text-gray-600">{cert.issuer} • {cert.year}</p>
+                        </div>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => setCertifications(certifications.filter(c => c.id !== cert.id))}
+                          className="text-red-600 hover:bg-red-50"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
+                  <div className="space-y-2 pt-2">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                      <Input
+                        placeholder="Certification name"
+                        value={certInput.name}
+                        onChange={(e) => setCertInput({ ...certInput, name: e.target.value })}
+                      />
+                      <Input
+                        placeholder="Issuer"
+                        value={certInput.issuer}
+                        onChange={(e) => setCertInput({ ...certInput, issuer: e.target.value })}
+                      />
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
+                      <Input
+                        type="number"
+                        placeholder="Year"
+                        value={certInput.year}
+                        onChange={(e) => setCertInput({ ...certInput, year: Number(e.target.value) })}
+                      />
+                      <Button
+                        onClick={() => {
+                          if (certInput.name && certInput.issuer && certInput.year) {
+                            setCertifications([...certifications, { id: Date.now().toString(), ...certInput }])
+                            setCertInput({ name: '', issuer: '', year: new Date().getFullYear() })
+                          }
+                        }}
+                        className="bg-blue-600 hover:bg-blue-700"
+                      >
+                        Add Certification
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="border-t pt-4">
+                  {/* Qualifications Section */}
+                  <div className="space-y-3">
+                    <h3 className="font-semibold text-gray-900">Education</h3>
+                    <div className="space-y-2">
+                      {qualifications.map((qual) => (
+                        <div key={qual.id} className="flex items-center justify-between p-3 bg-green-50 rounded-lg border border-green-200">
+                          <div>
+                            <p className="font-medium text-gray-900">{qual.degree}</p>
+                            <p className="text-sm text-gray-600">{qual.university} • {qual.year}</p>
+                          </div>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => setQualifications(qualifications.filter(q => q.id !== qual.id))}
+                            className="text-red-600 hover:bg-red-50"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      ))}
+                    </div>
+                    <div className="space-y-2 pt-2">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                        <Input
+                          placeholder="Degree (e.g., Bachelor, Master)"
+                          value={qualInput.degree}
+                          onChange={(e) => setQualInput({ ...qualInput, degree: e.target.value })}
+                        />
+                        <Input
+                          placeholder="University"
+                          value={qualInput.university}
+                          onChange={(e) => setQualInput({ ...qualInput, university: e.target.value })}
+                        />
+                      </div>
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
+                        <Input
+                          type="number"
+                          placeholder="Year"
+                          value={qualInput.year}
+                          onChange={(e) => setQualInput({ ...qualInput, year: Number(e.target.value) })}
+                        />
+                        <Button
+                          onClick={() => {
+                            if (qualInput.degree && qualInput.university && qualInput.year) {
+                              setQualifications([...qualifications, { id: Date.now().toString(), ...qualInput }])
+                              setQualInput({ degree: '', university: '', year: new Date().getFullYear() })
+                            }
+                          }}
+                          className="bg-green-600 hover:bg-green-700"
+                        >
+                          Add Education
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Specializations & Social Links */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Specializations & Social Links</CardTitle>
+                <CardDescription>Highlight your expertise and connect socially</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                {/* Specializations */}
+                <div className="space-y-3">
+                  <Label>Specializations</Label>
+                  <div className="flex gap-2">
+                    <Input
+                      placeholder="e.g., Marketing, Finance, Tech"
+                      value={specInput}
+                      onChange={(e) => setSpecInput(e.target.value)}
+                    />
+                    <Button
+                      onClick={() => {
+                        if (specInput && !specializations.includes(specInput)) {
+                          setSpecializations([...specializations, specInput])
+                          setSpecInput('')
+                        }
+                      }}
+                      className="bg-blue-600 hover:bg-blue-700"
+                    >
+                      Add
+                    </Button>
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    {specializations.map((spec) => (
+                      <Badge
+                        key={spec}
+                        className="bg-indigo-100 text-indigo-700 border-indigo-200 px-3 py-1 flex items-center gap-2"
+                      >
+                        {spec}
+                        <button
+                          onClick={() => setSpecializations(specializations.filter(s => s !== spec))}
+                          className="ml-1 hover:text-red-600"
+                        >
+                          ×
+                        </button>
+                      </Badge>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Social Links */}
+                <div className="space-y-3 pt-4 border-t">
+                  <Label>Social Links</Label>
+                  <div className="space-y-2">
+                    <Input
+                      placeholder="LinkedIn URL"
+                      value={socialLinks.linkedin || ''}
+                      onChange={(e) => setSocialLinks({ ...socialLinks, linkedin: e.target.value })}
+                    />
+                    <Input
+                      placeholder="Twitter URL"
+                      value={socialLinks.twitter || ''}
+                      onChange={(e) => setSocialLinks({ ...socialLinks, twitter: e.target.value })}
+                    />
+                    <Input
+                      placeholder="Website URL"
+                      value={socialLinks.website || ''}
+                      onChange={(e) => setSocialLinks({ ...socialLinks, website: e.target.value })}
+                    />
+                    <Input
+                      placeholder="Instagram URL"
+                      value={socialLinks.instagram || ''}
+                      onChange={(e) => setSocialLinks({ ...socialLinks, instagram: e.target.value })}
+                    />
+                  </div>
                 </div>
               </CardContent>
             </Card>
@@ -383,13 +971,18 @@ export default function ConsultantProfilePage() {
                     )}
                   </div>
                   <h3 className="font-semibold">  {userData?.name}</h3>
-                  <p className="text-sm text-gray-600">{userData?.specialty}</p>
+    
                 </div>
 
                 <div className="space-y-2 text-sm">
                   <div className="flex items-center">
                     <MapPin className="h-4 w-4 mr-2 text-gray-400" />
-                    <span>{profile.city || "City not set"}</span>
+                    <div className="flex flex-col">
+                      {profile.address && <span>{profile.address}</span>}
+                      <span className="font-medium">
+                        {[profile.city, profile.state, profile.country].filter(Boolean).join(", ") || "Location not set"}
+                      </span>
+                    </div>
                   </div>
                   <div className="flex items-center">
                     <DollarSign className="h-4 w-4 mr-2 text-gray-400" />

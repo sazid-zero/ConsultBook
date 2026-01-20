@@ -13,7 +13,6 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Calendar, Eye, EyeOff } from "lucide-react"
 import { toast } from "sonner"
 
@@ -24,8 +23,6 @@ export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false)
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
-  const [adminEmail, setAdminEmail] = useState("")
-  const [adminPassword, setAdminPassword] = useState("")
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
@@ -75,31 +72,6 @@ export default function LoginPage() {
           description: error.message
         })
       }
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  const handleAdminLogin = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setLoading(true)
-    setError(null)
-
-    try {
-      // Simple admin check - in production, use proper admin authentication
-      if (adminEmail === "admin@consultbook.com" && adminPassword === "admin123") {
-        localStorage.setItem("adminSession", "true")
-        toast.success("Admin Access Granted", {
-          description: "Redirecting to admin dashboard..."
-        })
-        router.push("/dashboard/admin")
-      } else {
-        setError("Invalid admin credentials")
-      }
-    } catch (error: any) {
-      toast.error("Admin Login Error", {
-        description: error.message
-      })
     } finally {
       setLoading(false)
     }
@@ -156,105 +128,51 @@ export default function LoginPage() {
               </CardDescription>
             </CardHeader>
             <CardContent className="px-2 sm:px-0">
-              <Tabs defaultValue="user" className="w-full">
-                <TabsList className="grid w-full grid-cols-2 mb-8 bg-gray-100/80">
-                  <TabsTrigger value="user" className="data-[state=active]:bg-white data-[state=active]:shadow-sm">User Login</TabsTrigger>
-                  <TabsTrigger value="admin" className="data-[state=active]:bg-white data-[state=active]:shadow-sm">Admin Login</TabsTrigger>
-                </TabsList>
-
-                <TabsContent value="user">
-                  <form onSubmit={handleUserLogin} className="space-y-5">
-                    {error && (
-                      <div className="p-3 rounded-lg bg-red-50 border border-red-100">
-                        <p className="text-sm font-medium text-red-600">{error}</p>
-                      </div>
-                    )}
-                    <div className="space-y-2">
-                      <Label htmlFor="email">Email</Label>
-                      <Input 
-                        id="email" 
-                        type="email" 
-                        required 
-                        value={email} 
-                        onChange={(e) => setEmail(e.target.value)} 
-                        placeholder="name@example.com"
-                        className="h-11"
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <div className="flex items-center justify-between">
-                        <Label htmlFor="password">Password</Label>
-                        <Link href="#" className="text-xs text-blue-600 hover:underline">Forgot password?</Link>
-                      </div>
-                      <div className="relative">
-                        <Input
-                          id="password"
-                          type={showPassword ? "text" : "password"}
-                          required
-                          value={password}
-                          onChange={(e) => setPassword(e.target.value)}
-                          className="pr-10 h-11"
-                        />
-                        <button
-                          type="button"
-                          onClick={() => setShowPassword(!showPassword)}
-                          className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
-                        >
-                          {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                        </button>
-                      </div>
-                    </div>
-                    <Button type="submit" className="w-full h-11 bg-blue-600 hover:bg-blue-700 text-base font-semibold" disabled={loading}>
-                      {loading ? "Signing in..." : "Sign In"}
-                    </Button>
-                  </form>
-                </TabsContent>
-
-                <TabsContent value="admin">
-                  <form onSubmit={handleAdminLogin} className="space-y-5">
-                    {error && (
-                      <div className="p-3 rounded-lg bg-red-50 border border-red-100">
-                        <p className="text-sm font-medium text-red-600">{error}</p>
-                      </div>
-                    )}
-                    <div className="space-y-2">
-                      <Label htmlFor="admin-email">Admin Email</Label>
-                      <Input
-                        id="admin-email"
-                        type="email"
-                        required
-                        value={adminEmail}
-                        onChange={(e) => setAdminEmail(e.target.value)}
-                        placeholder="admin@consultbook.com"
-                        className="h-11"
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="admin-password">Admin Password</Label>
-                      <div className="relative">
-                        <Input
-                          id="admin-password"
-                          type={showPassword ? "text" : "password"}
-                          required
-                          value={adminPassword}
-                          onChange={(e) => setAdminPassword(e.target.value)}
-                          className="pr-10 h-11"
-                        />
-                        <button
-                          type="button"
-                          onClick={() => setShowPassword(!showPassword)}
-                          className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
-                        >
-                          {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                        </button>
-                      </div>
-                    </div>
-                    <Button type="submit" className="w-full h-11 bg-gray-900 hover:bg-black text-base font-semibold" disabled={loading}>
-                      {loading ? "Verifying..." : "Admin Sign In"}
-                    </Button>
-                  </form>
-                </TabsContent>
-              </Tabs>
+              <form onSubmit={handleUserLogin} className="space-y-5">
+                {error && (
+                  <div className="p-3 rounded-lg bg-red-50 border border-red-100">
+                    <p className="text-sm font-medium text-red-600">{error}</p>
+                  </div>
+                )}
+                <div className="space-y-2">
+                  <Label htmlFor="email">Email</Label>
+                  <Input 
+                    id="email" 
+                    type="email" 
+                    required 
+                    value={email} 
+                    onChange={(e) => setEmail(e.target.value)} 
+                    placeholder="name@example.com"
+                    className="h-11"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <Label htmlFor="password">Password</Label>
+                    <Link href="#" className="text-xs text-blue-600 hover:underline">Forgot password?</Link>
+                  </div>
+                  <div className="relative">
+                    <Input
+                      id="password"
+                      type={showPassword ? "text" : "password"}
+                      required
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      className="pr-10 h-11"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
+                    >
+                      {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                    </button>
+                  </div>
+                </div>
+                <Button type="submit" className="w-full h-11 bg-blue-600 hover:bg-blue-700 text-base font-semibold" disabled={loading}>
+                  {loading ? "Signing in..." : "Sign In"}
+                </Button>
+              </form>
 
               <div className="mt-8 text-center border-t border-gray-100 pt-8">
                 <p className="text-sm text-gray-600">

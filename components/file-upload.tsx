@@ -8,7 +8,7 @@ import { CldUploadWidget } from 'next-cloudinary'
 
 interface FileUploadProps {
   userId: string
-  fileType: "certificate" | "profile"
+  fileType: "certificate" | "profile" | "cover-photo"
   onUploadComplete?: (files: UploadedFile[]) => void
   multiple?: boolean
   accept?: string

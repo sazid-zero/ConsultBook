@@ -83,6 +83,16 @@ export function Navbar({ notifications: propNotifications = [], unreadCount: pro
   const [logoutOpen, setLogoutOpen] = useState(false)
   
   // Local state for notifications (fetched from Firestore)
+
+
+
+
+
+
+
+
+
+
   const [notifications, setNotifications] = useState<Notification[]>(propNotifications)
   const [unreadCount, setUnreadCount] = useState(propUnreadCount)
 
@@ -116,6 +126,14 @@ export function Navbar({ notifications: propNotifications = [], unreadCount: pro
 
     fetchNotifications()
   }, [user, userData])
+
+  // Check if user is admin - AFTER all hooks defined
+  const isAdmin = typeof window !== 'undefined' && localStorage.getItem('adminSession') !== null
+  
+  // Don't render navbar for admin users
+  if (isAdmin || pathname.startsWith('/dashboard/admin')) {
+    return null
+  }
 
   // Mark notification as read
   const handleMarkNotificationAsRead = async (notificationId: string) => {
@@ -159,16 +177,18 @@ export function Navbar({ notifications: propNotifications = [], unreadCount: pro
     { name: "Home", href: "/", icon: Calendar },
     ...(user ? [
       { name: "Dashboard", href: getDashboardHref(), icon: LayoutDashboard },
-      ...(userData?.role === 'client' ? [{ name: "Find Consultants", href: "/book-consultant", icon: Search }] : []),
+      { name: "Find Consultants", href: "/book-consultant", icon: Search },
       { name: "Messages", href: "/messages", icon: MessageSquare },
+      
     ] : [
-      { name: "How It Works", href: "/#how-it-works", icon: MessageSquare },
+      { name: "Find Consultants", href: "/book-consultant", icon: Search },
       { name: "Help", href: "/help", icon: MessageSquare },
       { name: "Contact", href: "/contact", icon: MessageSquare }
     ]),
   ]
 
   const isActive = (path: string) => pathname === path
+
 
   return (
     <header className="sticky top-0 z-50 w-full bg-white/80 backdrop-blur-md border-b border-gray-100">

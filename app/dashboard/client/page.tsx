@@ -88,6 +88,7 @@ export default function ClientDashboard() {
   const [rescheduleData, setRescheduleData] = useState<RescheduleData>({ newDate: "", newTime: "", reason: "" })
   const [submittingReview, setSubmittingReview] = useState(false)
   const [processingAction, setProcessingAction] = useState(false)
+  const [logoutOpen, setLogoutOpen] = useState(false)
 
   // Add state for unread messages
   const [unreadMessages, setUnreadMessages] = useState(0)
@@ -292,251 +293,322 @@ export default function ClientDashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Quick Actions */}
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-6">Client Dashboard</h1>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <Link href="/book-consultant">
-              <Card className="hover:shadow-md transition-shadow cursor-pointer">
-                <CardContent className="flex items-center p-6">
-                  <Search className="h-8 w-8 text-blue-600 mr-4" />
-                  <div>
-                    <h3 className="font-semibold text-lg">Find Consultants</h3>
-                    <p className="text-gray-600">Search and book appointments</p>
-                  </div>
-                </CardContent>
-              </Card>
-            </Link>
-
-            <Link href="/book-consultant">
-              <Card className="hover:shadow-md transition-shadow cursor-pointer">
-                <CardContent className="flex items-center p-6">
-                  <Plus className="h-8 w-8 text-green-600 mr-4" />
-                  <div>
-                    <h3 className="font-semibold text-lg">Book Appointment</h3>
-                    <p className="text-gray-600">Schedule a new consultation</p>
-                  </div>
-                </CardContent>
-              </Card>
-            </Link>
+    <div className="min-h-screen bg-white">
+      {/* Header */}
+      <div className="border-b border-gray-100 sticky top-0 z-10 bg-white">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-3xl font-bold text-gray-900">Your Dashboard</h1>
+              <p className="text-gray-600 text-sm mt-1">Welcome back, {userData?.name}!</p>
+            </div>
+            <AlertDialog open={logoutOpen} onOpenChange={setLogoutOpen}>
+              <Button 
+                variant="outline" 
+                className="border-gray-300 text-gray-700 hover:bg-gray-50"
+                onClick={() => setLogoutOpen(true)}
+              >
+                <LogOut className="h-4 w-4 mr-2" />
+                Logout
+              </Button>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Are you sure you want to logout?</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    You will be signed out of your account.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <div className="flex justify-end gap-3">
+                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                  <AlertDialogAction onClick={handleLogout} className="bg-red-600 hover:bg-red-700">Logout</AlertDialogAction>
+                </div>
+              </AlertDialogContent>
+            </AlertDialog>
           </div>
         </div>
+      </div>
 
-        {/* Stats Cards */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Quick Stats */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Upcoming Appointments</CardTitle>
-              <Clock className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{upcomingAppointments.length}</div>
+          <Card className="border-gray-200 shadow-sm rounded-2xl overflow-hidden bg-gradient-to-br from-blue-50 to-white">
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-gray-600 text-sm font-medium mb-1">Upcoming</p>
+                  <p className="text-4xl font-bold text-gray-900">{upcomingAppointments.length}</p>
+                  <p className="text-xs text-gray-500 mt-2">appointments scheduled</p>
+                </div>
+                <div className="bg-blue-100 p-3 rounded-full">
+                  <Calendar className="h-6 w-6 text-blue-600" />
+                </div>
+              </div>
             </CardContent>
           </Card>
 
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Total Consultations</CardTitle>
-              <User className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{appointments.length}</div>
+          <Card className="border-gray-200 shadow-sm rounded-2xl overflow-hidden bg-gradient-to-br from-green-50 to-white">
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-gray-600 text-sm font-medium mb-1">Completed</p>
+                  <p className="text-4xl font-bold text-gray-900">{pastAppointments.length}</p>
+                  <p className="text-xs text-gray-500 mt-2">consultations done</p>
+                </div>
+                <div className="bg-green-100 p-3 rounded-full">
+                  <User className="h-6 w-6 text-green-600" />
+                </div>
+              </div>
             </CardContent>
           </Card>
 
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Completed Sessions</CardTitle>
-              <Calendar className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{pastAppointments.length}</div>
+          <Card className="border-gray-200 shadow-sm rounded-2xl overflow-hidden bg-gradient-to-br from-purple-50 to-white">
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-gray-600 text-sm font-medium mb-1">Messages</p>
+                  <p className="text-4xl font-bold text-gray-900">{unreadMessages}</p>
+                  <p className="text-xs text-gray-500 mt-2">unread messages</p>
+                </div>
+                <div className="bg-purple-100 p-3 rounded-full">
+                  <Bell className="h-6 w-6 text-purple-600" />
+                </div>
+              </div>
             </CardContent>
           </Card>
+        </div>
+
+        {/* Quick Actions */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+          <Link href="/book-consultant">
+            <Card className="border-gray-200 shadow-sm hover:shadow-md hover:border-blue-300 transition-all duration-300 cursor-pointer hover:-translate-y-1 rounded-2xl overflow-hidden group">
+              <CardContent className="p-6">
+                <div className="flex items-center gap-4">
+                  <div className="bg-blue-100 p-3 rounded-lg group-hover:bg-blue-200 transition-colors">
+                    <Search className="h-6 w-6 text-blue-600" />
+                  </div>
+                  <div>
+                    <h3 className="font-semibold text-lg text-gray-900 group-hover:text-blue-600 transition-colors">Find Consultants</h3>
+                    <p className="text-sm text-gray-600">Browse and book experts</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </Link>
+
+          <Link href="/book-consultant">
+            <Card className="border-gray-200 shadow-sm hover:shadow-md hover:border-green-300 transition-all duration-300 cursor-pointer hover:-translate-y-1 rounded-2xl overflow-hidden group">
+              <CardContent className="p-6">
+                <div className="flex items-center gap-4">
+                  <div className="bg-green-100 p-3 rounded-lg group-hover:bg-green-200 transition-colors">
+                    <Plus className="h-6 w-6 text-green-600" />
+                  </div>
+                  <div>
+                    <h3 className="font-semibold text-lg text-gray-900 group-hover:text-green-600 transition-colors">Book Appointment</h3>
+                    <p className="text-sm text-gray-600">Schedule a consultation</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </Link>
         </div>
 
         {/* Upcoming Appointments */}
-        <Card className="mb-8">
-          <CardHeader>
-            <CardTitle>Upcoming Appointments</CardTitle>
-            <CardDescription>Your scheduled consultations</CardDescription>
+        <Card className="border-gray-200 shadow-sm rounded-2xl overflow-hidden mb-8">
+          <CardHeader className="bg-gradient-to-r from-blue-50 to-white border-b border-gray-100 py-6">
+            <CardTitle className="text-2xl text-gray-900">Upcoming Appointments</CardTitle>
+            <CardDescription className="text-gray-600 mt-1">Your scheduled consultations</CardDescription>
           </CardHeader>
-          <CardContent>
+          <CardContent className="p-6">
             {loadingAppointments ? (
-              <div className="text-center py-4">Loading appointments...</div>
+              <div className="text-center py-12">
+                <div className="w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+                <p className="text-gray-500">Loading appointments...</p>
+              </div>
             ) : upcomingAppointments.length === 0 ? (
-              <div className="text-center py-8">
-                <Calendar className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                <p className="text-gray-500">No upcoming appointments</p>
+              <div className="text-center py-12">
+                <div className="bg-gray-100 p-4 rounded-full w-16 h-16 mx-auto mb-4 flex items-center justify-center">
+                  <Calendar className="h-8 w-8 text-gray-400" />
+                </div>
+                <p className="text-gray-900 font-semibold text-lg">No upcoming appointments</p>
+                <p className="text-gray-600 text-sm mt-2 mb-6">Book your first consultation today</p>
                 <Link href="/book-consultant">
-                  <Button className="mt-4">Book Your First Consultation</Button>
+                  <Button className="bg-blue-600 hover:bg-blue-700 text-white shadow-md">Book Consultation</Button>
                 </Link>
               </div>
             ) : (
               <div className="space-y-4">
                 {upcomingAppointments.map((appointment) => (
-                  <div key={appointment.id} className="flex items-center justify-between p-4 border rounded-lg">
-                    <div className="flex items-center space-x-4">
-                      <div className="bg-blue-100 p-2 rounded-full">
-                        <User className="h-5 w-5 text-blue-600" />
-                      </div>
-                      <div>
-                        <h4 className="font-semibold">{appointment.consultantName}</h4>
-                        <p className="text-sm text-gray-600">{appointment.consultantSpecialty}</p>
-                        <div className="flex items-center space-x-2 mt-1">
-                          <Badge variant="outline">{appointment.mode}</Badge>
-                          <span className="text-sm text-gray-500">
-                            {appointment.date} at {appointment.time}
-                          </span>
+                  <div key={appointment.id} className="group border border-gray-200 rounded-xl p-5 hover:border-blue-300 hover:bg-blue-50 transition-all duration-300">
+                    <div className="flex items-start justify-between gap-4">
+                      <div className="flex items-start gap-4 flex-1 min-w-0">
+                        <div className="bg-blue-100 p-2.5 rounded-full flex-shrink-0 group-hover:bg-blue-200 transition-colors">
+                          <User className="h-5 w-5 text-blue-600" />
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <h4 className="font-bold text-gray-900 text-base">{appointment.consultantName}</h4>
+                          <p className="text-sm text-blue-600 font-medium">{appointment.consultantSpecialty}</p>
+                          <div className="flex items-center gap-3 mt-2">
+                            <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200 capitalize text-xs">
+                              {appointment.mode.replace("-", " ")}
+                            </Badge>
+                            <span className="text-sm text-gray-600 flex items-center gap-1">
+                              <Calendar className="h-3.5 w-3.5" />
+                              {appointment.date} at {appointment.time}
+                            </span>
+                          </div>
                         </div>
                       </div>
-                    </div>
-                    <div className="text-right">
-                      <p className="font-semibold">৳{appointment.amount}</p>
-                      <div className="flex space-x-2 mt-2">
-                        {/* View Details Dialog */}
+                      <div className="text-right flex-shrink-0">
+                        <p className="text-lg font-bold text-gray-900">৳{appointment.amount}</p>
+                        <p className="text-xs text-gray-500 font-medium">{appointment.duration} min</p>
                         <Dialog>
                           <DialogTrigger asChild>
-                            <Button variant="outline" size="sm" onClick={() => setSelectedAppointment(appointment)}>
+                            <Button 
+                              variant="outline" 
+                              size="sm" 
+                              className="mt-3 text-xs border-gray-300 text-gray-700 hover:bg-white group-hover:border-blue-300 group-hover:text-blue-600"
+                              onClick={() => setSelectedAppointment(appointment)}
+                            >
                               View Details
                             </Button>
                           </DialogTrigger>
-                          <DialogContent className="max-w-2xl">
+                          <DialogContent className="max-w-2xl rounded-2xl">
                             <DialogHeader>
-                              <DialogTitle>Appointment Details</DialogTitle>
+                              <DialogTitle className="text-2xl">Appointment Details</DialogTitle>
                               <DialogDescription>
-                                Consultation with Dr. {selectedAppointment?.consultantName}
+                                Consultation with {selectedAppointment?.consultantName}
                               </DialogDescription>
                             </DialogHeader>
                             {selectedAppointment && (
-                              <div className="space-y-4">
+                              <div className="space-y-6">
                                 <div className="grid grid-cols-2 gap-4">
                                   <div>
-                                    <Label className="text-sm font-medium">Consultant</Label>
-                                    <p className="text-sm text-gray-600">Dr. {selectedAppointment.consultantName}</p>
+                                    <Label className="text-xs font-bold text-gray-400 uppercase tracking-wider block mb-1">Consultant</Label>
+                                    <p className="text-sm font-semibold text-gray-900">{selectedAppointment.consultantName}</p>
                                   </div>
                                   <div>
-                                    <Label className="text-sm font-medium">Specialty</Label>
-                                    <p className="text-sm text-gray-600">{selectedAppointment.consultantSpecialty}</p>
+                                    <Label className="text-xs font-bold text-gray-400 uppercase tracking-wider block mb-1">Specialty</Label>
+                                    <p className="text-sm font-semibold text-gray-900">{selectedAppointment.consultantSpecialty}</p>
                                   </div>
                                   <div>
-                                    <Label className="text-sm font-medium">Date & Time</Label>
-                                    <p className="text-sm text-gray-600">
-                                      {selectedAppointment.date} at {selectedAppointment.time}
-                                    </p>
+                                    <Label className="text-xs font-bold text-gray-400 uppercase tracking-wider block mb-1">Date & Time</Label>
+                                    <p className="text-sm font-semibold text-gray-900">{selectedAppointment.date} at {selectedAppointment.time}</p>
                                   </div>
                                   <div>
-                                    <Label className="text-sm font-medium">Duration</Label>
-                                    <p className="text-sm text-gray-600">{selectedAppointment.duration} minutes</p>
+                                    <Label className="text-xs font-bold text-gray-400 uppercase tracking-wider block mb-1">Duration</Label>
+                                    <p className="text-sm font-semibold text-gray-900">{selectedAppointment.duration} minutes</p>
                                   </div>
                                   <div>
-                                    <Label className="text-sm font-medium">Mode</Label>
-                                    <p className="text-sm text-gray-600 capitalize">
-                                      {selectedAppointment.mode.replace("-", " ")}
-                                    </p>
+                                    <Label className="text-xs font-bold text-gray-400 uppercase tracking-wider block mb-1">Mode</Label>
+                                    <p className="text-sm font-semibold text-gray-900 capitalize">{selectedAppointment.mode.replace("-", " ")}</p>
                                   </div>
                                   <div>
-                                    <Label className="text-sm font-medium">Amount</Label>
-                                    <p className="text-sm text-gray-600">৳{selectedAppointment.amount}</p>
+                                    <Label className="text-xs font-bold text-gray-400 uppercase tracking-wider block mb-1">Amount</Label>
+                                    <p className="text-sm font-semibold text-gray-900">৳{selectedAppointment.amount}</p>
                                   </div>
                                 </div>
 
                                 {selectedAppointment.notes && (
                                   <div>
-                                    <Label className="text-sm font-medium">Notes</Label>
-                                    <p className="text-sm text-gray-600">{selectedAppointment.notes}</p>
+                                    <Label className="text-xs font-bold text-gray-400 uppercase tracking-wider block mb-2">Notes</Label>
+                                    <p className="text-sm text-gray-700 bg-gray-50 p-3 rounded-lg">{selectedAppointment.notes}</p>
                                   </div>
                                 )}
 
-                                <div className="flex items-center space-x-2">
-                                  <Badge variant="secondary" className="bg-blue-100 text-blue-800">
-                                    {selectedAppointment.status}
-                                  </Badge>
+                                <div className="flex items-center gap-2 pt-4 border-t border-gray-100">
+                                  <Badge className="bg-blue-100 text-blue-700 border-none capitalize">{selectedAppointment.status}</Badge>
                                   <Badge variant="outline">{selectedAppointment.paymentStatus}</Badge>
                                 </div>
 
-                                {/* Action Buttons */}
-                                <div className="flex space-x-2 pt-4 border-t">
-                                  <Link href={`/messages?consultantId=${selectedAppointment.consultantId}`}>
-                                    <Button variant="outline" size="sm">
+                                <div className="flex gap-3 pt-4 border-t border-gray-100">
+                                  <Link href={`/messages?consultantId=${selectedAppointment.consultantId}`} className="flex-1">
+                                    <Button variant="outline" className="w-full border-gray-300 text-gray-700 hover:bg-gray-50">
                                       <MessageCircle className="h-4 w-4 mr-2" />
                                       Message
                                     </Button>
                                   </Link>
 
-                                  {/* Reschedule Dialog */}
                                   <Dialog>
                                     <DialogTrigger asChild>
-                                      <Button variant="outline" size="sm">
+                                      <Button variant="outline" className="flex-1 border-gray-300 text-gray-700 hover:bg-gray-50">
                                         <CalendarX className="h-4 w-4 mr-2" />
                                         Reschedule
                                       </Button>
                                     </DialogTrigger>
-                                    <DialogContent>
+                                    <DialogContent className="rounded-2xl">
                                       <DialogHeader>
                                         <DialogTitle>Reschedule Appointment</DialogTitle>
-                                        <DialogDescription>
-                                          Choose a new date and time for your appointment
-                                        </DialogDescription>
+                                        <DialogDescription>Choose a new date and time</DialogDescription>
                                       </DialogHeader>
                                       <div className="space-y-4">
                                         <div>
-                                          <Label htmlFor="newDate">New Date</Label>
+                                          <Label htmlFor="newDate" className="font-semibold">New Date</Label>
                                           <Input
                                             id="newDate"
                                             type="date"
                                             value={rescheduleData.newDate}
-                                            onChange={(e) =>
-                                              setRescheduleData({ ...rescheduleData, newDate: e.target.value })
-                                            }
+                                            onChange={(e) => setRescheduleData({ ...rescheduleData, newDate: e.target.value })}
                                             min={new Date().toISOString().split("T")[0]}
+                                            className="mt-1.5 border-gray-200"
                                           />
                                         </div>
                                         <div>
-                                          <Label htmlFor="newTime">New Time</Label>
+                                          <Label htmlFor="newTime" className="font-semibold">New Time</Label>
                                           <Input
                                             id="newTime"
                                             type="time"
                                             value={rescheduleData.newTime}
-                                            onChange={(e) =>
-                                              setRescheduleData({ ...rescheduleData, newTime: e.target.value })
-                                            }
+                                            onChange={(e) => setRescheduleData({ ...rescheduleData, newTime: e.target.value })}
+                                            className="mt-1.5 border-gray-200"
                                           />
                                         </div>
                                         <div>
-                                          <Label htmlFor="reason">Reason for Rescheduling</Label>
+                                          <Label htmlFor="reason" className="font-semibold">Reason for Rescheduling</Label>
                                           <Textarea
                                             id="reason"
                                             value={rescheduleData.reason}
-                                            onChange={(e) =>
-                                              setRescheduleData({ ...rescheduleData, reason: e.target.value })
-                                            }
-                                            placeholder="Please provide a reason..."
+                                            onChange={(e) => setRescheduleData({ ...rescheduleData, reason: e.target.value })}
+                                            placeholder="Let the consultant know why you're rescheduling..."
                                             rows={3}
+                                            className="mt-1.5 border-gray-200 resize-none"
                                           />
                                         </div>
                                         <Button
-                                          onClick={handleRescheduleAppointment}
+                                          onClick={() => handleRescheduleAppointment()}
                                           disabled={processingAction}
-                                          className="w-full"
+                                          className="w-full bg-blue-600 hover:bg-blue-700 text-white"
                                         >
-                                          {processingAction ? "Rescheduling..." : "Reschedule Appointment"}
+                                          {processingAction ? "Processing..." : "Confirm Reschedule"}
                                         </Button>
                                       </div>
                                     </DialogContent>
                                   </Dialog>
 
-                                  <Button
-                                    variant="destructive"
-                                    size="sm"
-                                    onClick={() => handleCancelAppointment(selectedAppointment.id)}
-                                    disabled={processingAction}
-                                  >
-                                    <X className="h-4 w-4 mr-2" />
-                                    {processingAction ? "Cancelling..." : "Cancel"}
-                                  </Button>
+                                  <AlertDialog>
+                                    <AlertDialogTrigger asChild>
+                                      <Button variant="destructive" size="sm" className="w-full bg-red-600 hover:bg-red-700">
+                                        <X className="h-4 w-4 mr-1" />
+                                        Cancel
+                                      </Button>
+                                    </AlertDialogTrigger>
+                                    <AlertDialogContent className="rounded-2xl">
+                                      <AlertDialogHeader>
+                                        <AlertDialogTitle>Cancel Appointment</AlertDialogTitle>
+                                        <AlertDialogDescription>
+                                          Are you sure you want to cancel this appointment? This action cannot be undone.
+                                        </AlertDialogDescription>
+                                      </AlertDialogHeader>
+                                      <AlertDialogFooter>
+                                        <AlertDialogCancel className="border-gray-300">Keep Appointment</AlertDialogCancel>
+                                        <AlertDialogAction 
+                                          className="bg-red-600 hover:bg-red-700"
+                                          onClick={() => handleCancelAppointment(selectedAppointment.id)}
+                                        >
+                                          Cancel Appointment
+                                        </AlertDialogAction>
+                                      </AlertDialogFooter>
+                                    </AlertDialogContent>
+                                  </AlertDialog>
                                 </div>
                               </div>
                             )}
@@ -552,85 +624,99 @@ export default function ClientDashboard() {
         </Card>
 
         {/* Consultation History */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Consultation History</CardTitle>
-            <CardDescription>Your past consultations</CardDescription>
+        <Card className="border-gray-200 shadow-sm rounded-2xl overflow-hidden">
+          <CardHeader className="bg-gradient-to-r from-green-50 to-white border-b border-gray-100 py-6">
+            <CardTitle className="text-2xl text-gray-900">Consultation History</CardTitle>
+            <CardDescription className="text-gray-600 mt-1">Your past consultations</CardDescription>
           </CardHeader>
-          <CardContent>
+          <CardContent className="p-6">
             {pastAppointments.length === 0 ? (
-              <div className="text-center py-8">
-                <Clock className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                <p className="text-gray-500">No consultation history yet</p>
+              <div className="text-center py-12">
+                <div className="bg-gray-100 p-4 rounded-full w-16 h-16 mx-auto mb-4 flex items-center justify-center">
+                  <Clock className="h-8 w-8 text-gray-400" />
+                </div>
+                <p className="text-gray-900 font-semibold text-lg">No consultation history yet</p>
+                <p className="text-gray-600 text-sm mt-2">Book your first consultation to get started</p>
               </div>
             ) : (
               <div className="space-y-4">
                 {pastAppointments.slice(0, 5).map((appointment) => (
-                  <div key={appointment.id} className="flex items-center justify-between p-4 border rounded-lg">
-                    <div className="flex items-center space-x-4">
-                      <div className="bg-green-100 p-2 rounded-full">
-                        <User className="h-5 w-5 text-green-600" />
+                  <div key={appointment.id} className="group border border-gray-200 rounded-xl p-5 hover:border-green-300 hover:bg-green-50 transition-all duration-300">
+                    <div className="flex items-start justify-between gap-4">
+                      <div className="flex items-start gap-4 flex-1 min-w-0">
+                        <div className="bg-green-100 p-2.5 rounded-full flex-shrink-0 group-hover:bg-green-200 transition-colors">
+                          <User className="h-5 w-5 text-green-600" />
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <h4 className="font-bold text-gray-900 text-base">{appointment.consultantName}</h4>
+                          <p className="text-sm text-blue-600 font-medium">{appointment.consultantSpecialty}</p>
+                          <span className="text-sm text-gray-600 flex items-center gap-1 mt-1">
+                            <Calendar className="h-3.5 w-3.5" />
+                            {appointment.date} at {appointment.time}
+                          </span>
+                        </div>
                       </div>
-                      <div>
-                        <h4 className="font-semibold">{appointment.consultantName}</h4>
-                        <p className="text-sm text-gray-600">{appointment.consultantSpecialty}</p>
-                        <span className="text-sm text-gray-500">
-                          {appointment.date} at {appointment.time}
-                        </span>
-                      </div>
-                    </div>
-                    <div className="text-right">
-                      <Badge variant="secondary">Completed</Badge>
-                      <div className="flex space-x-2 mt-2">
+                      <div className="text-right flex-shrink-0">
+                        <Badge className="bg-green-100 text-green-700 border-none mb-3">Completed</Badge>
                         {(appointment as any).reviewed ? (
-                          <Badge variant="outline" className="text-green-600">
-                            Reviewed
+                          <Badge variant="outline" className="text-green-600 border-green-200 bg-green-50 block w-full text-center text-xs">
+                            ✓ Reviewed
                           </Badge>
                         ) : (
                           <Dialog>
                             <DialogTrigger asChild>
-                              <Button variant="outline" size="sm" onClick={() => setSelectedAppointment(appointment)}>
-                                <Star className="h-4 w-4 mr-1" />
+                              <Button 
+                                variant="outline" 
+                                size="sm" 
+                                className="w-full text-xs border-gray-300 text-gray-700 hover:bg-white group-hover:border-green-300 group-hover:text-green-600"
+                                onClick={() => setSelectedAppointment(appointment)}
+                              >
+                                <Star className="h-3.5 w-3.5 mr-1" />
                                 Rate & Review
                               </Button>
                             </DialogTrigger>
-                            <DialogContent>
+                            <DialogContent className="rounded-2xl">
                               <DialogHeader>
-                                <DialogTitle>Rate & Review</DialogTitle>
+                                <DialogTitle className="text-2xl">Rate & Review</DialogTitle>
                                 <DialogDescription>
-                                  Share your experience with Dr. {selectedAppointment?.consultantName}
+                                  Share your experience with {selectedAppointment?.consultantName}
                                 </DialogDescription>
                               </DialogHeader>
-                              <div className="space-y-4">
+                              <div className="space-y-6">
                                 <div>
-                                  <Label className="text-sm font-medium">Rating</Label>
-                                  <div className="flex space-x-1 mt-2">
+                                  <Label className="font-semibold text-gray-900 mb-3 block">Your Rating</Label>
+                                  <div className="flex gap-2">
                                     {[1, 2, 3, 4, 5].map((star) => (
                                       <button
                                         key={star}
                                         onClick={() => setReviewData({ ...reviewData, rating: star })}
-                                        className={`p-1 ${
+                                        className={`p-1.5 transition-transform hover:scale-110 ${
                                           star <= reviewData.rating ? "text-yellow-400" : "text-gray-300"
                                         }`}
                                       >
-                                        <Star className="h-6 w-6 fill-current" />
+                                        <Star className="h-7 w-7 fill-current" />
                                       </button>
                                     ))}
                                   </div>
                                 </div>
 
                                 <div>
-                                  <Label htmlFor="comment">Comment</Label>
+                                  <Label htmlFor="comment" className="font-semibold text-gray-900 mb-2 block">Your Review</Label>
                                   <Textarea
                                     id="comment"
                                     value={reviewData.comment}
                                     onChange={(e) => setReviewData({ ...reviewData, comment: e.target.value })}
-                                    placeholder="Share your experience..."
+                                    placeholder="Tell others about your experience..."
                                     rows={4}
+                                    className="border-gray-200 resize-none focus-visible:ring-blue-500"
                                   />
                                 </div>
 
-                                <Button onClick={handleSubmitReview} disabled={submittingReview} className="w-full">
+                                <Button 
+                                  onClick={handleSubmitReview} 
+                                  disabled={submittingReview} 
+                                  className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold h-11"
+                                >
                                   {submittingReview ? "Submitting..." : "Submit Review"}
                                 </Button>
                               </div>

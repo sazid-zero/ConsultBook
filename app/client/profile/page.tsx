@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 import { useRouter } from "next/navigation"
 import { doc, updateDoc } from "firebase/firestore"
 import { updatePassword, updateEmail } from "firebase/auth"
@@ -11,9 +11,9 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Badge } from "@/components/ui/badge"
-import { Calendar, Save, User, Mail, Phone, Lock } from "lucide-react"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { Calendar, Save, User, Mail, Phone, Lock, Upload } from "lucide-react"
 import Link from "next/link"
-import FileUpload from "@/components/file-upload"
 
 interface UploadedFile {
   id: string
@@ -46,6 +46,9 @@ export default function ClientProfilePage() {
     confirm: "",
   })
   const [updatingPassword, setUpdatingPassword] = useState(false)
+  const [uploading, setUploading] = useState(false)
+  const [profileHover, setProfileHover] = useState(false)
+  const profileFileInputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
     if (!loading && (!user || userData?.role !== "client")) {
@@ -73,6 +76,71 @@ export default function ClientProfilePage() {
       }
     }
   }, [user, userData, loading, router])
+
+  const uploadToCloudinary = async (file: File): Promise<string | null> => {
+    const formData = new FormData()
+    formData.append("file", file)
+    
+    const uploadPreset = process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET
+    const cloudName = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME || "duj3kbfhm"
+    
+    if (!uploadPreset) {
+      console.error("Cloudinary upload preset not configured")
+      alert("Upload configuration error. Please contact support.")
+      return null
+    }
+    
+    formData.append("upload_preset", uploadPreset)
+    formData.append("folder", `consultbook/${user?.uid}/profile-photo`)
+
+    try {
+      const response = await fetch(`https://api.cloudinary.com/v1_1/${cloudName}/image/upload`, {
+        method: "POST",
+        body: formData,
+      })
+
+      const data = await response.json()
+      
+      if (!response.ok) {
+        console.error("Cloudinary error:", data)
+        throw new Error(data.error?.message || "Upload failed")
+      }
+      
+      return data.secure_url
+    } catch (error) {
+      console.error("Error uploading to Cloudinary:", error)
+      alert(`Upload failed: ${error instanceof Error ? error.message : "Unknown error"}`)
+      return null
+    }
+  }
+
+  const handleProfilePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    setUploading(true)
+    try {
+      const url = await uploadToCloudinary(file)
+      if (url) {
+        await updateDoc(doc(db, "users", user!.uid), {
+          profilePhoto: url,
+        })
+        setProfile(prev => ({ ...prev }))
+        setProfilePhoto([{
+          id: "existing",
+          filename: "profile.jpg",
+          originalName: "Profile Photo",
+          url: url,
+          contentType: "image/jpeg",
+        }])
+      }
+    } catch (error) {
+      console.error("Error updating profile photo:", error)
+    } finally {
+      setUploading(false)
+      if (profileFileInputRef.current) profileFileInputRef.current.value = ""
+    }
+  }
 
   const handleSaveProfile = async () => {
     if (!profile.name.trim() || !profile.phone.trim()) {
@@ -160,7 +228,7 @@ export default function ClientProfilePage() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-8 md:h-screen">
           {/* Main Profile Form */}
-          <div className="md:col-span-2 space-y-6 md:overflow-y-auto">
+          <div className="md:col-span-2 space-y-6">
             {/* Basic Information */}
             <Card>
               <CardHeader>
@@ -173,14 +241,37 @@ export default function ClientProfilePage() {
               <CardContent className="space-y-4">
                 <div className="space-y-2">
                   <Label>Profile Photo</Label>
-                  <FileUpload
-                    userId={user?.uid || ""}
-                    fileType="profile"
-                    onUploadComplete={setProfilePhoto}
-                    multiple={false}
-                    accept="image/*"
-                    maxSize={5}
-                  />
+                  <div 
+                    className="relative w-32 h-32 group"
+                    onMouseEnter={() => setProfileHover(true)}
+                    onMouseLeave={() => setProfileHover(false)}
+                  >
+                    <Avatar className="h-32 w-32 border-4 border-gray-200">
+                      <AvatarImage src={profilePhoto.length > 0 ? profilePhoto[0].url : userData?.profilePhoto} className="object-cover" />
+                      <AvatarFallback className="bg-blue-100 text-blue-700 text-2xl font-bold">
+                        {profile.name.charAt(0)}
+                      </AvatarFallback>
+                    </Avatar>
+                    
+                    {/* Hover Overlay */}
+                    {profileHover && (
+                      <div className="absolute inset-0 bg-black bg-opacity-50 rounded-full flex items-center justify-center cursor-pointer"
+                        onClick={() => profileFileInputRef.current?.click()}
+                      >
+                        <Upload className="h-8 w-8 text-white" />
+                      </div>
+                    )}
+
+                    {/* Hidden Profile File Input */}
+                    <input
+                      ref={profileFileInputRef}
+                      type="file"
+                      accept="image/*"
+                      className="hidden"
+                      onChange={handleProfilePhotoUpload}
+                      disabled={uploading}
+                    />
+                  </div>
                 </div>
 
                 <div className="space-y-2">
