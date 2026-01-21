@@ -8,14 +8,14 @@ import { Badge } from "@/components/ui/badge"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Separator } from "@/components/ui/separator"
 import { ScrollArea } from "@/components/ui/scroll-area"
-import { Star, MapPin, DollarSign, Clock, User, MessageSquare, ArrowLeft, CalendarCheck, Globe, Upload, Trash2, Award, BookOpen, Users, Briefcase, Linkedin, Twitter, ExternalLink, CheckCircle, Settings } from "lucide-react"
+import { Star, MapPin, DollarSign, Clock, User, MessageSquare, ArrowLeft, CalendarCheck, Globe, Upload, Trash2, Award, BookOpen, Users, Briefcase, Linkedin, Twitter, ExternalLink, CheckCircle, Settings, Calendar } from "lucide-react"
 import Link from "next/link"
 import { useAuth } from "@/lib/auth-context"
 import { getPublicConsultantProfile } from "@/app/actions/consultants"
 import { updateConsultantImage } from "@/app/actions/profile"
 import { getConsultantReviews, updateReview, deleteReview } from "@/app/actions/reviews"
-import { getProducts } from "@/app/actions/library"
-import { getWorkshops } from "@/app/actions/workshops"
+import { getProducts, deleteProduct } from "@/app/actions/library"
+import { getWorkshops, deleteWorkshop } from "@/app/actions/workshops"
 import Image from "next/image"
 import {
   AlertDialog,
@@ -261,6 +261,22 @@ export default function ConsultantPublicProfilePage({ params }: { params: { cons
       console.error("Error fetching consultant:", error)
     } finally {
       setLoading(false)
+    }
+  }
+
+  const handleDeleteProduct = async (id: string) => {
+    if (!confirm("Are you sure you want to delete this product?")) return
+    const result = await deleteProduct(id)
+    if (result.success) {
+      setProducts(products.filter(p => p.id !== id))
+    }
+  }
+
+  const handleDeleteWorkshop = async (id: string) => {
+    if (!confirm("Are you sure you want to delete this workshop?")) return
+    const result = await deleteWorkshop(id)
+    if (result.success) {
+      setWorkshops(workshops.filter(w => w.id !== id))
     }
   }
 
@@ -930,38 +946,61 @@ export default function ConsultantPublicProfilePage({ params }: { params: { cons
                   {products.length > 0 ? (
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                       {products.map((product: any) => (
-                        <Link key={product.id} href={`/library/${product.id}`}>
-                          <Card className="border-gray-200 rounded-2xl overflow-hidden hover:shadow-xl transition-all hover:-translate-y-1 group cursor-pointer">
-                            <div className="relative aspect-[4/3] overflow-hidden bg-gray-100">
-                              {product.thumbnailUrl ? (
-                                <img 
-                                  src={product.thumbnailUrl} 
-                                  alt={product.title}
-                                  className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
-                                />
-                              ) : (
-                                <div className="w-full h-full bg-gradient-to-br from-blue-600 to-indigo-700 flex items-center justify-center">
-                                  <BookOpen className="h-16 w-16 text-white/20" />
-                                </div>
-                              )}
-                              <Badge className="absolute top-3 left-3 bg-white/95 text-gray-900 border-none shadow-md text-xs font-bold px-3 py-1">
-                                {product.type.replace('_', ' ').toUpperCase()}
-                              </Badge>
+                        <div key={product.id} className="relative group">
+                          {isOwner && (
+                            <div className="absolute top-3 right-3 z-30 flex gap-2">
+                              <Link href="/dashboard/consultant/library">
+                                <Button variant="secondary" size="icon" className="h-8 w-8 rounded-full bg-white/95 backdrop-blur-sm shadow-md hover:bg-white text-blue-600 border border-gray-100 scale-90 group-hover:scale-100 transition-transform">
+                                  <Settings className="h-4 w-4" />
+                                </Button>
+                              </Link>
+                              <Button 
+                                variant="secondary" 
+                                size="icon" 
+                                className="h-8 w-8 rounded-full bg-white/95 backdrop-blur-sm shadow-md hover:bg-white text-red-600 border border-gray-100 scale-90 group-hover:scale-100 transition-transform"
+                                onClick={(e) => {
+                                  e.preventDefault();
+                                  e.stopPropagation();
+                                  handleDeleteProduct(product.id);
+                                }}
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
                             </div>
-                            <CardContent className="p-5">
-                              <h3 className="font-bold text-gray-900 text-lg mb-2 line-clamp-2 group-hover:text-blue-600 transition-colors">
-                                {product.title}
-                              </h3>
-                              <p className="text-sm text-gray-600 line-clamp-2 mb-4">{product.description}</p>
-                              <div className="flex items-center justify-between">
-                                <span className="text-2xl font-black text-gray-900">${(product.price / 100).toFixed(2)}</span>
-                                <Badge className="bg-blue-50 text-blue-600 border-none text-xs">
-                                  {product.salesCount || 0} sales
+                          )}
+                          <Link href={`/library/${product.id}`}>
+                            <Card className="border-gray-200 rounded-2xl overflow-hidden hover:shadow-xl transition-all hover:-translate-y-1 bg-white h-full">
+                              <div className="relative aspect-[4/3] overflow-hidden bg-gray-100">
+                                {product.thumbnailUrl ? (
+                                  <img 
+                                    src={product.thumbnailUrl} 
+                                    alt={product.title}
+                                    className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                                  />
+                                ) : (
+                                  <div className="w-full h-full bg-gradient-to-br from-blue-600 to-indigo-700 flex items-center justify-center">
+                                    <BookOpen className="h-16 w-16 text-white/20" />
+                                  </div>
+                                )}
+                                <Badge className="absolute top-3 left-3 bg-white/95 text-gray-900 border-none shadow-md text-[10px] font-black tracking-widest px-3 py-1">
+                                  {product.type.replace('_', ' ').toUpperCase()}
                                 </Badge>
                               </div>
-                            </CardContent>
-                          </Card>
-                        </Link>
+                              <CardContent className="p-5">
+                                <h3 className="font-bold text-gray-900 text-lg mb-2 line-clamp-2 group-hover:text-blue-600 transition-colors">
+                                  {product.title}
+                                </h3>
+                                <p className="text-sm text-gray-600 line-clamp-2 mb-4 h-10">{product.description}</p>
+                                <div className="flex items-center justify-between pt-2 border-t border-gray-50">
+                                  <span className="text-2xl font-black text-gray-900">${(product.price / 100).toFixed(2)}</span>
+                                  <Badge className="bg-blue-50 text-blue-600 border-none text-[10px] font-bold">
+                                    {product.salesCount || 0} sales
+                                  </Badge>
+                                </div>
+                              </CardContent>
+                            </Card>
+                          </Link>
+                        </div>
                       ))}
                     </div>
                   ) : (
@@ -980,50 +1019,73 @@ export default function ConsultantPublicProfilePage({ params }: { params: { cons
                   {workshops.length > 0 ? (
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                       {workshops.map((workshop: any) => (
-                        <Link key={workshop.id} href={`/sessions/${workshop.id}`}>
-                          <Card className="border-gray-200 rounded-2xl overflow-hidden hover:shadow-xl transition-all hover:-translate-y-1 group cursor-pointer">
-                            <div className="relative aspect-[16/10] overflow-hidden bg-gray-900">
-                              {workshop.thumbnailUrl ? (
-                                <img 
-                                  src={workshop.thumbnailUrl} 
-                                  alt={workshop.title}
-                                  className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300 opacity-60"
-                                />
-                              ) : (
-                                <div className="w-full h-full bg-gradient-to-br from-blue-600 to-indigo-700 flex items-center justify-center">
-                                  <Users className="h-16 w-16 text-white/20" />
-                                </div>
-                              )}
-                              <div className="absolute inset-0 bg-gradient-to-t from-gray-900/80 via-transparent to-transparent" />
-                              <Badge className="absolute top-3 left-3 bg-white/95 text-gray-900 border-none shadow-md text-xs font-bold px-3 py-1">
-                                {workshop.mode.toUpperCase()}
-                              </Badge>
-                              <div className="absolute bottom-3 left-3 right-3">
-                                <h3 className="font-bold text-white text-lg line-clamp-2 drop-shadow-md">
-                                  {workshop.title}
-                                </h3>
-                              </div>
+                        <div key={workshop.id} className="relative group">
+                          {isOwner && (
+                            <div className="absolute top-3 right-3 z-30 flex gap-2">
+                              <Link href="/dashboard/consultant/sessions">
+                                <Button variant="secondary" size="icon" className="h-8 w-8 rounded-full bg-white/95 backdrop-blur-sm shadow-md hover:bg-white text-blue-600 border border-gray-100 scale-90 group-hover:scale-100 transition-transform">
+                                  <Settings className="h-4 w-4" />
+                                </Button>
+                              </Link>
+                              <Button 
+                                variant="secondary" 
+                                size="icon" 
+                                className="h-8 w-8 rounded-full bg-white/95 backdrop-blur-sm shadow-md hover:bg-white text-red-600 border border-gray-100 scale-90 group-hover:scale-100 transition-transform"
+                                onClick={(e) => {
+                                  e.preventDefault();
+                                  e.stopPropagation();
+                                  handleDeleteWorkshop(workshop.id);
+                                }}
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
                             </div>
-                            <CardContent className="p-5">
-                              <div className="flex items-center gap-4 mb-3">
-                                <div className="flex items-center gap-2 text-sm text-gray-600">
-                                  <Clock className="h-4 w-4" />
-                                  {new Date(workshop.startDate).toLocaleDateString()}
-                                </div>
-                                <div className="flex items-center gap-2 text-sm text-gray-600">
-                                  <Users className="h-4 w-4" />
-                                  {workshop.registrations?.length || 0}/{workshop.maxParticipants || '∞'}
-                                </div>
-                              </div>
-                              <div className="flex items-center justify-between">
-                                <span className="text-2xl font-black text-gray-900">${(workshop.price / 100).toFixed(2)}</span>
-                                <Badge className="bg-green-50 text-green-600 border-none text-xs">
-                                  {workshop.duration} min
+                          )}
+                          <Link href={`/sessions/${workshop.id}`}>
+                            <Card className="border-gray-200 rounded-2xl overflow-hidden hover:shadow-xl transition-all hover:-translate-y-1 bg-white h-full cursor-pointer">
+                              <div className="relative aspect-[16/10] overflow-hidden bg-gray-900">
+                                {workshop.thumbnailUrl ? (
+                                  <img 
+                                    src={workshop.thumbnailUrl} 
+                                    alt={workshop.title}
+                                    className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500 opacity-60"
+                                  />
+                                ) : (
+                                  <div className="w-full h-full bg-gradient-to-br from-blue-600 to-indigo-700 flex items-center justify-center">
+                                    <Users className="h-16 w-16 text-white/20" />
+                                  </div>
+                                )}
+                                <div className="absolute inset-0 bg-gradient-to-t from-gray-900/80 via-transparent to-transparent" />
+                                <Badge className="absolute top-3 left-3 bg-white/95 text-gray-900 border-none shadow-md text-[10px] font-black tracking-widest px-3 py-1">
+                                  {workshop.mode.toUpperCase()}
                                 </Badge>
+                                <div className="absolute bottom-3 left-3 right-3">
+                                  <h3 className="font-bold text-white text-lg line-clamp-2 drop-shadow-md">
+                                    {workshop.title}
+                                  </h3>
+                                </div>
                               </div>
-                            </CardContent>
-                          </Card>
-                        </Link>
+                              <CardContent className="p-5">
+                                <div className="flex items-center gap-4 mb-3">
+                                  <div className="flex items-center gap-2 text-sm text-gray-600 font-medium">
+                                    <Calendar className="h-4 w-4 text-gray-400" />
+                                    {new Date(workshop.startDate).toLocaleDateString()}
+                                  </div>
+                                  <div className="flex items-center gap-2 text-sm text-gray-600 font-medium">
+                                    <Users className="h-4 w-4 text-gray-400" />
+                                    {workshop.registrations?.length || 0}/{workshop.maxParticipants || '∞'}
+                                  </div>
+                                </div>
+                                <div className="flex items-center justify-between pt-2 border-t border-gray-50">
+                                  <span className="text-2xl font-black text-gray-900">${(workshop.price / 100).toFixed(2)}</span>
+                                  <Badge className="bg-indigo-50 text-indigo-600 border-none text-[10px] font-bold">
+                                    {workshop.duration} min
+                                  </Badge>
+                                </div>
+                              </CardContent>
+                            </Card>
+                          </Link>
+                        </div>
                       ))}
                     </div>
                   ) : (

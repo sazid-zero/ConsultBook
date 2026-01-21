@@ -21,24 +21,21 @@ export function ProductPurchaseActions({ product }: ProductPurchaseActionsProps)
   const { user } = useAuth()
   const isOwner = user?.uid === product.consultantId
 
-  if (isOwner) {
-    return (
-      <div className="space-y-4 mb-8">
-        <Link href="/dashboard/consultant/library" className="w-full">
-          <Button className="w-full h-14 bg-gray-900 hover:bg-gray-800 text-white rounded-2xl font-black text-lg shadow-xl shadow-gray-200 transition-all hover:scale-[1.02] active:scale-[0.98]">
-            <Settings className="mr-2 h-5 w-5" />
-            Manage Product
-          </Button>
-        </Link>
-        <p className="text-center text-xs font-bold text-blue-600 uppercase tracking-widest">
-          This is your product
-        </p>
-      </div>
-    )
-  }
-
   return (
     <div className="space-y-4 mb-8">
+      {isOwner && (
+        <div className="space-y-2">
+          <Link href="/dashboard/consultant/library" className="w-full">
+            <Button className="w-full h-14 bg-gray-900 hover:bg-gray-800 text-white rounded-2xl font-black text-lg shadow-xl shadow-gray-200 transition-all hover:scale-[1.02] active:scale-[0.98]">
+              <Settings className="mr-2 h-5 w-5" />
+              Manage Product
+            </Button>
+          </Link>
+          <p className="text-center text-[10px] font-bold text-blue-600 uppercase tracking-widest mb-4">
+            This is your product
+          </p>
+        </div>
+      )}
       <Link href={`/checkout?productId=${product.id}`}>
         <Button className="w-full h-14 bg-blue-600 hover:bg-blue-700 text-white rounded-2xl font-black text-lg shadow-xl shadow-blue-100 transition-all hover:scale-[1.02] active:scale-[0.98]">
           Buy Now

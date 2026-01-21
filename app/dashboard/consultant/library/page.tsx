@@ -48,6 +48,9 @@ export default function ConsultantLibraryDashboard() {
   const [products, setProducts] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [isLaunchOpen, setIsLaunchOpen] = useState(false)
+  const [isEditOpen, setIsEditOpen] = useState(false)
+  const [selectedProduct, setSelectedProduct] = useState<any>(null)
+  const [isSubmitting, setIsSubmitting] = useState(false)
   
   // Form State
   const [newProduct, setNewProduct] = useState({
@@ -94,6 +97,8 @@ export default function ConsultantLibraryDashboard() {
       isPublished: newProduct.isPublished
     })
 
+    setIsSubmitting(false)
+
     if (result.success) {
       toast.success(`${newProduct.title} launched successfully!`)
       setIsLaunchOpen(false)
@@ -109,6 +114,51 @@ export default function ConsultantLibraryDashboard() {
       })
     } else {
       toast.error("Failed to launch product")
+    }
+  }
+
+  async function handleEdit(product: any) {
+    setSelectedProduct(product)
+    setNewProduct({
+      title: product.title,
+      description: product.description,
+      type: product.type,
+      price: (product.price / 100).toString(),
+      thumbnailUrl: product.thumbnailUrl || "",
+      fileUrl: product.fileUrl || "",
+      isPublished: product.isPublished
+    })
+    setIsEditOpen(true)
+  }
+
+  async function handleUpdate() {
+    if (!selectedProduct) return
+    if (!newProduct.title || !newProduct.price) {
+      toast.error("Title and Price are required")
+      return
+    }
+
+    setIsSubmitting(true)
+    const priceInCents = Math.round(parseFloat(newProduct.price) * 100)
+
+    const result = await updateProduct(selectedProduct.id, {
+      title: newProduct.title,
+      description: newProduct.description,
+      type: newProduct.type,
+      price: priceInCents,
+      thumbnailUrl: newProduct.thumbnailUrl,
+      fileUrl: newProduct.fileUrl,
+      isPublished: newProduct.isPublished
+    })
+
+    setIsSubmitting(false)
+
+    if (result.success) {
+      toast.success("Product updated successfully")
+      setIsEditOpen(false)
+      fetchProducts()
+    } else {
+      toast.error("Failed to update product")
     }
   }
 
@@ -219,7 +269,9 @@ export default function ConsultantLibraryDashboard() {
             </div>
             <DialogFooter className="p-8 bg-gray-50 border-t border-gray-100">
                <Button variant="ghost" className="rounded-xl font-bold" onClick={() => setIsLaunchOpen(false)}>Cancel</Button>
-               <Button className="bg-blue-600 hover:bg-blue-700 rounded-xl px-10 font-bold" onClick={handleLaunch}>Launch Product</Button>
+               <Button className="bg-blue-600 hover:bg-blue-700 rounded-xl px-10 font-bold" onClick={handleLaunch} disabled={isSubmitting}>
+                 {isSubmitting ? "Launching..." : "Launch Product"}
+               </Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>
@@ -299,7 +351,7 @@ export default function ConsultantLibraryDashboard() {
                         Preview
                       </Button>
                     </Link>
-                    <Button variant="ghost" size="icon" className="h-10 w-10 rounded-xl text-gray-400 hover:text-blue-600">
+                    <Button variant="ghost" size="icon" className="h-10 w-10 rounded-xl text-gray-400 hover:text-blue-600" onClick={() => handleEdit(product)}>
                        <Edit3 className="h-4 w-4" />
                     </Button>
                     <Button variant="ghost" size="icon" className="h-10 w-10 rounded-xl text-gray-400 hover:text-red-600" onClick={() => handleDelete(product.id)}>
@@ -321,6 +373,90 @@ export default function ConsultantLibraryDashboard() {
           )}
         </CardContent>
       </Card>
+      {/* Edit Dialog */}
+      <Dialog open={isEditOpen} onOpenChange={setIsEditOpen}>
+        <DialogContent className="sm:max-w-[600px] rounded-3xl border-none p-0 overflow-hidden">
+          <div className="bg-gradient-to-r from-blue-600 to-indigo-700 p-8 text-white">
+             <DialogTitle className="text-2xl font-black mb-2">Edit Product</DialogTitle>
+             <DialogDescription className="text-white/70 font-medium">Update your resource details.</DialogDescription>
+          </div>
+          <div className="p-8 space-y-6 max-h-[70vh] overflow-y-auto">
+              <div className="space-y-4">
+                <div className="grid gap-2">
+                  <label className="text-sm font-bold text-gray-700">Product Title</label>
+                  <Input 
+                    placeholder="e.g. Masterclass in Business Strategy" 
+                    className="rounded-xl border-gray-100 bg-gray-50/50"
+                    value={newProduct.title}
+                    onChange={e => setNewProduct({...newProduct, title: e.target.value})}
+                  />
+                </div>
+                
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="grid gap-2">
+                    <label className="text-sm font-bold text-gray-700">Type</label>
+                    <Select value={newProduct.type} onValueChange={(val: any) => setNewProduct({...newProduct, type: val})}>
+                      <SelectTrigger className="rounded-xl border-gray-100 bg-gray-50/50 h-10">
+                        <SelectValue placeholder="Select type" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="book">E-Book</SelectItem>
+                        <SelectItem value="course">Video Course</SelectItem>
+                        <SelectItem value="digital_asset">Digital Asset</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="grid gap-2">
+                    <label className="text-sm font-bold text-gray-700">Price (USD)</label>
+                    <Input 
+                      type="number" 
+                      placeholder="29.99" 
+                      className="rounded-xl border-gray-100 bg-gray-50/50"
+                      value={newProduct.price}
+                      onChange={e => setNewProduct({...newProduct, price: e.target.value})}
+                    />
+                  </div>
+                </div>
+
+                <div className="grid gap-2">
+                  <label className="text-sm font-bold text-gray-700">Description</label>
+                  <Textarea 
+                    placeholder="What makes this product special?" 
+                    className="rounded-xl border-gray-100 bg-gray-50/50 min-h-[120px]"
+                    value={newProduct.description}
+                    onChange={e => setNewProduct({...newProduct, description: e.target.value})}
+                  />
+                </div>
+
+                <div className="grid gap-2">
+                  <label className="text-sm font-bold text-gray-700">Thumbnail URL</label>
+                  <Input 
+                    placeholder="https://..." 
+                    className="rounded-xl border-gray-100 bg-gray-50/50"
+                    value={newProduct.thumbnailUrl}
+                    onChange={e => setNewProduct({...newProduct, thumbnailUrl: e.target.value})}
+                  />
+                </div>
+
+                <div className="grid gap-2">
+                  <label className="text-sm font-bold text-gray-700">Digital Asset Link (Access File)</label>
+                  <Input 
+                    placeholder="Cloudinary link or Google Drive" 
+                    className="rounded-xl border-gray-100 bg-gray-50/50"
+                    value={newProduct.fileUrl}
+                    onChange={e => setNewProduct({...newProduct, fileUrl: e.target.value})}
+                  />
+                </div>
+              </div>
+          </div>
+          <DialogFooter className="p-8 bg-gray-50 border-t border-gray-100">
+             <Button variant="ghost" className="rounded-xl font-bold" onClick={() => setIsEditOpen(false)}>Cancel</Button>
+             <Button className="bg-blue-600 hover:bg-blue-700 rounded-xl px-10 font-bold" onClick={handleUpdate} disabled={isSubmitting}>
+               {isSubmitting ? "Updating..." : "Update Product"}
+             </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }
