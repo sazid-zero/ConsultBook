@@ -6,6 +6,8 @@ import { AuthProvider } from "@/lib/auth-context"
 import { LenisProvider } from "@/components/lenis-provider"
 import { Navbar } from "@/components/navbar/Navbar"
 
+import { Toaster } from "@/components/ui/sonner"
+
 const inter = Inter({ subsets: ["latin"] })
 
 export const metadata: Metadata = {
@@ -26,6 +28,7 @@ export default function RootLayout({
         <AuthProvider>
           <Navbar />
           {children}
+          <Toaster />
         </AuthProvider>
       </body>
     </html>
