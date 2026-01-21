@@ -248,8 +248,6 @@ export function Navbar({ notifications: propNotifications = [], unreadCount: pro
       { name: "Consultants", href: "/book-consultant", icon: Search },
     ] : [
       { name: "Consultants", href: "/book-consultant", icon: Search },
-      { name: "Help", href: "/help", icon: MessageSquare },
-      { name: "Contact", href: "/contact", icon: MessageSquare }
     ]),
   ]
 
