@@ -1,3 +1,4 @@
+export const dynamic = 'force-dynamic'
 
 import { getWorkshop } from "@/app/actions/workshops"
 import { Button } from "@/components/ui/button"

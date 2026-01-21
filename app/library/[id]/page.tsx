@@ -1,3 +1,4 @@
+export const dynamic = 'force-dynamic'
 
 import { getProduct } from "@/app/actions/library"
 import { Button } from "@/components/ui/button"
