@@ -19,28 +19,20 @@ export async function getConsultants() {
       consultationModes: consultantProfiles.consultationModes,
       profilePhoto: users.profilePhoto,
       isPublished: consultantProfiles.isPublished,
-      // ratings?
+      rating: consultantProfiles.averageRating,
+      reviewCount: consultantProfiles.ratingCount,
+      appointmentCount: consultantProfiles.hoursDelivered,
     })
     .from(consultantProfiles)
     .innerJoin(users, eq(consultantProfiles.consultantId, users.uid))
     .where(eq(consultantProfiles.isPublished, true));
     
-    // For ratings and counts, ideally we do aggregations. 
-    // Since we don't have reviews table yet, return 0.
-    // Appointment count:
-    
-    // This N+1 is bad, but for MVP/Refactor step:
-    const enriched = await Promise.all(consultants.map(async (c) => {
-        // Mock rating or impl later
-        return {
-            ...c,
-            rating: 5.0, // Default/Mock
-            reviewCount: 0,
-            appointmentCount: 0, // Could fetch count from appointments
-        }
+    return consultants.map((c: any) => ({
+        ...c,
+        rating: c.rating || 0,
+        reviewCount: c.reviewCount || 0,
+        appointmentCount: c.appointmentCount || 0,
     }));
-
-    return enriched;
 
   } catch (error) {
     console.error("Error fetching consultants:", error);

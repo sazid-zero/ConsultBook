@@ -245,9 +245,9 @@ export function Navbar({ notifications: propNotifications = [], unreadCount: pro
     { name: "Sessions", href: "/sessions", icon: Calendar },
     ...(user ? [
       { name: "Dashboard", href: getDashboardHref(), icon: LayoutDashboard },
-      { name: "Find Consultants", href: "/book-consultant", icon: Search },
+      { name: "Consultants", href: "/book-consultant", icon: Search },
     ] : [
-      { name: "Find Consultants", href: "/book-consultant", icon: Search },
+      { name: "Consultants", href: "/book-consultant", icon: Search },
       { name: "Help", href: "/help", icon: MessageSquare },
       { name: "Contact", href: "/contact", icon: MessageSquare }
     ]),
@@ -258,9 +258,9 @@ export function Navbar({ notifications: propNotifications = [], unreadCount: pro
 
   return (
     <header className="sticky top-0 z-50 w-full bg-white/80 backdrop-blur-md border-b border-gray-100">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between items-center h-16">
-          <div className="flex items-center gap-8">
+      <div className="max-w-8xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="flex items-center h-16">
+          <div className="flex items-center gap-4">
             <Link href="/" className="flex items-center gap-2 group">
               <div className="bg-blue-600 p-1.5 rounded-lg group-hover:scale-110 transition-transform">
                 <Calendar className="h-5 w-5 text-white" />
@@ -277,13 +277,13 @@ export function Navbar({ notifications: propNotifications = [], unreadCount: pro
           </div>
 
           {/* Desktop Navigation */}
-          <nav className="hidden lg:flex items-center gap-1">
+          <nav className="hidden lg:flex items-center gap-1 ml-6">
             {navLinks.map((link) => (
               <Link key={link.name} href={link.href}>
                 <Button 
                   variant="ghost" 
                   size="sm" 
-                  className={`px-4 font-medium transition-colors ${
+                  className={`px-2 xl:px-4 font-medium transition-colors ${
                     isActive(link.href) 
                       ? "text-blue-600 bg-blue-50" 
                       : "text-gray-600 hover:text-blue-600 hover:bg-gray-50"
@@ -296,7 +296,7 @@ export function Navbar({ notifications: propNotifications = [], unreadCount: pro
           </nav>
 
           {/* Desktop Actions */}
-          <div className="hidden lg:flex items-center gap-4">
+          <div className="hidden lg:flex items-center gap-4 ml-auto">
             {!loading && (
               <>
                 {user ? (
@@ -529,7 +529,7 @@ export function Navbar({ notifications: propNotifications = [], unreadCount: pro
           </div>
 
           {/* Mobile Menu Toggle & Actions */}
-          <div className="lg:hidden flex items-center gap-2">
+          <div className="lg:hidden flex items-center gap-2 ml-auto">
             <GlobalSearch />
             {!loading && user && (
               <Link href="/messages">

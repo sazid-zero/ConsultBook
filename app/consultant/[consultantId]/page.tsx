@@ -2,7 +2,7 @@
 
 export const dynamic = 'force-dynamic'
 
-import { useState, useEffect, useRef } from "react"
+import { useState, useEffect, useRef, use } from "react"
 import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
@@ -85,13 +85,15 @@ interface UploadedFile {
   url: string;
   contentType: string;
 }
-export default function ConsultantPublicProfilePage({ params }: { params: { consultantId: string } }) {
+export default function ConsultantPublicProfilePage({ params }: { params: Promise<{ consultantId: string }> }) {
   const router = useRouter()
+  const resolvedParams = use(params)
+  const { consultantId } = resolvedParams
   const { user } = useAuth()
   const [consultant, setConsultant] = useState<ConsultantProfile | null>(null)
   const [reviews, setReviews] = useState<Review[]>([])
   const [loading, setLoading] = useState(true)
-  const [consultantId, setConsultantId] = useState<string>("")
+  // const [consultantId, setConsultantId] = useState<string>("") // No longer needed as state, derived from props
   const [isOwner, setIsOwner] = useState(false)
   const [uploading, setUploading] = useState(false)
   const [profileHover, setProfileHover] = useState(false)
@@ -109,13 +111,7 @@ export default function ConsultantPublicProfilePage({ params }: { params: { cons
   const coverFileInputRef = useRef<HTMLInputElement>(null)
 
   // Handle params properly for Next.js 15
-  useEffect(() => {
-    const resolveParams = async () => {
-      const resolvedParams = await Promise.resolve(params)
-      setConsultantId(resolvedParams.consultantId)
-    }
-    resolveParams()
-  }, [params])
+  // Effect removed as access is now direct via use()
 
   useEffect(() => {
     window.scrollTo(0, 0)
@@ -377,76 +373,79 @@ export default function ConsultantPublicProfilePage({ params }: { params: { cons
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 pt-0">
         {/* Hero Header with Cover Photo */}
-        <div 
-          className="relative h-60 bg-gradient-to-r from-blue-500 via-blue-600 to-indigo-600 rounded-3xl mb-20 overflow-hidden"
-          onMouseEnter={() => isOwner && setCoverHover(true)}
-          onMouseLeave={() => setCoverHover(false)}
-        >
-          {consultant.coverPhoto ? (
-            <Image
-              src={consultant.coverPhoto}
-              alt="Cover Photo"
-              layout="fill"
-              objectFit="cover"
-              className="rounded-3xl"
-            />
-          ) : (
-            <div className="h-full w-full bg-gradient-to-r from-blue-500 via-blue-600 to-indigo-600 rounded-3xl" />
-          )}
-          
-          {/* Hover Overlay */}
-          {isOwner && coverHover && (
-            <div className="absolute inset-0 bg-black bg-opacity-40 rounded-3xl flex items-center justify-center gap-4">
-              <Button 
-                className="bg-white text-gray-900 hover:bg-gray-100 gap-2"
-                onClick={() => coverFileInputRef.current?.click()}
-              >
-                <Upload className="h-4 w-4" />
-                {consultant.coverPhoto ? "Change Photo" : "Upload Photo"}
-              </Button>
-              {consultant.coverPhoto && (
-                <Button 
-                  className="bg-red-500 text-white hover:bg-red-600 gap-2"
-                  onClick={() => setRemoveConfirmOpen(true)}
-                >
-                  <Trash2 className="h-4 w-4" />
-                  Remove
-                </Button>
-              )}
-            </div>
-          )}
 
-          {/* Hidden File Inputs */}
-          <input
-            ref={coverFileInputRef}
-            type="file"
-            accept="image/*"
-            className="hidden"
-            onChange={handleCoverPhotoUpload}
-            disabled={uploading}
-          />
-
-        {/* Remove Cover Photo Confirmation Dialog */}
-        <AlertDialog open={removeConfirmOpen} onOpenChange={setRemoveConfirmOpen}>
-          <AlertDialogContent>
-            <AlertDialogHeader>
-              <AlertDialogTitle>Remove cover photo?</AlertDialogTitle>
-              <AlertDialogDescription>
-                This will permanently remove your cover photo. You can upload a new one anytime.
-              </AlertDialogDescription>
-            </AlertDialogHeader>
-            <div className="flex justify-end gap-3">
-              <AlertDialogCancel>Cancel</AlertDialogCancel>
-              <AlertDialogAction onClick={handleRemoveCoverPhoto} className="bg-red-600 hover:bg-red-700">Remove</AlertDialogAction>
-            </div>
-          </AlertDialogContent>
-        </AlertDialog>
-        </div>
 
         {/* Profile Section */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 -mt-16 relative z-10 mb-12">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 relative z-10 mb-12">
           {/* Left: Profile Info */}
           <div className="lg:col-span-2 space-y-8">
+            {/* Hero Header with Cover Photo (Moved Here) */}
+            <div 
+              className="relative h-40 w-full bg-gradient-to-r from-blue-500 via-blue-600 to-indigo-600 rounded-3xl mb-8 overflow-hidden"
+              onMouseEnter={() => isOwner && setCoverHover(true)}
+              onMouseLeave={() => setCoverHover(false)}
+            >
+              {consultant.coverPhoto ? (
+                <Image
+                  src={consultant.coverPhoto}
+                  alt="Cover Photo"
+                  layout="fill"
+                  objectFit="cover"
+                  className="rounded-3xl"
+                />
+              ) : (
+                <div className="h-full w-full bg-gradient-to-r from-blue-500 via-blue-600 to-indigo-600 rounded-3xl" />
+              )}
+              
+              {/* Hover Overlay */}
+              {isOwner && coverHover && (
+                <div className="absolute inset-0 bg-black bg-opacity-40 rounded-3xl flex items-center justify-center gap-4">
+                  <Button 
+                    className="bg-white text-gray-900 hover:bg-gray-100 gap-2"
+                    onClick={() => coverFileInputRef.current?.click()}
+                  >
+                    <Upload className="h-4 w-4" />
+                    {consultant.coverPhoto ? "Change Photo" : "Upload Photo"}
+                  </Button>
+                  {consultant.coverPhoto && (
+                    <Button 
+                      className="bg-red-500 text-white hover:bg-red-600 gap-2"
+                      onClick={() => setRemoveConfirmOpen(true)}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                      Remove
+                    </Button>
+                  )}
+                </div>
+              )}
+
+              {/* Hidden File Inputs */}
+              <input
+                ref={coverFileInputRef}
+                type="file"
+                accept="image/*"
+                className="hidden"
+                onChange={handleCoverPhotoUpload}
+                disabled={uploading}
+              />
+
+            {/* Remove Cover Photo Confirmation Dialog */}
+            <AlertDialog open={removeConfirmOpen} onOpenChange={setRemoveConfirmOpen}>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Remove cover photo?</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    This will permanently remove your cover photo. You can upload a new one anytime.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <div className="flex justify-end gap-3">
+                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                  <AlertDialogAction onClick={handleRemoveCoverPhoto} className="bg-red-600 hover:bg-red-700">Remove</AlertDialogAction>
+                </div>
+              </AlertDialogContent>
+            </AlertDialog>
+            </div>
+            
             <div className="flex items-end gap-6">
               {/* Profile Avatar with Hover */}
               <div 
@@ -1124,7 +1123,6 @@ export default function ConsultantPublicProfilePage({ params }: { params: { cons
                   )}
                 </div>
               )}
-            </div>
 
             {/* Reviews Section */}
             <div className="space-y-4 border-t pt-8">
@@ -1217,6 +1215,10 @@ export default function ConsultantPublicProfilePage({ params }: { params: { cons
                 </ScrollArea>
               )}
             </div>
+
+
+
+          </div>
           </div>
 
           {/* Right: Booking Card */}
@@ -1273,6 +1275,9 @@ export default function ConsultantPublicProfilePage({ params }: { params: { cons
                 </div>
               </CardContent>
             </Card>
+
+
+
           </div>
         </div>
       </div>

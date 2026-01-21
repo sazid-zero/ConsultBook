@@ -2,8 +2,10 @@
 
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
 import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Calendar, Users, Shield, Clock, Star, CheckCircle, TrendingUp, Award, MapPin, DollarSign, ChevronRight, Check, Search } from "lucide-react"
+import { Calendar, Users, Shield, Clock, Star, CheckCircle, TrendingUp, Award, MapPin, DollarSign, ChevronRight, Check, Search, MessageCircle, FileText, Send, X, User as UserIcon, Video, BookOpen, ArrowRight } from "lucide-react"
+import { Badge } from "@/components/ui/badge"
 import { useAuth } from "@/lib/auth-context"
 import { Navbar } from "@/components/navbar/Navbar"
 
@@ -20,102 +22,63 @@ export default function HomePage() {
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
 
       {/* Hero Section */}
-      <section className="py-20">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <h1 className="text-5xl font-bold text-gray-900 mb-6">
-            Connect with Expert Consultants
-            <span className="text-blue-600"> Instantly</span>
+      <section className="relative h-[calc(100vh-64px)] items-center flex justify-center overflow-hidden bg-white">
+        <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-5" />
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 text-center">
+          <Badge className="mb-6 bg-blue-50 text-blue-600 border-blue-100 hover:bg-blue-100 transition-colors px-4 py-1.5 text-sm font-bold rounded-full shadow-sm">
+            v3.0 Now Live — The Expert Ecosystem
+          </Badge>
+          <h1 className="text-5xl lg:text-7xl font-black text-gray-900 mb-8 tracking-tight leading-tight">
+            The World's Most <br className="hidden lg:block" /> 
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-600">Powerful Knowledge Hub</span>
           </h1>
-          <p className="text-xl text-gray-600 mb-8 max-w-3xl mx-auto">
-            Book appointments with verified professionals across various fields. Get expert advice through in-person,
-            phone, or virtual consultations.
+          <p className="text-xl text-gray-600 mb-12 max-w-3xl mx-auto leading-relaxed">
+            From 1-on-1 consultations to exclusive digital masterclasses and expert-led workshops. 
+            Everything you need to accelerate your growth in one unified platform.
           </p>
-          <div className="flex justify-center space-x-4">
+          <div className="flex flex-col sm:flex-row justify-center gap-4 mb-16">
             {!loading && user ? (
               <Link href={dashboardHref}>
-                <Button size="lg" className="px-8 py-3">
-                  Go to Dashboard
+                <Button size="lg" className="px-10 h-14 bg-blue-600 hover:bg-blue-700 text-lg font-bold rounded-2xl shadow-xl shadow-blue-200 transition-all hover:scale-105 active:scale-95">
+                  Access My Dashboard
+                  <ChevronRight className="ml-2 h-5 w-5" />
                 </Button>
               </Link>
             ) : (
               <>
                 <Link href="/register?type=client">
-                  <Button size="lg" className="sm:px-8 py-3 px-4 ">
-                    Book a Consultation
+                  <Button size="lg" className="px-10 h-14 bg-blue-600 hover:bg-blue-700 text-lg font-bold rounded-2xl shadow-xl shadow-blue-200 transition-all hover:scale-105 active:scale-95 w-full sm:w-auto">
+                    Start Learning
                   </Button>
                 </Link>
                 <Link href="/register?type=consultant">
-                  <Button variant="outline" size="lg" className="sm:px-8 px-4 py-3">
-                    Join as Consultant
+                  <Button variant="outline" size="lg" className="px-10 h-14 border-gray-200 hover:bg-black hover:text-white text-lg font-bold rounded-2xl transition-all w-full sm:w-auto">
+                    Become an Expert
                   </Button>
                 </Link>
               </>
             )}
           </div>
-        </div>
-      </section>
 
-      {/* Features Section */}
-      <section className="py-16 bg-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold text-gray-900 mb-4">Why Choose ConsultBook?</h2>
-            <p className="text-lg text-gray-600">Everything you need for seamless consultation booking</p>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            <Card>
-              <CardHeader>
-                <Users className="h-12 w-12 text-blue-600 mb-4" />
-                <CardTitle>Verified Consultants</CardTitle>
-                <CardDescription>
-                  All consultants are verified with proper credentials and certifications
-                </CardDescription>
-              </CardHeader>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <Clock className="h-12 w-12 text-green-600 mb-4" />
-                <CardTitle>Real-time Availability</CardTitle>
-                <CardDescription>See live availability and book appointments instantly</CardDescription>
-              </CardHeader>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <Shield className="h-12 w-12 text-purple-600 mb-4" />
-                <CardTitle>Secure & Private</CardTitle>
-                <CardDescription>Your data is protected with enterprise-grade security</CardDescription>
-              </CardHeader>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <Calendar className="h-12 w-12 text-orange-600 mb-4" />
-                <CardTitle>Multiple Consultation Modes</CardTitle>
-                <CardDescription>Choose from in-person, phone, or virtual consultations</CardDescription>
-              </CardHeader>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <Star className="h-12 w-12 text-yellow-600 mb-4" />
-                <CardTitle>Reviews & Ratings</CardTitle>
-                <CardDescription>Read reviews and ratings from previous clients</CardDescription>
-              </CardHeader>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CheckCircle className="h-12 w-12 text-blue-600 mb-4" />
-                <CardTitle>Easy Rescheduling</CardTitle>
-                <CardDescription>Reschedule or cancel appointments with just a few clicks</CardDescription>
-              </CardHeader>
-            </Card>
+          {/* Feature Badges */}
+          <div className="flex flex-wrap justify-center gap-6 opacity-60">
+            <div className="flex items-center gap-2">
+              <CheckCircle className="h-5 w-5 text-green-500" />
+              <span className="text-sm font-bold text-gray-600">Verified Professionals</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <CheckCircle className="h-5 w-5 text-green-500" />
+              <span className="text-sm font-bold text-gray-600">Secure Payments</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <CheckCircle className="h-5 w-5 text-green-500" />
+              <span className="text-sm font-bold text-gray-600">Lifetime Access</span>
+            </div>
           </div>
         </div>
       </section>
+
+
 
       {/* Stats Section with Visual */}
       <section className="py-20 bg-gradient-to-b from-white to-blue-50">
@@ -193,7 +156,7 @@ export default function HomePage() {
                   </div>
 
                   {/* Consultant 3 */}
-                  <div className="px-6 py-4 border-b border-gray-100 hover:bg-gray-50 transition-colors cursor-pointer group/card">
+                  <div className="px-6 py-4 border-b border-gray-100 hover:bg-gray-50 transition-colors cursor-pointer group/card ">
                     <div className="flex items-start gap-4">
                       <img src="https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=48&h=48&fit=crop" alt="Priya Chakraborty" className="w-12 h-12 rounded-full object-cover flex-shrink-0" />
                       <div className="flex-1 min-w-0">
@@ -208,27 +171,6 @@ export default function HomePage() {
                         <div className="flex items-center justify-between text-xs text-gray-500">
                           <span>📍 Los Angeles</span>
                           <span className="font-semibold text-gray-700">$100/hr</span>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Consultant 4 */}
-                  <div className="px-6 py-4 hover:bg-gray-50 transition-colors cursor-pointer group/card">
-                    <div className="flex items-start gap-4">
-                      <img src="https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=48&h=48&fit=crop" alt="Kabir Hassan" className="w-12 h-12 rounded-full object-cover flex-shrink-0" />
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center justify-between gap-2 mb-1">
-                          <h4 className="font-semibold text-gray-900 text-sm">Kabir Hassan</h4>
-                          <div className="flex items-center gap-1">
-                            <Star className="h-3 w-3 fill-yellow-400 text-yellow-400" />
-                            <span className="text-xs font-semibold text-gray-700">4.7</span>
-                          </div>
-                        </div>
-                        <p className="text-xs text-gray-600 mb-2">Tech Startup Advisor</p>
-                        <div className="flex items-center justify-between text-xs text-gray-500">
-                          <span>📍 Austin</span>
-                          <span className="font-semibold text-gray-700">$180/hr</span>
                         </div>
                       </div>
                     </div>
@@ -346,14 +288,18 @@ export default function HomePage() {
                   </div>
                 </div>
 
-                <div className="flex gap-2">
-                  <div className="flex-1 inline-flex items-center justify-center px-3 py-2 bg-blue-50 text-blue-600 rounded-lg font-semibold text-sm hover:bg-blue-100 transition-colors cursor-pointer">
-                    View Profile
+                  <div className="flex gap-2">
+                    <Link href="/consultant/consultant_fatima" className="flex-1">
+                      <div className="w-full inline-flex items-center justify-center px-3 py-2 bg-blue-50 text-blue-600 rounded-lg font-semibold text-sm hover:bg-blue-100 transition-colors cursor-pointer">
+                        View Profile
+                      </div>
+                    </Link>
+                    <Link href="/consultant/consultant_fatima" className="flex-1">
+                      <div className="w-full inline-flex items-center justify-center px-3 py-2 bg-blue-600 text-white rounded-lg font-semibold text-sm hover:bg-blue-700 transition-colors cursor-pointer">
+                        Book Now
+                      </div>
+                    </Link>
                   </div>
-                  <div className="flex-1 inline-flex items-center justify-center px-3 py-2 bg-blue-600 text-white rounded-lg font-semibold text-sm hover:bg-blue-700 transition-colors cursor-pointer">
-                    Book Now
-                  </div>
-                </div>
               </div>
             </div>
 
@@ -390,12 +336,16 @@ export default function HomePage() {
                 </div>
 
                 <div className="flex gap-2">
-                  <div className="flex-1 inline-flex items-center justify-center px-3 py-2 bg-indigo-50 text-indigo-600 rounded-lg font-semibold text-sm hover:bg-indigo-100 transition-colors cursor-pointer">
-                    View Profile
-                  </div>
-                  <div className="flex-1 inline-flex items-center justify-center px-3 py-2 bg-indigo-600 text-white rounded-lg font-semibold text-sm hover:bg-indigo-700 transition-colors cursor-pointer">
-                    Book Now
-                  </div>
+                  <Link href="/consultant/consultant_anik" className="flex-1">
+                    <div className="w-full inline-flex items-center justify-center px-3 py-2 bg-indigo-50 text-indigo-600 rounded-lg font-semibold text-sm hover:bg-indigo-100 transition-colors cursor-pointer">
+                      View Profile
+                    </div>
+                  </Link>
+                  <Link href="/consultant/consultant_anik" className="flex-1">
+                    <div className="w-full inline-flex items-center justify-center px-3 py-2 bg-indigo-600 text-white rounded-lg font-semibold text-sm hover:bg-indigo-700 transition-colors cursor-pointer">
+                      Book Now
+                    </div>
+                  </Link>
                 </div>
               </div>
             </div>
@@ -433,12 +383,16 @@ export default function HomePage() {
                 </div>
 
                 <div className="flex gap-2">
-                  <div className="flex-1 inline-flex items-center justify-center px-3 py-2 bg-purple-50 text-purple-600 rounded-lg font-semibold text-sm hover:bg-purple-100 transition-colors cursor-pointer">
-                    View Profile
-                  </div>
-                  <div className="flex-1 inline-flex items-center justify-center px-3 py-2 bg-purple-600 text-white rounded-lg font-semibold text-sm hover:bg-purple-700 transition-colors cursor-pointer">
-                    Book Now
-                  </div>
+                  <Link href="/consultant/consultant_priya" className="flex-1">
+                    <div className="w-full inline-flex items-center justify-center px-3 py-2 bg-purple-50 text-purple-600 rounded-lg font-semibold text-sm hover:bg-purple-100 transition-colors cursor-pointer">
+                      View Profile
+                    </div>
+                  </Link>
+                  <Link href="/consultant/consultant_priya" className="flex-1">
+                    <div className="w-full inline-flex items-center justify-center px-3 py-2 bg-purple-600 text-white rounded-lg font-semibold text-sm hover:bg-purple-700 transition-colors cursor-pointer">
+                      Book Now
+                    </div>
+                  </Link>
                 </div>
               </div>
             </div>
@@ -597,130 +551,599 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* Mock: Client Dashboard Section */}
-      <section className="py-20 bg-gradient-to-b from-gray-50 to-white">
+      {/* NEW: Expert Marketplace Showcase */}
+      <section className="py-24 bg-[#f8f9fc]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-16">
-            <span className="inline-block px-4 py-2 bg-purple-100 text-purple-600 rounded-full text-sm font-semibold mb-4">MANAGE EASILY</span>
-            <h2 className="text-4xl font-bold text-gray-900 mb-4">Your Personal Dashboard</h2>
-            <p className="text-xl text-gray-600 max-w-2xl mx-auto">Manage appointments, track history, and organize your consultations</p>
+          <div className="flex flex-col lg:flex-row lg:items-end justify-between mb-12 gap-6">
+            <div className="max-w-2xl">
+              <span className="text-blue-600 font-black text-sm uppercase tracking-widest bg-blue-50 px-3 py-1 rounded-full mb-4 inline-block">THE MARKETPLACE</span>
+              <h2 className="text-4xl lg:text-5xl font-black text-gray-900 mb-6">Learn from the Best, <br /> Any Time.</h2>
+              <p className="text-xl text-gray-600 leading-relaxed">
+                Unlock exclusive digital assets. Masterclasses, downloadable toolkits, and private e-books written by our top-rated consultants.
+              </p>
+            </div>
+            <Link href="/book-consultant">
+              <Button variant="outline" className="h-12 px-8 rounded-xl font-bold border-gray-200 hover:bg-white hover:border-blue-300 group">
+                Browse Marketplace
+                <ChevronRight className="ml-2 h-4 w-4 group-hover:translate-x-1 transition-transform" />
+              </Button>
+            </Link>
           </div>
 
-          <div className="bg-white border border-gray-200 rounded-2xl overflow-hidden shadow-xl">
-            {/* Dashboard Header */}
-            <div className="bg-gradient-to-r from-purple-600 to-purple-700 px-8 py-6 flex items-center justify-between">
-              <div>
-                <h3 className="text-2xl font-bold text-white">Welcome back, Akash!</h3>
-                <p className="text-purple-100 text-sm">You have 2 upcoming consultations</p>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {/* Project Mock: Product 1 */}
+            <div className="group bg-white rounded-3xl border border-gray-100 overflow-hidden hover:shadow-2xl hover:shadow-blue-100/50 transition-all duration-500 hover:-translate-y-2">
+              <div className="aspect-[4/3] bg-gray-200 relative overflow-hidden">
+                <img 
+                  src="https://images.unsplash.com/photo-1553481187-be93c21490a9?w=600&h=450&fit=crop" 
+                  alt="Marketplace Product" 
+                  className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" 
+                />
+                <div className="absolute top-4 right-4 bg-white/90 backdrop-blur-md px-3 py-1.5 rounded-xl font-black text-gray-900 shadow-sm">
+                  $49.00
+                </div>
               </div>
-              <div className="hidden md:flex items-center gap-4">
-                <div className="bg-white/20 backdrop-blur-sm px-4 py-2 rounded-lg text-white text-sm font-semibold">
-                  Next: Today at 2 PM
+              <div className="p-8">
+                <Badge className="mb-3 bg-indigo-50 text-indigo-700 border-none capitalize">E-Book</Badge>
+                <h3 className="text-xl font-black text-gray-900 mb-2 group-hover:text-blue-600 transition-colors">Mastering UX Strategy</h3>
+                <p className="text-gray-500 text-sm mb-6 line-clamp-2">Complete guide to building user-centric products that scale effortlessly in modern markets.</p>
+                <div className="flex items-center justify-between pt-6 border-t border-gray-50">
+                   <div className="flex items-center gap-2">
+                     <div className="w-8 h-8 rounded-full bg-gray-100 overflow-hidden">
+                       <img src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=32&h=32&fit=crop" alt="Author" />
+                     </div>
+                     <span className="text-sm font-bold text-gray-700">Sarah Drasner</span>
+                   </div>
+                   <div className="flex items-center gap-1">
+                     <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
+                     <span className="text-sm font-bold">4.9</span>
+                   </div>
                 </div>
               </div>
             </div>
 
-            {/* Dashboard Content */}
-            <div className="p-8">
-              <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                {/* Upcoming Appointments */}
-                <div className="lg:col-span-2">
-                  <h4 className="text-lg font-bold text-gray-900 mb-6">Upcoming Consultations</h4>
-                  <div className="space-y-4">
-                    {/* Appointment Card 1 */}
-                    <div className="border border-gray-200 rounded-xl p-4 hover:border-purple-300 hover:shadow-lg transition-all">
-                      <div className="flex items-start justify-between mb-4">
-                        <div className="flex items-start gap-4">
-                          <img src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=56&h=56&fit=crop" alt="Fatima Ahmed" className="w-14 h-14 rounded-full object-cover" />
-                          <div>
-                            <h5 className="font-bold text-gray-900">Business Strategy Session</h5>
-                            <p className="text-sm text-gray-600">with Fatima Ahmed</p>
-                          </div>
-                        </div>
-                        <span className="inline-flex items-center gap-1 px-3 py-1 bg-green-100 text-green-700 rounded-full text-xs font-semibold">
-                          <Check className="h-3 w-3" />
-                          Confirmed
-                        </span>
+            {/* Project Mock: Product 2 */}
+            <div className="group bg-white rounded-3xl border border-gray-100 overflow-hidden hover:shadow-2xl hover:shadow-blue-100/50 transition-all duration-500 hover:-translate-y-2">
+              <div className="aspect-[4/3] bg-gray-200 relative overflow-hidden">
+                <img 
+                  src="https://images.unsplash.com/photo-1587620962725-abab7fe55159?w=600&h=450&fit=crop" 
+                  alt="Marketplace Product" 
+                  className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" 
+                />
+                <div className="absolute top-4 right-4 bg-white/90 backdrop-blur-md px-3 py-1.5 rounded-xl font-black text-gray-900 shadow-sm">
+                  $99.00
+                </div>
+              </div>
+              <div className="p-8">
+                <Badge className="mb-3 bg-blue-50 text-blue-700 border-none capitalize">Video Course</Badge>
+                <h3 className="text-xl font-black text-gray-900 mb-2 group-hover:text-blue-600 transition-colors">SaaS Growth Engine</h3>
+                <p className="text-gray-500 text-sm mb-6 line-clamp-2">Learn the exact framework used to scale startups from $0 to $10M ARR in 24 months.</p>
+                <div className="flex items-center justify-between pt-6 border-t border-gray-50">
+                   <div className="flex items-center gap-2">
+                     <div className="w-8 h-8 rounded-full bg-gray-100 overflow-hidden">
+                       <img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=32&h=32&fit=crop" alt="Author" />
+                     </div>
+                     <span className="text-sm font-bold text-gray-700">Marcus Aurelius</span>
+                   </div>
+                   <div className="flex items-center gap-1">
+                     <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
+                     <span className="text-sm font-bold">5.0</span>
+                   </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Project Mock: Product 3 */}
+            <div className="group bg-white rounded-3xl border border-gray-100 overflow-hidden hover:shadow-2xl hover:shadow-blue-100/50 transition-all duration-500 hover:-translate-y-2">
+              <div className="aspect-[4/3] bg-gray-200 relative overflow-hidden">
+                <img 
+                  src="https://plus.unsplash.com/premium_photo-1661719191032-79c57f9b11e6?q=80&w=1170&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D" 
+                  alt="Marketplace Product" 
+                  className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" 
+                />
+                <div className="absolute top-4 right-4 bg-white/90 backdrop-blur-md px-3 py-1.5 rounded-xl font-black text-gray-900 shadow-sm">
+                  $25.00
+                </div>
+              </div>
+              <div className="p-8">
+                <Badge className="mb-3 bg-purple-50 text-purple-700 border-none capitalize">Digital Toolkit</Badge>
+                <h3 className="text-xl font-black text-gray-900 mb-2 group-hover:text-blue-600 transition-colors">Consultant Sales Kit</h3>
+                <p className="text-gray-500 text-sm mb-6 line-clamp-2">All the templates, contracts, and pitch decks you need to start your high-ticket consulting.</p>
+                <div className="flex items-center justify-between pt-6 border-t border-gray-50">
+                   <div className="flex items-center gap-2">
+                     <div className="w-8 h-8 rounded-full bg-gray-100 overflow-hidden">
+                       <img src="https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=32&h=32&fit=crop" alt="Author" />
+                     </div>
+                     <span className="text-sm font-bold text-gray-700">Elena Gilbert</span>
+                   </div>
+                   <div className="flex items-center gap-1">
+                     <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
+                     <span className="text-sm font-bold">4.8</span>
+                   </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* NEW: Live Masterclasses Section */}
+      <section className="py-24 bg-white overflow-hidden relative">
+        <div className="absolute top-1/2 left-0 -translate-y-1/2 w-96 h-96 bg-blue-100/40 rounded-full blur-[120px] -z-1" />
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
+            <div>
+              <span className="text-indigo-600 font-black text-sm uppercase tracking-widest bg-indigo-50 px-3 py-1 rounded-full mb-6 inline-block">LIVE WORKSHOPS</span>
+              <h2 className="text-4xl lg:text-6xl font-black text-gray-900 mb-8 tracking-tight">Interactive <br /> Masterclasses</h2>
+              <p className="text-xl text-gray-600 mb-10 leading-relaxed">
+                Join live group sessions hosted by top industry leaders. Real-time Q&A, collaborative brainstorming, and hands-on learning with experts worldwide.
+              </p>
+              
+              <div className="space-y-6 mb-12">
+                <div className="flex items-start gap-4">
+                  <div className="bg-green-100 p-2 rounded-xl">
+                    <CheckCircle className="h-6 w-6 text-green-600" />
+                  </div>
+                  <div>
+                    <h4 className="font-bold text-gray-900 text-lg">Real-time Feedback</h4>
+                    <p className="text-gray-600">Get your questions answered instantly by the host.</p>
+                  </div>
+                </div>
+                <div className="flex items-start gap-4">
+                  <div className="bg-blue-100 p-2 rounded-xl">
+                    <CheckCircle className="h-6 w-6 text-blue-600" />
+                  </div>
+                  <div>
+                    <h4 className="font-bold text-gray-900 text-lg">Networking Hub</h4>
+                    <p className="text-gray-600">Connect with other ambitious learners in your industry.</p>
+                  </div>
+                </div>
+              </div>
+
+              <Link href="/book-consultant">
+                <Button size="lg" className="h-14 px-10 rounded-2xl bg-indigo-600 hover:bg-indigo-700 text-white font-black shadow-xl shadow-indigo-100">
+                  Find a Workshop
+                </Button>
+              </Link>
+            </div>
+
+            <div className="relative">
+              <div className="bg-gradient-to-br from-indigo-600 to-blue-700 rounded-[2.5rem] p-4 shadow-2xl rotate-3">
+                 <div className="bg-white rounded-[2.2rem] overflow-hidden lg:aspect-square">
+                    <img 
+                      src="https://images.unsplash.com/photo-1540317580384-e5d43616b9aa?w=800&h=800&fit=crop" 
+                      className="w-full h-full object-cover -rotate-3 hover:rotate-0 transition-transform duration-700" 
+                      alt="Workshop Preview" 
+                    />
+                    <div className="absolute bottom-12 left-12 right-12 bg-white/95 backdrop-blur-md p-6 rounded-3xl shadow-2xl -rotate-3 border border-indigo-50">
+                       <div className="flex items-center justify-between mb-4">
+                          <Badge className="bg-indigo-600 text-white border-transparent">TODAY • 4:00 PM</Badge>
+                          <span className="text-indigo-600 font-black">$25.00</span>
+                       </div>
+                       <h4 className="text-xl font-black text-gray-900 mb-2">Public Speaking for Introverts</h4>
+                       <div className="flex items-center gap-2">
+                          <div className="w-8 h-8 rounded-full bg-gray-200" />
+                          <span className="text-sm font-bold text-gray-600">with John Maxwell</span>
+                       </div>
+                    </div>
+                 </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* NEW: Global Command Feature */}
+      <section className="py-24 bg-gray-950 text-white overflow-hidden relative">
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_0%,rgba(59,130,246,0.15),transparent)] pointer-events-none" />
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+          <div className="text-center mb-16">
+            <Badge className="mb-4 bg-white/10 text-white border-white/20 hover:bg-white/20 px-4 py-1.5 text-xs font-black uppercase tracking-widest transition-all">
+              Power Search v3.0
+            </Badge>
+            <h2 className="text-4xl lg:text-5xl font-black mb-6">Expertise at Your <br className="hidden lg:block" /> Fingertips</h2>
+            <p className="text-gray-400 text-lg max-w-2xl mx-auto">
+              Our advanced Command Palette lets you discover consultants, launch workshops, and access your library with a single keystroke.
+            </p>
+          </div>
+
+          <div className="max-w-4xl mx-auto">
+            <div className="relative group">
+              {/* Floating Key Hints */}
+              <div className="absolute -left-12 top-1/2 -translate-y-1/2 hidden xl:flex flex-col gap-4">
+                <div className="w-12 h-12 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center font-black text-xl shadow-2xl">⌘</div>
+                <div className="w-12 h-12 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center font-black text-xl shadow-2xl">K</div>
+              </div>
+
+              {/* Mock Command Dialog */}
+              <div className="bg-[#1c1c1c] border border-white/10 rounded-[2rem] shadow-[0_0_80px_rgba(0,0,0,0.5)] overflow-hidden transition-all group-hover:border-blue-500/30">
+                <div className="px-6 py-5 border-b border-white/5 flex items-center gap-4">
+                  <Search className="h-5 w-5 text-gray-500" />
+                  <span className="text-lg text-gray-500 font-medium">Search for consultants, products, or commands...</span>
+                </div>
+                <div className="p-4 space-y-1">
+                  <div className="px-4 py-4 rounded-2xl bg-white/5 border border-white/5 flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-xl bg-blue-600/20 flex items-center justify-center">
+                        <UserIcon className="h-5 w-5 text-blue-400" />
                       </div>
-                      <div className="grid grid-cols-3 gap-4 text-sm mb-4 pb-4 border-t border-gray-100">
-                        <div className="flex items-center gap-2 text-gray-600">
-                          <Calendar className="h-4 w-4" />
-                          <span>Jan 25, 2025</span>
-                        </div>
-                        <div className="flex items-center gap-2 text-gray-600">
-                          <Clock className="h-4 w-4" />
-                          <span>2:00 PM - 3:00 PM</span>
-                        </div>
-                        <div className="flex items-center gap-2 text-gray-600">
-                          <span className="text-xs bg-blue-50 text-blue-700 px-2 py-1 rounded">Video Call</span>
-                        </div>
-                      </div>
-                      <div className="flex gap-2">
-                        <Button size="sm" className="flex-1" variant="outline">Reschedule</Button>
-                        <Button size="sm" className="flex-1 bg-blue-600 hover:bg-blue-700">Join Call</Button>
+                      <div>
+                         <p className="font-bold text-sm">Find Business Strategists</p>
+                         <p className="text-xs text-gray-500">Search specialized consultants</p>
                       </div>
                     </div>
+                    <span className="text-[10px] font-black text-gray-600 bg-white/5 px-1.5 py-0.5 rounded border border-white/5 uppercase">Quick Link</span>
+                  </div>
 
-                    {/* Appointment Card 2 */}
-                    <div className="border border-gray-200 rounded-xl p-4 hover:border-purple-300 hover:shadow-lg transition-all">
-                      <div className="flex items-start justify-between mb-4">
-                        <div className="flex items-start gap-4">
-                          <img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=56&h=56&fit=crop" alt="Anik Islam" className="w-14 h-14 rounded-full object-cover" />
-                          <div>
-                            <h5 className="font-bold text-gray-900">Career Development Coaching</h5>
-                            <p className="text-sm text-gray-600">with Anik Islam</p>
-                          </div>
-                        </div>
-                        <span className="inline-flex items-center gap-1 px-3 py-1 bg-yellow-100 text-yellow-700 rounded-full text-xs font-semibold">
-                          Pending
-                        </span>
+                  <div className="px-4 py-4 rounded-2xl flex items-center justify-between hover:bg-white/5 group/item transition-colors">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-xl bg-indigo-600/20 flex items-center justify-center">
+                        <Award className="h-5 w-5 text-indigo-400" />
                       </div>
-                      <div className="grid grid-cols-3 gap-4 text-sm mb-4 pb-4 border-t border-gray-100">
-                        <div className="flex items-center gap-2 text-gray-600">
-                          <Calendar className="h-4 w-4" />
-                          <span>Jan 27, 2025</span>
-                        </div>
-                        <div className="flex items-center gap-2 text-gray-600">
-                          <Clock className="h-4 w-4" />
-                          <span>10:00 AM - 11:00 AM</span>
-                        </div>
-                        <div className="flex items-center gap-2 text-gray-600">
-                          <span className="text-xs bg-purple-50 text-purple-700 px-2 py-1 rounded">Phone Call</span>
-                        </div>
+                      <div>
+                         <p className="font-bold text-sm">Browse Top Rated Products</p>
+                         <p className="text-xs text-gray-500">Featured e-books & masterclasses</p>
                       </div>
-                      <div className="flex gap-2">
-                        <Button size="sm" className="flex-1" variant="outline">Cancel</Button>
-                        <Button size="sm" className="flex-1 bg-indigo-600 hover:bg-indigo-700">Confirm</Button>
+                    </div>
+                  </div>
+
+                  <div className="px-4 py-4 rounded-2xl flex items-center justify-between hover:bg-white/5 group/item transition-colors">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-xl bg-green-600/20 flex items-center justify-center">
+                        <Calendar className="h-5 w-5 text-green-400" />
+                      </div>
+                      <div>
+                         <p className="font-bold text-sm">Upcoming Workshops</p>
+                         <p className="text-xs text-gray-500">Next live sessions this week</p>
                       </div>
                     </div>
                   </div>
                 </div>
+                <div className="bg-[#151515] px-6 py-3 border-t border-white/5 flex justify-between items-center">
+                   <div className="flex gap-4">
+                     <span className="text-[10px] text-gray-500 flex items-center gap-1.5"><span className="bg-white/10 px-1 rounded">↑↓</span> Navigate</span>
+                     <span className="text-[10px] text-gray-500 flex items-center gap-1.5"><span className="bg-white/10 px-1 rounded">↵</span> Select</span>
+                   </div>
+                   <span className="text-[10px] text-gray-500">Knowledge Search v3</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
 
-                {/* Quick Stats Sidebar */}
-                <div className="space-y-4">
-                  <h4 className="text-lg font-bold text-gray-900 mb-4">Your Stats</h4>
-                  
-                  <div className="bg-gradient-to-br from-green-50 to-green-100 border border-green-200 rounded-xl p-6">
-                    <div className="text-sm text-gray-600 mb-2">Completed</div>
-                    <div className="text-3xl font-bold text-green-700 mb-2">8</div>
-                    <p className="text-xs text-green-600">consultations</p>
+      {/* NEW: Real-time Messaging Hub */}
+      <section className="py-24 bg-white overflow-hidden">
+         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-20 items-center">
+               <div className="order-2 lg:order-1 relative">
+                  <div className="relative bg-gray-50 rounded-[3rem] p-10 border border-gray-100 shadow-2xl">
+                     <div className="absolute -top-6 -right-6 bg-blue-600 text-white p-4 rounded-full shadow-2xl animate-bounce">
+                        <MessageCircle className="h-8 w-8" />
+                     </div>
+                     <div className="space-y-6">
+                        <div className="flex gap-4">
+                           <div className="w-12 h-12 rounded-full bg-blue-600 animate-pulse" />
+                           <div className="flex-1 bg-white p-4 rounded-2xl rounded-tl-none shadow-sm border border-gray-100 italic text-gray-500 text-sm">
+                              "Hi Akash! I've uploaded the strategy roadmap to our chat. Let's discuss it during our call tomorrow."
+                           </div>
+                        </div>
+                        <div className="flex gap-4 flex-row-reverse">
+                           <div className="w-12 h-12 rounded-full bg-indigo-600" />
+                           <div className="flex-1 bg-blue-600 p-4 rounded-2xl rounded-tr-none shadow-sm text-white text-sm font-medium">
+                              "Perfect! Just reviewed it. The growth projections look incredible. Can't wait!"
+                           </div>
+                        </div>
+                        <div className="bg-white border border-gray-100 rounded-2xl p-4 flex items-center justify-between shadow-sm">
+                           <div className="flex items-center gap-3">
+                              <div className="bg-red-50 p-2 rounded-lg">
+                                 <FileText className="h-5 w-5 text-red-600" />
+                              </div>
+                              <div>
+                                 <p className="text-sm font-bold text-gray-800">Growth_Strategy.pdf</p>
+                                 <p className="text-xs text-gray-400">2.4 MB • Shared 5 mins ago</p>
+                              </div>
+                           </div>
+                           <Button variant="ghost" size="sm" className="text-blue-600 font-bold hover:bg-blue-50">Download</Button>
+                        </div>
+                     </div>
+                  </div>
+               </div>
+               <div className="order-1 lg:order-2">
+                  <span className="text-blue-600 font-black text-sm uppercase tracking-widest bg-blue-50 px-3 py-1 rounded-full mb-6 inline-block">REAL-TIME SYNC</span>
+                  <h2 className="text-4xl lg:text-5xl font-black text-gray-900 mb-6 underline decoration-blue-500/30">Never Miss <br /> a Beat.</h2>
+                  <p className="text-xl text-gray-600 mb-10 leading-relaxed">
+                     Integrated chat, file-sharing, and notifications keep you connected to your experts. Share ideas, provide feedback, and grow together in a secure environment.
+                  </p>
+                  <Link href="/messages">
+                     <Button size="lg" className="h-14 px-10 rounded-2xl bg-gray-900 hover:bg-black text-white font-bold shadow-xl shadow-gray-200">
+                        Explore Messaging
+                        <Send className="ml-2 h-4 w-4" />
+                     </Button>
+                  </Link>
+               </div>
+            </div>
+         </div>
+      </section>
+
+      {/* Client Dashboard Preview Section */}
+      <section className="py-20 bg-gradient-to-b from-gray-50 to-white">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-16">
+            <span className="inline-block px-4 py-2 bg-indigo-100 text-indigo-600 rounded-full text-sm font-semibold mb-4">YOUR COMMAND CENTER</span>
+            <h2 className="text-4xl font-bold text-gray-900 mb-4">Manage Everything in One Place</h2>
+            <p className="text-xl text-gray-600 max-w-2xl mx-auto">Track appointments, access your library, and stay connected with your experts</p>
+          </div>
+
+          <div className="bg-white border border-gray-200 rounded-3xl overflow-hidden shadow-2xl">
+            {/* Dashboard Header */}
+            <div className="bg-gradient-to-r from-indigo-600 via-purple-600 to-blue-600 px-8 py-8">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h3 className="text-3xl font-black text-white mb-2">Welcome back, Akash!</h3>
+                  <p className="text-indigo-100 text-sm">Here's what's happening with your consultations</p>
+                </div>
+                <div className="hidden lg:flex items-center gap-3">
+                  <div className="bg-white/20 backdrop-blur-sm px-4 py-2 rounded-xl text-white text-sm font-bold flex items-center gap-2">
+                    <Calendar className="h-4 w-4" />
+                    Next: Today at 2 PM
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Stats Grid */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 px-8 py-8 bg-gradient-to-b from-indigo-50/50 to-white border-b border-gray-100">
+              <div className="group bg-white rounded-2xl p-6 border border-gray-200 hover:border-indigo-300 hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
+                <div className="flex items-start justify-between mb-4">
+                  <div className="p-3 bg-indigo-100 rounded-xl group-hover:bg-indigo-600 transition-all duration-300">
+                    <Calendar className="h-6 w-6 text-indigo-600 group-hover:text-white transition-colors" />
+                  </div>
+                  <span className="text-xs font-bold text-indigo-600 bg-indigo-50 px-2 py-1 rounded-full">This Month</span>
+                </div>
+                <div className="text-3xl font-black text-gray-900 mb-1">12</div>
+                <p className="text-gray-600 text-sm font-medium">Total Sessions</p>
+              </div>
+
+              <div className="group bg-white rounded-2xl p-6 border border-gray-200 hover:border-blue-300 hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
+                <div className="flex items-start justify-between mb-4">
+                  <div className="p-3 bg-blue-100 rounded-xl group-hover:bg-blue-600 transition-all duration-300">
+                    <Clock className="h-6 w-6 text-blue-600 group-hover:text-white transition-colors" />
+                  </div>
+                  <span className="text-xs font-bold text-blue-600 bg-blue-50 px-2 py-1 rounded-full">Upcoming</span>
+                </div>
+                <div className="text-3xl font-black text-gray-900 mb-1">3</div>
+                <p className="text-gray-600 text-sm font-medium">Scheduled</p>
+              </div>
+
+              <div className="group bg-white rounded-2xl p-6 border border-gray-200 hover:border-green-300 hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
+                <div className="flex items-start justify-between mb-4">
+                  <div className="p-3 bg-green-100 rounded-xl group-hover:bg-green-600 transition-all duration-300">
+                    <Check className="h-6 w-6 text-green-600 group-hover:text-white transition-colors" />
+                  </div>
+                  <span className="text-xs font-bold text-green-600 bg-green-50 px-2 py-1 rounded-full">↑ 25%</span>
+                </div>
+                <div className="text-3xl font-black text-gray-900 mb-1">9</div>
+                <p className="text-gray-600 text-sm font-medium">Completed</p>
+              </div>
+            </div>
+
+            {/* Main Dashboard Content */}
+            <div className="p-8">
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                {/* Upcoming Appointments */}
+                <div className="lg:col-span-2 space-y-6">
+                  <div className="flex items-center justify-between mb-6">
+                    <h4 className="text-xl font-black text-gray-900">Upcoming Appointments</h4>
+                    <Link href="/dashboard/client">
+                      <span className="text-sm font-semibold text-indigo-600 hover:text-indigo-700 cursor-pointer">View All →</span>
+                    </Link>
                   </div>
 
-                  <div className="bg-gradient-to-br from-blue-50 to-blue-100 border border-blue-200 rounded-xl p-6">
-                    <div className="text-sm text-gray-600 mb-2">Total Spent</div>
-                    <div className="text-3xl font-bold text-blue-700 mb-2">$1,200</div>
-                    <p className="text-xs text-blue-600">on consultations</p>
+                  {/* Appointment Card 1 */}
+                  <div className="group border border-gray-200 rounded-2xl p-6 hover:border-indigo-300 hover:shadow-xl transition-all duration-300">
+                    <div className="flex items-start justify-between mb-5">
+                      <div className="flex items-start gap-4">
+                        <div className="relative">
+                          <img src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=56&h=56&fit=crop" alt="Fatima Ahmed" className="w-14 h-14 rounded-full object-cover ring-4 ring-indigo-50" />
+                          <div className="absolute -bottom-1 -right-1 w-5 h-5 bg-green-500 rounded-full border-2 border-white"></div>
+                        </div>
+                        <div>
+                          <h5 className="font-bold text-gray-900 text-lg mb-1">Business Strategy Session</h5>
+                          <p className="text-sm text-gray-600 font-medium">with Fatima Ahmed</p>
+                          <div className="flex items-center gap-1 mt-1">
+                            <Star className="h-3 w-3 fill-yellow-400 text-yellow-400" />
+                            <span className="text-xs font-bold text-gray-700">4.9</span>
+                            <span className="text-xs text-gray-500 ml-1">• Business Strategy</span>
+                          </div>
+                        </div>
+                      </div>
+                      <Badge className="bg-green-100 text-green-700 border-green-200 hover:bg-green-100">
+                        <Check className="h-3 w-3 mr-1" />
+                        Confirmed
+                      </Badge>
+                    </div>
+
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-5 pb-5 border-t border-gray-100 pt-5">
+                      <div className="flex items-center gap-2 text-sm text-gray-600">
+                        <Calendar className="h-4 w-4 text-indigo-500" />
+                        <span className="font-medium">Jan 25, 2025</span>
+                      </div>
+                      <div className="flex items-center gap-2 text-sm text-gray-600">
+                        <Clock className="h-4 w-4 text-blue-500" />
+                        <span className="font-medium">2:00 PM</span>
+                      </div>
+                      <div className="flex items-center gap-2 text-sm">
+                        <Badge variant="outline" className="text-xs bg-blue-50 text-blue-700 border-blue-200">Video Call</Badge>
+                      </div>
+                      <div className="flex items-center gap-2 text-sm">
+                        <DollarSign className="h-4 w-4 text-green-500" />
+                        <span className="font-bold text-gray-900">$150</span>
+                      </div>
+                    </div>
+
+                    <div className="flex gap-3">
+                      <Button size="sm" variant="outline" className="flex-1 font-semibold">
+                        <MessageCircle className="h-4 w-4 mr-2" />
+                        Message
+                      </Button>
+                      <Button size="sm" className="flex-1 bg-indigo-600 hover:bg-indigo-700 font-semibold">
+                        <Video className="h-4 w-4 mr-2" />
+                        Join Call
+                      </Button>
+                    </div>
                   </div>
 
-                  <div className="bg-gradient-to-br from-yellow-50 to-yellow-100 border border-yellow-200 rounded-xl p-6">
-                    <div className="text-sm text-gray-600 mb-2">Rating</div>
-                    <div className="text-3xl font-bold text-yellow-700 mb-2">4.8★</div>
-                    <p className="text-xs text-yellow-600">average from consultants</p>
+                  {/* Appointment Card 2 */}
+                  <div className="group border border-gray-200 rounded-2xl p-6 hover:border-purple-300 hover:shadow-xl transition-all duration-300">
+                    <div className="flex items-start justify-between mb-5">
+                      <div className="flex items-start gap-4">
+                        <div className="relative">
+                          <img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=56&h=56&fit=crop" alt="Anik Islam" className="w-14 h-14 rounded-full object-cover ring-4 ring-purple-50" />
+                          <div className="absolute -bottom-1 -right-1 w-5 h-5 bg-gray-400 rounded-full border-2 border-white"></div>
+                        </div>
+                        <div>
+                          <h5 className="font-bold text-gray-900 text-lg mb-1">Career Development Coaching</h5>
+                          <p className="text-sm text-gray-600 font-medium">with Anik Islam</p>
+                          <div className="flex items-center gap-1 mt-1">
+                            <Star className="h-3 w-3 fill-yellow-400 text-yellow-400" />
+                            <span className="text-xs font-bold text-gray-700">4.8</span>
+                            <span className="text-xs text-gray-500 ml-1">• Career Coach</span>
+                          </div>
+                        </div>
+                      </div>
+                      <Badge className="bg-yellow-100 text-yellow-700 border-yellow-200 hover:bg-yellow-100">
+                        Pending
+                      </Badge>
+                    </div>
+
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-5 pb-5 border-t border-gray-100 pt-5">
+                      <div className="flex items-center gap-2 text-sm text-gray-600">
+                        <Calendar className="h-4 w-4 text-purple-500" />
+                        <span className="font-medium">Jan 27, 2025</span>
+                      </div>
+                      <div className="flex items-center gap-2 text-sm text-gray-600">
+                        <Clock className="h-4 w-4 text-blue-500" />
+                        <span className="font-medium">10:00 AM</span>
+                      </div>
+                      <div className="flex items-center gap-2 text-sm">
+                        <Badge variant="outline" className="text-xs bg-purple-50 text-purple-700 border-purple-200">Phone Call</Badge>
+                      </div>
+                      <div className="flex items-center gap-2 text-sm">
+                        <DollarSign className="h-4 w-4 text-green-500" />
+                        <span className="font-bold text-gray-900">$120</span>
+                      </div>
+                    </div>
+
+                    <div className="flex gap-3">
+                      <Button size="sm" variant="outline" className="flex-1 font-semibold text-red-600 border-red-200 hover:bg-red-50">
+                        Cancel
+                      </Button>
+                      <Button size="sm" className="flex-1 bg-purple-600 hover:bg-purple-700 font-semibold">
+                        Confirm Booking
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Sidebar: Quick Actions & Recent Activity */}
+                <div className="space-y-6">
+                  <div>
+                    <h4 className="text-lg font-black text-gray-900 mb-4">Quick Actions</h4>
+                    <div className="space-y-3">
+                      <Link href="/book-consultant">
+                        <div className="group cursor-pointer bg-gradient-to-br from-indigo-50 to-indigo-100 border border-indigo-200 rounded-xl p-4 hover:shadow-lg transition-all hover:-translate-y-1">
+                          <div className="flex items-center gap-3">
+                            <div className="p-2 bg-indigo-600 rounded-lg">
+                              <Calendar className="h-5 w-5 text-white" />
+                            </div>
+                            <div className="flex-1">
+                              <p className="font-bold text-gray-900 text-sm">Book Session</p>
+                              <p className="text-xs text-gray-600">Find an expert</p>
+                            </div>
+                            <ArrowRight className="h-4 w-4 text-indigo-600 group-hover:translate-x-1 transition-transform" />
+                          </div>
+                        </div>
+                      </Link>
+
+                      <Link href="/library">
+                        <div className="group cursor-pointer bg-gradient-to-br from-purple-50 to-purple-100 border border-purple-200 rounded-xl p-4 hover:shadow-lg transition-all hover:-translate-y-1">
+                          <div className="flex items-center gap-3">
+                            <div className="p-2 bg-purple-600 rounded-lg">
+                              <BookOpen className="h-5 w-5 text-white" />
+                            </div>
+                            <div className="flex-1">
+                              <p className="font-bold text-gray-900 text-sm">Browse Library</p>
+                              <p className="text-xs text-gray-600">Digital products</p>
+                            </div>
+                            <ArrowRight className="h-4 w-4 text-purple-600 group-hover:translate-x-1 transition-transform" />
+                          </div>
+                        </div>
+                      </Link>
+
+                      <Link href="/messages">
+                        <div className="group cursor-pointer bg-gradient-to-br from-blue-50 to-blue-100 border border-blue-200 rounded-xl p-4 hover:shadow-lg transition-all hover:-translate-y-1">
+                          <div className="flex items-center gap-3">
+                            <div className="p-2 bg-blue-600 rounded-lg relative">
+                              <MessageCircle className="h-5 w-5 text-white" />
+                              <div className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 rounded-full text-[10px] text-white font-bold flex items-center justify-center">3</div>
+                            </div>
+                            <div className="flex-1">
+                              <p className="font-bold text-gray-900 text-sm">Messages</p>
+                              <p className="text-xs text-gray-600">3 unread</p>
+                            </div>
+                            <ArrowRight className="h-4 w-4 text-blue-600 group-hover:translate-x-1 transition-transform" />
+                          </div>
+                        </div>
+                      </Link>
+                    </div>
                   </div>
 
-                  <Button className="w-full bg-purple-600 hover:bg-purple-700" size="lg">
-                    View Full Dashboard
-                  </Button>
+                  {/* Recent Activity */}
+                  <div>
+                    <h4 className="text-lg font-black text-gray-900 mb-4">Recent Activity</h4>
+                    <div className="space-y-3">
+                      <div className="flex items-start gap-3 p-3 bg-gray-50 rounded-xl border border-gray-100">
+                        <div className="p-2 bg-green-100 rounded-lg">
+                          <Check className="h-4 w-4 text-green-600" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-semibold text-gray-900 truncate">Session Completed</p>
+                          <p className="text-xs text-gray-600">Marketing Strategy with Priya</p>
+                          <p className="text-xs text-gray-400 mt-1">2 hours ago</p>
+                        </div>
+                      </div>
+
+                      <div className="flex items-start gap-3 p-3 bg-gray-50 rounded-xl border border-gray-100">
+                        <div className="p-2 bg-purple-100 rounded-lg">
+                          <BookOpen className="h-4 w-4 text-purple-600" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-semibold text-gray-900 truncate">New Purchase</p>
+                          <p className="text-xs text-gray-600">Growth Hacking E-book</p>
+                          <p className="text-xs text-gray-400 mt-1">Yesterday</p>
+                        </div>
+                      </div>
+
+                      <div className="flex items-start gap-3 p-3 bg-gray-50 rounded-xl border border-gray-100">
+                        <div className="p-2 bg-blue-100 rounded-lg">
+                          <Video className="h-4 w-4 text-blue-600" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-semibold text-gray-900 truncate">Workshop Joined</p>
+                          <p className="text-xs text-gray-600">Public Speaking Masterclass</p>
+                          <p className="text-xs text-gray-400 mt-1">3 days ago</p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <Link href="/dashboard/client">
+                    <Button className="w-full bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 font-bold shadow-lg" size="lg">
+                      Open Full Dashboard
+                      <ArrowRight className="ml-2 h-4 w-4" />
+                    </Button>
+                  </Link>
                 </div>
               </div>
             </div>
@@ -801,40 +1224,6 @@ export default function HomePage() {
           </div>
         </div>
       </section>
-       <section id="how-it-works" className="py-16 bg-gray-50 scroll-mt-16">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold text-gray-900 mb-4">How It Works</h2>
-            <p className="text-lg text-gray-600">Simple steps to get started</p>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            <div className="text-center">
-              <div className="bg-blue-600 text-white rounded-full w-12 h-12 flex items-center justify-center mx-auto mb-4 text-xl font-bold">
-                1
-              </div>
-              <h3 className="text-xl font-semibold mb-2">Create Account</h3>
-              <p className="text-gray-600">Sign up as a client or register as a consultant</p>
-            </div>
-
-            <div className="text-center">
-              <div className="bg-blue-600 text-white rounded-full w-12 h-12 flex items-center justify-center mx-auto mb-4 text-xl font-bold">
-                2
-              </div>
-              <h3 className="text-xl font-semibold mb-2">Find & Book</h3>
-              <p className="text-gray-600">Search for consultants and book available time slots</p>
-            </div>
-
-            <div className="text-center">
-              <div className="bg-blue-600 text-white rounded-full w-12 h-12 flex items-center justify-center mx-auto mb-4 text-xl font-bold">
-                3
-              </div>
-              <h3 className="text-xl font-semibold mb-2">Consult</h3>
-              <p className="text-gray-600">Attend your consultation and get expert advice</p>
-            </div>
-          </div>
-        </div>
-      </section>
 
       {/* CTA Section */}
       <section className="py-16 bg-blue-600">
@@ -852,7 +1241,7 @@ export default function HomePage() {
       {/* Footer */}
       <footer className="bg-gray-900 text-white py-12">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-5 gap-8">
             <div>
               <div className="flex items-center mb-4">
                 <Calendar className="h-6 w-6 text-blue-400" />
@@ -886,6 +1275,21 @@ export default function HomePage() {
                 <li><Link href="/contact" className="hover:text-blue-400 transition-colors">Contact Us</Link></li>
                 <li><Link href="/privacy" className="hover:text-blue-400 transition-colors">Privacy Policy</Link></li>
               </ul>
+            </div>
+
+            <div>
+              <h3 className="text-lg font-semibold mb-4">Stay Connected</h3>
+              <p className="text-gray-400 mb-4 text-sm">Subscribe for research updates and academic insights.</p>
+              <div className="flex flex-col gap-3">
+                <Input 
+                  type="email" 
+                  placeholder="Email address" 
+                  className="bg-gray-800 border-gray-700 text-white placeholder:text-gray-500 focus-visible:ring-blue-500 h-10"
+                />
+                <Button className="w-full bg-green-600 hover:bg-green-700 text-white font-bold h-10">
+                  Subscribe <ArrowRight className="ml-2 h-4 w-4" />
+                </Button>
+              </div>
             </div>
           </div>
 

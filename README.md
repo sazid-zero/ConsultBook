@@ -1,345 +1,137 @@
-# ConsultBook: Revolutionizing Expert Knowledge Marketplace
+# ConsultBook - The Ultimate Expert Consultation Platform
 
-> **The all-in-one platform connecting millions with world-class consultants, educators, and thought leaders.**
+![ConsultBook Hero](https://consultbook-demo.vercel.app/og-image.png)
 
----
+## 🚀 Introduction
 
-## 🎯 The Problem We Solved
+**ConsultBook** is a next-generation SaaS platform designed to bridge the gap between experts and knowledge seekers. It serves as a comprehensive **Knowledge Commerce Marketplace**, allowing professionals to monetize their expertise through 1:1 consultations, live masterclasses, and digital products.
 
-### Real-World Challenges in Professional Consultation & Learning
+Built with **Next.js 15**, **TypeScript**, and **Drizzle ORM**, ConsultBook offers a seamless, high-performance experience with real-time capabilities. It solves the fragmentation in the consultation industry by unifying scheduling, video conferencing, payments, and community management into a single, elegant ecosystem.
 
-**Before ConsultBook**, experts and learners faced fragmented ecosystems:
-
-- 🌍 **Geographic Barriers**: Brilliant consultants remained localized. Knowledge was locked in cities.
-- 💰 **Income Inequality**: Experts couldn't monetize their knowledge beyond billable hours. No passive income.
-- 📚 **Learning Friction**: Students scattered across 10+ platforms. No unified learning experience.
-- ⏰ **Scheduling Chaos**: Booking consultations required endless email threads and timezone nightmares.
-- 👥 **Scalability Limits**: Group workshops and events required expensive infrastructure. Expert time was non-scalable.
-- 🎓 **Credibility Gaps**: No way to verify expertise or build professional portfolios online.
-- 💸 **Payment Complexity**: Multiple payment systems. No unified billing for different service types.
-- 📊 **Zero Insights**: Consultants had no data on what services worked best.
+> **Status Reference for Recruiters**: This project is a full-stack production-grade application demonstrating advanced architectural patterns, real-time data handling, and complex state management.
 
 ---
 
-## ✨ The ConsultBook Solution
+## 🌟 Key Features
 
-A comprehensive platform solving all these problems with 15+ integrated features:
+### 1. **Expert Marketplace & Discovery**
+- **Advanced Search Engine**: Real-time filtering by specialty, location, price, and mode (video/in-person) using a custom optimized search algorithm.
+- **Dynamic Profile Pages**: Rich consultant profiles showcasing bios, qualifications, cover photos, and verified reviews.
+- **Global Command Center**: A `Cmd+K` power search interface for instant navigation across the entire platform.
 
-### **1. 1:1 Expert Consultations (Core)**
-- ⏰ Instant booking with real-time availability calendar
-- 💻 Multi-modal sessions (in-person, virtual Zoom, phone)
-- 🔐 Secure scheduling with automatic conflict detection
-- 📝 Pre-session notes sharing for better preparation
-- ⭐ 5-star reviews + detailed feedback system
-- 🔄 Flexible rescheduling and cancellations
+### 2. **Comprehensive Booking System**
+- **Smart Scheduling**: Integrated calendar management with timezone support, allowing consultants to define custom availability slots.
+- **Multi-Mode Appointments**: Support for Video, Audio, and In-Person consultation bookings.
+- **Workflow Automation**: Automated email notifications and status updates (Pending -> Confirmed -> Completed) for both parties.
 
-**Impact**: 94% reduction in no-shows, 89% availability utilization
+### 3. **Live Workshops & Masterclasses**
+- **Event Management**: Consultants can create, publish, and monetize live group sessions.
+- **Ticketing System**: Seamless seat reservation and capacity management for workshops.
+- **Digital Asset Delivery**: Automated distribution of workshop materials and resources to attendees.
 
----
+### 4. **Real-Time Communication Hub**
+- **Integrated Messaging**: A full-featured chat system allowing pre-booking inquiries and post-session follow-ups.
+- **File Sharing**: Secure sharing of documents, resources, and session notes directly within the chat.
+- **Instant Notifications**: Real-time alerts for new messages, booking requests, and session reminders.
 
-### **2. Expert Profiles & Portfolios**
-- 📸 Professional verified consultant dashboards
-- 🎓 Credentials showcase (certifications, degrees, licenses)
-- 📊 Live statistics (completions, satisfaction, earnings)
-- 🖼️ Portfolio gallery with case studies
-- ✔️ Verification badges for credibility
-- 💼 Authentic client testimonials
+### 5. **Robust Payment Infrastructure** (Powered by Stripe)
+- **Secure Transactions**: End-to-end encrypted payment processing for appointments and digital products.
+- **Wallet System**: Integrated digital wallet for tracking earnings, refunds, and transaction history.
+- **Automated Payouts**: Streamlined withdrawal process for consultants to receive their earnings directly.
+- **Multi-Currency Support**: Built to handle international transactions seamlessley.
 
-**Impact**: 78% increase in conversion from profile view to booking
-
----
-
-### **3. Interactive Group Sessions & Workshops**
-- 🎓 Flexible session types (webinars, workshops, hybrid)
-- 📅 Advanced scheduling with recurring sessions and waitlists
-- 👥 Capacity management with dynamic pricing
-- 🎬 Screen sharing, Q&A modules, polls, chat
-- 📜 Auto-generated completion certificates
-- 📊 Host analytics with engagement metrics
-
-**Impact**: 340% increase in consultant revenue, 5.2x higher than 1:1
+### 6. **Dual-Role Dashboards**
+- **Client Dashboard**: A personalized hub for tracking upcoming sessions, purchase history, and favorite consultants.
+- **Consultant Workspace**: A professional suite for managing bookings, analyzing earnings, creating workshops, and editing public profiles.
 
 ---
 
-### **4. Digital Library & Knowledge Products**
-- 📖 Book publishing platform with royalty tracking
-- 📚 Rich content types (e-books, courses, templates, case studies)
-- 🔍 AI-powered discovery and recommendations
-- 🛒 Smart purchasing with bundled deals
-- 📝 Reader features (bookmarks, highlights, notes, dark mode)
-- ⭐ Social review system with verified badges
-- 📊 Author analytics with real-time sales dashboard
+## 🛠️ Technology Stack
 
-**Impact**: 2,100+ published titles, $4.2M author earnings, avg $2,800/mo per author
+This project leverages the bleeding edge of the React ecosystem to ensure scalability and performance.
 
----
-
-### **5. Unified Payment & Order System**
-- 💳 Multi-gateway support (Stripe, Razorpay, bKash, Nagad, Apple Pay)
-- 🛍️ Unified shopping cart (consultations, sessions, books)
-- 📊 Smart invoicing with tax calculations
-- 🔒 PCI-DSS compliant with fraud detection
-- 📱 Seamless mobile payments
-
-**Impact**: 99.4% successful transaction rate, 2.1% chargeback rate
+| Category | Technologies |
+|----------|--------------|
+| **Core Framework** | Next.js 15 (App Router), React 19 (RC) |
+| **Language** | TypeScript (Strict Mode) |
+| **Styling** | Tailwind CSS, Shadcn UI, Framer Motion (Animations) |
+| **Database & ORM** | PostgreSQL (Neon DB Serverless), Drizzle ORM |
+| **Authentication** | Firebase Auth (Custom Integration) |
+| **State Management** | React Hooks, Context API, Server Actions |
+| **Real-Time** | Server-Sent Events (SSE) / Polling for Updates |
+| **Forms & Validation** | React Hook Form, Zod |
 
 ---
 
-### **6. Enhanced Consultant Dashboard v2.0**
-- 📊 Executive overview with real-time earnings
-- 🎯 Quick actions for all service types
-- 👥 Complete client management system
-- 💰 Revenue analytics and performance tracking
-- ⚙️ Full configuration and settings
-- 📄 Reports and exports for taxes/compliance
+## 💡 Technical Challenges Solved
 
-**Impact**: 73% less admin time, 80% more focus on consulting
+### **1. Handling Complex Scheduling Logic**
+Designing a database schema and UI that handles custom availability across different timezones was non-trivial. I implemented a robust `consultant_schedules` table and overlapping time-slot validation logic to ensure zero double-bookings.
 
----
+### **2. Performance Optimization with Server Actions**
+To ensure lightning-fast page loads, I heavily utilized Next.js Server Components and Server Actions. This reduced the client-side bundle size significantly and moved complex logic (like booking calculations and database mutations) to the edge.
 
-### **7. Enhanced Client Dashboard v2.0**
-- 📊 Learning overview with stats
-- 🔍 AI-powered discovery hub
-- 📅 Unified schedule with countdown timers
-- 📚 Learning progress tracking
-- 💬 Messages and connections
-- 🎓 Certificates and achievements
-- 💳 Complete purchase history
-- 🎁 Referrals and rewards system
-
-**Impact**: 89% client retention, 65% book additional services within 3 months
+### **3. Unified Search Experience**
+Implementing the "Global Search" required harmonizing data from multiple disparate sources (Consultants, Workshops, Products). I built a unified search indexer that aggregates these entities and serves them through a high-performance filtering UI.
 
 ---
 
-### **8. Admin Dashboard & Platform Management**
-- 📊 Comprehensive platform analytics
-- 👥 User and consultant verification management
-- ✅ Content moderation with ML filtering
-- 💰 Financial management and payout processing
-- 📢 Marketing and communications tools
-- 🔐 Security monitoring and audit logs
-- 📊 Custom report builder and exports
+## 📸 Screen Showcase
 
-**Impact**: 92% reduction in platform issues, 38% improvement in consultant quality
+| | |
+|:-------------------------:|:-------------------------:|
+| **Landing Page** | **Consultant Profile** |
+| ![Landing](https://placehold.co/600x400?text=Landing+Page) | ![Profile](https://placehold.co/600x400?text=Consultant+Profile) |
+| **Booking Flow** | **Expert Dashboard** |
+| ![Booking](https://placehold.co/600x400?text=Booking+Flow) | ![Dashboard](https://placehold.co/600x400?text=Expert+Dashboard) |
 
 ---
 
-### **9. Advanced Search & Discovery Engine**
-- 🤖 Intelligent AI-powered consultant matching
-- 🔍 Multi-faceted filtering and fuzzy search
-- 📈 Personalized home feed and recommendations
-- 🎯 Smart suggestions and trending content
+## 🏁 Getting Started
 
-**Impact**: 67% increase in search-driven bookings, 2.3x CTR improvement
+To run this project locally:
 
----
+1.  **Clone the repository:**
+    ```bash
+    git clone https://github.com/your-username/consultbook.git
+    cd consultbook
+    ```
 
-### **10. Community & Social Features**
-- 💬 Q&A forum with expert verification
-- 🎥 Live streaming capabilities
-- 👥 Networking events and expert circles
-- 🏆 Gamification with badges and leaderboards
-- 📱 Social sharing with referral codes
+2.  **Install dependencies:**
+    ```bash
+    npm install
+    ```
 
-**Impact**: 3.2x conversion with referrals, 45% of signups from community
+3.  **Set up Environment Variables:**
+    Create a `.env.local` file and add your Supabase/Neon DB credentials and Stripe keys.
+    ```env
+    DATABASE_URL=postgres://...
+    NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=pk_test_...
+    STRIPE_SECRET_KEY=sk_test_...
+    ```
 
----
+4.  **Run Database Migrations:**
+    ```bash
+    npm run db:push
+    ```
 
-### **11. Marketing & Referral System**
-- 🎁 Dual-sided referral rewards (consultant & client)
-- 📊 Referral analytics and leaderboards
-- 🎯 Pre-made marketing materials
-- 📧 Automated email sequences
-
-**Impact**: 40% of bookings from referrals, 4.1x higher LTV
-
----
-
-### **12. Certification & Credentials System**
-- 📜 Auto-generated certificates upon completion
-- 🎓 Multi-session learning paths with skill badges
-- 📊 Public credential verification database
-- 🔗 LinkedIn integration for sharing
-
-**Impact**: 78% share credentials on social, 2.5x booking increase after earning
+5.  **Start the Development Server:**
+    ```bash
+    npm run dev
+    ```
 
 ---
 
-### **13. Integration Ecosystem**
-- 🔗 Calendar sync (Google, Outlook, iCal)
-- 🎥 Video conferencing (Zoom, Google Meet, Teams)
-- 💬 Communication (Slack, WhatsApp, Telegram)
-- 📊 Analytics integration
-- 💳 Multi-payment gateway support
+## 🛣️ Future Roadmap
 
-**Impact**: 94% calendar sync adoption, 88% tool integration adoption
+- [ ] **AI-Powered Matching**: Recommendation engine to pair clients with the perfect expert.
+- [ ] **Mobile App**: Native mobile experience using React Native.
+- [ ] **Group Consulting**: Support for cohort-based consulting programs.
 
 ---
 
-### **14. Mobile Apps (iOS & Android)**
-- ✨ Full dashboard functionality
-- 📱 Push notifications and offline content
-- 🔔 One-tap booking and biometric auth
-- 📱 <2s load time, 3G-ready optimization
+## 📬 Contact
 
-**Impact**: 67% users on mobile, 5.2x daily active sessions via app
+**Saad** - [Your Portfolio Link] - [Your Email]
 
----
-
-### **15. Multi-Language & Localization**
-- 🌍 12+ supported languages
-- 🌐 Currency conversion, local payment methods
-- 📞 24/7 support in 8+ languages
-- 🌏 Regional compliance (GDPR, CCPA)
-
-**Impact**: 67% international users, 140+ countries supported
-
----
-
-## 🏗️ Technical Architecture
-
-### Technology Stack
-```
-Frontend:  Next.js 15+, TypeScript, Tailwind CSS, shadcn/ui, React Hooks
-Backend:   Firebase (Firestore, Auth, Storage, Functions), Node.js
-Payments:  Stripe, Razorpay, Custom Gateway Wrapper
-Analytics: Google Analytics 4, Mixpanel, Sentry
-Infra:     Vercel CDN, Cloudflare DDoS, AWS S3, Google Cloud
-DevOps:    GitHub Actions, Docker, Datadog, Auth0
-```
-
-### Real-time Features
-- Live session attendee count
-- Live Q&A during sessions
-- Real-time message delivery
-- Instant notification distribution
-- Live availability calendar sync
-
----
-
-## 📊 Platform Metrics & Impact
-
-### User Metrics
-- **Total Users**: 2.8M+ (480K consultants, 2.32M clients)
-- **Monthly Active Users**: 1.4M
-- **Daily Active Users**: 380K
-- **User Retention (30d)**: 68%
-- **User Retention (90d)**: 42%
-
-### Business Metrics
-- **Gross Merchandise Value (GMV)**: $92.4M annually
-- **Revenue**: $18.5M annually
-- **Transactions/Month**: 340K+
-- **Avg Transaction Value**: $89
-- **Payment Success Rate**: 99.4%
-
-### Consultant Metrics
-- **Avg Consultant Earnings**: $3,200/month
-- **Top Consultant Earnings**: $85,000/month
-- **Avg Hourly Rate**: $75
-- **Sessions Offered**: 1.2M+
-- **Books Published**: 2,100+
-
-### Growth Metrics
-- **YoY Growth**: 180%
-- **MoM Growth**: 12.5% avg
-- **New Consultants/Month**: 9,000+
-- **New Clients/Month**: 58,000+
-- **Expansion to New Countries**: 22 in last year
-
----
-
-## 🚀 Key Success Factors
-
-✅ **Trust & Verification** - Verified badges, background checks, authentic reviews
-✅ **Frictionless Booking** - One-click scheduling with integrated payments
-✅ **Revenue Diversity** - 1:1, groups, books, passive income streams
-✅ **Global Accessibility** - 12+ languages, local payments, 24/7 support
-✅ **Data-Driven** - ML recommendations, real-time analytics, A/B testing
-✅ **Community-Driven** - Referrals, social features, gamification, viral loops
-
----
-
-## 💼 Getting Started
-
-### For Developers
-```bash
-git clone https://github.com/yourusername/consultbook.git
-cd consultbook
-npm install
-npm run dev
-```
-
-### For Consultants
-[Join as Consultant](https://consulbook.com/join-consultant) - Apply with credentials → Verification → Start earning
-
-### For Users
-[Sign Up Today](https://consulbook.com/signup) - Browse experts → Book consultation → Learn and grow
-
----
-
-## 🔐 Security & Compliance
-
-✅ End-to-end encryption for messages
-✅ PCI-DSS Level 1 compliance
-✅ GDPR, CCPA compliant
-✅ Regular security audits & penetration testing
-✅ SSL/TLS for all communications
-✅ Bug bounty program active
-
----
-
-## 🌱 Growth Roadmap
-
-**Q1-Q2 2026**: Enterprise & B2B licensing
-**Q3-Q4 2026**: AI integration (recommendations, transcription, chatbot)
-**2027**: Global expansion to 50+ countries, crypto payments
-**2027+**: Vision 2030 - 100M+ users, $1B+ GMV, IPO/acquisition
-
----
-
-## 🎉 Why ConsultBook Matters
-
-**In a world where:**
-- ❌ Geographic location limits opportunities
-- ❌ Knowledge is siloed and expensive
-- ❌ Experts can't scale their impact
-- ❌ Learning is fragmented across platforms
-- ❌ Trust in online experts is low
-
-**ConsultBook provides:**
-- ✅ Global access to world-class expertise
-- ✅ Affordable, scalable learning
-- ✅ Unlimited earning potential for experts
-- ✅ Unified, seamless learning experience
-- ✅ Verified, trustworthy consultants
-
----
-
-## 📞 Contact & Support
-
-- **Website**: https://consulbook.com
-- **Email**: support@consulbook.com
-- **Help Center**: https://help.consulbook.com
-- **Community**: https://community.consulbook.com
-- **Live Chat**: Available 24/7
-
----
-
-## 📄 License
-
-Apache 2.0 - See [LICENSE](./LICENSE) file for details
-
----
-
-### 🚀 Join the Revolution
-
-**The future of learning is here.**
-
-Whether you're an expert wanting to share knowledge globally, or a learner seeking growth, **ConsultBook is your platform**.
-
-[Get Started Today →](https://consulbook.com/signup)
-
----
-
-*Last Updated: January 19, 2026 | Version: 2.0 - Complete Platform*
+*Built with ❤️ and ☕ by a passionate full-stack developer.*
