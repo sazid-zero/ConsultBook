@@ -32,10 +32,10 @@ export function WorkshopRegistrationActions({ workshop }: WorkshopRegistrationAc
           </p>
         </div>
       )}
-      <Link href={`/checkout?workshopId=${workshop.id}`} className="w-full">
+      <Link href={isHost || workshop.isFull ? "#" : `/checkout?workshopId=${workshop.id}`} className="w-full">
         <Button 
           className="w-full h-16 bg-blue-600 hover:bg-blue-700 text-white rounded-[24px] font-black text-lg shadow-2xl shadow-blue-200 transition-all hover:scale-[1.02] active:scale-[0.98] disabled:grayscale disabled:opacity-50"
-          disabled={workshop.isFull}
+          disabled={workshop.isFull || isHost}
         >
           {workshop.isFull ? "Workshop Full" : "Book Spot Now"}
         </Button>

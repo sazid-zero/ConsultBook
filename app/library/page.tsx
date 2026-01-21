@@ -220,6 +220,7 @@ export default function LibraryPage() {
                       }}
                       variant="icon"
                       className="h-12 w-12 rounded-xl bg-gray-900 hover:bg-blue-600 shadow-lg transition-all group-hover:translate-x-1"
+                      disabled={userData?.uid === product.consultantId}
                     />
                   </CardFooter>
                 </Card>

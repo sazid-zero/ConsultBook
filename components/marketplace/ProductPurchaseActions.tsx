@@ -36,8 +36,11 @@ export function ProductPurchaseActions({ product }: ProductPurchaseActionsProps)
           </p>
         </div>
       )}
-      <Link href={`/checkout?productId=${product.id}`}>
-        <Button className="w-full h-14 bg-blue-600 hover:bg-blue-700 text-white rounded-2xl font-black text-lg shadow-xl shadow-blue-100 transition-all hover:scale-[1.02] active:scale-[0.98]">
+      <Link href={isOwner ? "#" : `/checkout?productId=${product.id}`}>
+        <Button 
+          className="w-full h-14 bg-blue-600 hover:bg-blue-700 text-white rounded-2xl font-black text-lg shadow-xl shadow-blue-100 transition-all hover:scale-[1.02] active:scale-[0.98] disabled:grayscale disabled:opacity-70 disabled:cursor-not-allowed"
+          disabled={isOwner}
+        >
           Buy Now
         </Button>
       </Link>
@@ -51,6 +54,7 @@ export function ProductPurchaseActions({ product }: ProductPurchaseActionsProps)
         }}
         className="w-full h-14 border-gray-100 text-gray-600 hover:bg-gray-50 rounded-2xl font-bold flex items-center justify-center gap-2"
         variant="outline"
+        disabled={isOwner}
       />
     </div>
   )

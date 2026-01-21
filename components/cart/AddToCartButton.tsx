@@ -15,9 +15,10 @@ interface AddToCartButtonProps {
   variant?: "outline" | "default" | "ghost" | "icon"
   className?: string
   children?: React.ReactNode
+  disabled?: boolean
 }
 
-export function AddToCartButton({ item, variant = "default", className, children }: AddToCartButtonProps) {
+export function AddToCartButton({ item, variant = "default", className, children, disabled }: AddToCartButtonProps) {
   const addToCart = () => {
     const savedCart = localStorage.getItem("consultbook_cart")
     let cart = savedCart ? JSON.parse(savedCart) : []
@@ -43,6 +44,7 @@ export function AddToCartButton({ item, variant = "default", className, children
       <Button 
         size="icon" 
         className={className}
+        disabled={disabled}
         onClick={(e) => {
           e.preventDefault()
           e.stopPropagation()
@@ -57,7 +59,8 @@ export function AddToCartButton({ item, variant = "default", className, children
   return (
     <Button 
       variant={variant}
-      className={className}
+      className={`${className} ${disabled ? 'grayscale opacity-70 cursor-not-allowed' : ''}`}
+      disabled={disabled}
       onClick={(e) => {
         e.preventDefault()
         e.stopPropagation()

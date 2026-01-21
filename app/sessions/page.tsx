@@ -18,8 +18,10 @@ import {
 } from "lucide-react"
 import Link from "next/link"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { useAuth } from "@/lib/auth-context"
 
 export default function SessionsPage() {
+  const { userData } = useAuth()
   const [workshops, setWorkshops] = useState<any[]>([])
   const [filteredWorkshops, setFilteredWorkshops] = useState<any[]>([])
   const [searchQuery, setSearchQuery] = useState("")
@@ -210,11 +212,12 @@ export default function SessionsPage() {
                                Details
                             </Button>
                          </Link>
-                         <Link href={`/checkout?workshopId=${ws.id}`}>
+                         <Link href={ws.consultantId === userData?.uid ? "#" : `/checkout?workshopId=${ws.id}`}>
                            <Button 
-                             className="h-11 bg-gray-900 hover:bg-blue-600 text-white rounded-2xl px-4 font-black text-[10px] uppercase tracking-widest shadow-xl transition-all hover:translate-x-1"
+                             className="h-11 bg-gray-900 hover:bg-blue-600 text-white rounded-2xl px-4 font-black text-[10px] uppercase tracking-widest shadow-xl transition-all hover:translate-x-1 disabled:grayscale disabled:opacity-70 disabled:cursor-not-allowed"
+                             disabled={ws.consultantId === userData?.uid || (ws.registrations?.length >= (ws.maxParticipants || 100))}
                            >
-                              Book Spot
+                              {ws.registrations?.length >= (ws.maxParticipants || 100) ? "Sold Out" : "Book Spot"}
                               <ArrowRight className="ml-1.5 h-3.5 w-3.5" />
                            </Button>
                          </Link>

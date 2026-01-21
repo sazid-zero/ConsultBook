@@ -100,8 +100,13 @@ export async function updateWorkshop(id: string, data: Partial<typeof workshops.
 
 export async function deleteWorkshop(id: string) {
   try {
+    // Delete registrations first due to foreign key constraints
+    await pgDb.delete(workshopRegistrations).where(eq(workshopRegistrations.workshopId, id))
     await pgDb.delete(workshops).where(eq(workshops.id, id))
+    
     revalidatePath("/sessions")
+    revalidatePath("/dashboard/consultant/sessions")
+    
     return { success: true }
   } catch (error) {
     console.error("Error deleting workshop:", error)

@@ -96,8 +96,14 @@ export async function updateProduct(id: string, data: Partial<typeof products.$i
 
 export async function deleteProduct(id: string) {
   try {
+    // Delete reviews and orders first due to foreign key constraints
+    await pgDb.delete(productReviews).where(eq(productReviews.productId, id))
+    await pgDb.delete(productOrders).where(eq(productOrders.productId, id))
     await pgDb.delete(products).where(eq(products.id, id))
+    
     revalidatePath("/library")
+    revalidatePath("/dashboard/consultant/library")
+    
     return { success: true }
   } catch (error) {
     console.error("Error deleting product:", error)
