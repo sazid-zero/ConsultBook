@@ -2,8 +2,8 @@
 
 import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
-import { collection, query, where, getDocs } from "firebase/firestore"
-import { db } from "@/lib/firebase"
+import { getConsultants } from "@/app/actions/consultants"
+import { auth } from "@/lib/firebase"
 import { useAuth } from "@/lib/auth-context"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card"
@@ -37,8 +37,8 @@ interface ConsultantProfile {
   experience: string
   languages: string[]
   consultationModes: string[]
-  profilePhoto?: string
-  published: boolean
+  profilePhoto?: string | null
+  isPublished: boolean
   rating?: number
   reviewCount?: number
   appointmentCount?: number
@@ -79,30 +79,8 @@ export default function BookConsultantPage() {
 
   const fetchConsultants = async () => {
     try {
-      const profilesRef = collection(db, "consultantProfiles")
-      const q = query(profilesRef, where("published", "==", true))
-      const querySnapshot = await getDocs(q)
-
-      const consultantsList: ConsultantProfile[] = []
-
-      for (const docSnapshot of querySnapshot.docs) {
-        const consultantData = docSnapshot.data() as ConsultantProfile
-
-        const [avgRating, reviewCount, appointmentCount] = await Promise.all([
-          getConsultantRating(consultantData.consultantId),
-          getReviewCount(consultantData.consultantId),
-          getAppointmentCount(consultantData.consultantId),
-        ])
-
-        consultantsList.push({
-          ...consultantData,
-          rating: avgRating,
-          reviewCount,
-          appointmentCount,
-        })
-      }
-
-      setConsultants(consultantsList)
+      const data = await getConsultants()
+      setConsultants(data as any[]) // Type assertion or alignment needed
     } catch (error) {
       console.error("Error fetching consultants:", error)
     } finally {
@@ -110,49 +88,7 @@ export default function BookConsultantPage() {
     }
   }
 
-  const getConsultantRating = async (consultantId: string): Promise<number> => {
-    try {
-      const reviewsRef = collection(db, "reviews")
-      const q = query(reviewsRef, where("consultantId", "==", consultantId))
-      const querySnapshot = await getDocs(q)
-
-      if (querySnapshot.empty) return 0
-
-      let totalRating = 0
-      querySnapshot.forEach((doc) => {
-        totalRating += doc.data().rating
-      })
-
-      return Math.round((totalRating / querySnapshot.size) * 10) / 10
-    } catch (error) {
-      console.error("Error fetching rating:", error)
-      return 0
-    }
-  }
-
-  const getReviewCount = async (consultantId: string): Promise<number> => {
-    try {
-      const reviewsRef = collection(db, "reviews")
-      const q = query(reviewsRef, where("consultantId", "==", consultantId))
-      const querySnapshot = await getDocs(q)
-      return querySnapshot.size
-    } catch (error) {
-      console.error("Error fetching review count:", error)
-      return 0
-    }
-  }
-
-  const getAppointmentCount = async (consultantId: string): Promise<number> => {
-    try {
-      const appointmentsRef = collection(db, "appointments")
-      const q = query(appointmentsRef, where("consultantId", "==", consultantId))
-      const querySnapshot = await getDocs(q)
-      return querySnapshot.size
-    } catch (error) {
-      console.error("Error fetching appointment count:", error)
-      return 0
-    }
-  }
+  // Removed unused rating/count fetchers as they come from action now
 
   const filterConsultants = () => {
     let filtered = consultants
@@ -358,7 +294,7 @@ export default function BookConsultantPage() {
                       {/* Header with avatar and name */}
                       <div className="flex items-start gap-4 mb-4">
                         <Avatar className="h-14 w-14 border-2 border-gray-100 flex-shrink-0">
-                          <AvatarImage src={consultant.profilePhoto} className="object-cover" />
+                          <AvatarImage src={consultant.profilePhoto || undefined} className="object-cover" />
                           <AvatarFallback className="bg-blue-100 text-blue-700 text-base font-bold uppercase">
                             {consultant.consultantName.charAt(0)}
                           </AvatarFallback>

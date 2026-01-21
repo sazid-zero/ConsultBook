@@ -2,8 +2,6 @@
 
 import { useState, useEffect, useRef } from "react"
 import { useRouter } from "next/navigation"
-import { doc, getDoc, collection, query, where, getDocs, updateDoc } from "firebase/firestore"
-import { db } from "@/lib/firebase"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
@@ -13,6 +11,11 @@ import { ScrollArea } from "@/components/ui/scroll-area"
 import { Star, MapPin, DollarSign, Clock, User, MessageSquare, ArrowLeft, CalendarCheck, Globe, Upload, Trash2, Award, BookOpen, Users, Briefcase, Linkedin, Twitter, ExternalLink, CheckCircle } from "lucide-react"
 import Link from "next/link"
 import { useAuth } from "@/lib/auth-context"
+import { getPublicConsultantProfile } from "@/app/actions/consultants"
+import { updateConsultantImage } from "@/app/actions/profile"
+import { getConsultantReviews, updateReview, deleteReview } from "@/app/actions/reviews"
+import { getProducts } from "@/app/actions/library"
+import { getWorkshops } from "@/app/actions/workshops"
 import Image from "next/image"
 import {
   AlertDialog,
@@ -23,6 +26,15 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog"
+import { Textarea } from "@/components/ui/textarea"
 
 interface ConsultantProfile {
   consultantId: string
@@ -56,6 +68,7 @@ interface ConsultantProfile {
 
 interface Review {
   id: string
+  clientId: string
   clientName: string
   rating: number
   comment: string
@@ -81,6 +94,10 @@ export default function ConsultantPublicProfilePage({ params }: { params: { cons
   const [coverHover, setCoverHover] = useState(false)
   const [removeConfirmOpen, setRemoveConfirmOpen] = useState(false)
   const [activeTab, setActiveTab] = useState<'books' | 'sessions'>('books')
+  const [editingReview, setEditingReview] = useState<Review | null>(null)
+  const [editReviewData, setEditReviewData] = useState({ rating: 5, comment: "" })
+  const [products, setProducts] = useState<any[]>([])
+  const [workshops, setWorkshops] = useState<any[]>([])
   const profileFileInputRef = useRef<HTMLInputElement>(null)
   const coverFileInputRef = useRef<HTMLInputElement>(null)
 
@@ -106,8 +123,29 @@ export default function ConsultantPublicProfilePage({ params }: { params: { cons
   useEffect(() => {
     if (consultantId) {
       fetchConsultant()
+      fetchProducts()
+      fetchWorkshops()
     }
   }, [consultantId])
+
+  const fetchProducts = async () => {
+    const result = await getProducts({ consultantId, publishedOnly: true })
+    console.log('Fetching products for consultant:', consultantId, 'Result:', result)
+    if (result.success) {
+      setProducts(result.data || [])
+      console.log('Products set:', result.data?.length || 0)
+    }
+  }
+
+  const fetchWorkshops = async () => {
+    // Don't filter by upcomingOnly - show all workshops on profile
+    const result = await getWorkshops({ consultantId, publishedOnly: true })
+    console.log('Fetching workshops for consultant:', consultantId, 'Result:', result)
+    if (result.success) {
+      setWorkshops(result.data || [])
+      console.log('Workshops set:', result.data?.length || 0)
+    }
+  }
 
   const uploadToCloudinary = async (file: File, fileType: "cover" | "profile"): Promise<string | null> => {
     const formData = new FormData()
@@ -146,6 +184,8 @@ export default function ConsultantPublicProfilePage({ params }: { params: { cons
     }
   }
 
+
+
   const handleProfilePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (!file) return
@@ -154,9 +194,7 @@ export default function ConsultantPublicProfilePage({ params }: { params: { cons
     try {
       const url = await uploadToCloudinary(file, "profile")
       if (url) {
-        await updateDoc(doc(db, "consultantProfiles", consultantId), {
-          profilePhoto: url,
-        })
+        await updateConsultantImage(consultantId, "profile", url)
         setConsultant(prev => prev ? { ...prev, profilePhoto: url } : null)
       }
     } catch (error) {
@@ -175,9 +213,7 @@ export default function ConsultantPublicProfilePage({ params }: { params: { cons
     try {
       const url = await uploadToCloudinary(file, "cover")
       if (url) {
-        await updateDoc(doc(db, "consultantProfiles", consultantId), {
-          coverPhoto: url,
-        })
+        await updateConsultantImage(consultantId, "cover", url)
         setConsultant(prev => prev ? { ...prev, coverPhoto: url } : null)
       }
     } catch (error) {
@@ -191,9 +227,7 @@ export default function ConsultantPublicProfilePage({ params }: { params: { cons
   const handleRemoveCoverPhoto = async () => {
     setUploading(true)
     try {
-      await updateDoc(doc(db, "consultantProfiles", consultantId), {
-        coverPhoto: null,
-      })
+      await updateConsultantImage(consultantId, "cover", null)
       setConsultant(prev => prev ? { ...prev, coverPhoto: undefined } : null)
     } catch (error) {
       console.error("Error removing cover photo:", error)
@@ -201,28 +235,27 @@ export default function ConsultantPublicProfilePage({ params }: { params: { cons
       setUploading(false)
     }
   }
+
   const fetchConsultant = async () => {
     try {
-      const consultantDoc = await getDoc(doc(db, "consultantProfiles", consultantId))
-      if (consultantDoc.exists()) {
-        const consultantData = consultantDoc.data() as ConsultantProfile
-
-        // Fetch rating and review count
-        const [rating, reviewCount, appointmentCount] = await Promise.all([
-          getConsultantRating(consultantId),
-          getReviewCount(consultantId),
-          getAppointmentCount(consultantId),
-        ])
-
-        setConsultant({
-          ...consultantData,
-          rating,
-          reviewCount,
-          appointmentCount,
-        })
-
-        // Fetch reviews
-        await fetchConsultantReviews(consultantId)
+      const data = await getPublicConsultantProfile(consultantId)
+      if (data) {
+        setConsultant(data as unknown as ConsultantProfile)
+        
+        // Fetch real reviews
+        const reviewsResult = await getConsultantReviews(consultantId)
+        if (reviewsResult.success && reviewsResult.data) {
+            setReviews(reviewsResult.data.map((r: any) => ({
+                id: r.id,
+                clientId: r.clientId,
+                clientName: r.client?.name || "Client",
+                rating: r.rating,
+                comment: r.comment,
+                createdAt: r.createdAt
+            })))
+        }
+      } else {
+        setConsultant(null)
       }
     } catch (error) {
       console.error("Error fetching consultant:", error)
@@ -231,67 +264,35 @@ export default function ConsultantPublicProfilePage({ params }: { params: { cons
     }
   }
 
-  const getConsultantRating = async (consultantId: string): Promise<number> => {
+  const handleDeleteReview = async (reviewId: string) => {
+    if (!confirm("Are you sure you want to delete your review?")) return
     try {
-      const reviewsRef = collection(db, "reviews")
-      const q = query(reviewsRef, where("consultantId", "==", consultantId))
-      const querySnapshot = await getDocs(q)
-
-      if (querySnapshot.empty) return 0
-
-      let totalRating = 0
-      querySnapshot.forEach((doc) => {
-        totalRating += doc.data().rating
-      })
-
-      return Math.round((totalRating / querySnapshot.size) * 10) / 10
+        const result = await deleteReview(reviewId)
+        if (result.success) {
+            setReviews(reviews.filter(r => r.id !== reviewId))
+            fetchConsultant() // Refresh stats
+        }
     } catch (error) {
-      console.error("Error fetching rating:", error)
-      return 0
+        console.error("Error deleting review:", error)
     }
   }
 
-  const getReviewCount = async (consultantId: string): Promise<number> => {
+  const handleUpdateReview = async () => {
+    if (!editingReview || !editReviewData.comment.trim()) return
     try {
-      const reviewsRef = collection(db, "reviews")
-      const q = query(reviewsRef, where("consultantId", "==", consultantId))
-      const querySnapshot = await getDocs(q)
-      return querySnapshot.size
+        const result = await updateReview(editingReview.id, editReviewData.rating, editReviewData.comment)
+        if (result.success) {
+            setReviews(reviews.map(r => r.id === editingReview.id ? { ...r, rating: editReviewData.rating, comment: editReviewData.comment } : r))
+            setEditingReview(null)
+            fetchConsultant() // Refresh stats
+        }
     } catch (error) {
-      console.error("Error fetching review count:", error)
-      return 0
+        console.error("Error updating review:", error)
     }
   }
 
-  const getAppointmentCount = async (consultantId: string): Promise<number> => {
-    try {
-      const appointmentsRef = collection(db, "appointments")
-      const q = query(appointmentsRef, where("consultantId", "==", consultantId))
-      const querySnapshot = await getDocs(q)
-      return querySnapshot.size
-    } catch (error) {
-      console.error("Error fetching appointment count:", error)
-      return 0
-    }
-  }
-
-  const fetchConsultantReviews = async (consultantId: string) => {
-    try {
-      const reviewsRef = collection(db, "reviews")
-      const q = query(reviewsRef, where("consultantId", "==", consultantId))
-      const querySnapshot = await getDocs(q)
-
-      const reviewsList: Review[] = []
-      querySnapshot.forEach((doc) => {
-        reviewsList.push({ id: doc.id, ...doc.data() } as Review)
-      })
-
-      reviewsList.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
-      setReviews(reviewsList)
-    } catch (error) {
-      console.error("Error fetching reviews:", error)
-    }
-  }
+  // Removed getConsultantRating, getReviewCount, getAppointmentCount, fetchConsultantReviews
+  // as they are now handled by getPublicConsultantProfile (or mocked there)
 
   if (loading) {
     return (
@@ -905,7 +906,7 @@ export default function ConsultantPublicProfilePage({ params }: { params: { cons
                 >
                   <div className="flex items-center gap-2">
                     <BookOpen className="h-4 w-4" />
-                    Published Books
+                    Books, Courses & Assets
                   </div>
                 </button>
                 <button
@@ -926,22 +927,112 @@ export default function ConsultantPublicProfilePage({ params }: { params: { cons
               {/* Books Section */}
               {activeTab === 'books' && (
                 <div className="space-y-4">
-                  <div className="text-center py-12 bg-gray-50 rounded-2xl">
-                    <BookOpen className="h-12 w-12 text-gray-300 mx-auto mb-3" />
-                    <p className="text-gray-600 font-medium">Coming Soon</p>
-                    <p className="text-sm text-gray-400 mt-1">Books & publications coming to the platform</p>
-                  </div>
+                  {products.length > 0 ? (
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                      {products.map((product: any) => (
+                        <Link key={product.id} href={`/library/${product.id}`}>
+                          <Card className="border-gray-200 rounded-2xl overflow-hidden hover:shadow-xl transition-all hover:-translate-y-1 group cursor-pointer">
+                            <div className="relative aspect-[4/3] overflow-hidden bg-gray-100">
+                              {product.thumbnailUrl ? (
+                                <img 
+                                  src={product.thumbnailUrl} 
+                                  alt={product.title}
+                                  className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
+                                />
+                              ) : (
+                                <div className="w-full h-full bg-gradient-to-br from-blue-600 to-indigo-700 flex items-center justify-center">
+                                  <BookOpen className="h-16 w-16 text-white/20" />
+                                </div>
+                              )}
+                              <Badge className="absolute top-3 left-3 bg-white/95 text-gray-900 border-none shadow-md text-xs font-bold px-3 py-1">
+                                {product.type.replace('_', ' ').toUpperCase()}
+                              </Badge>
+                            </div>
+                            <CardContent className="p-5">
+                              <h3 className="font-bold text-gray-900 text-lg mb-2 line-clamp-2 group-hover:text-blue-600 transition-colors">
+                                {product.title}
+                              </h3>
+                              <p className="text-sm text-gray-600 line-clamp-2 mb-4">{product.description}</p>
+                              <div className="flex items-center justify-between">
+                                <span className="text-2xl font-black text-gray-900">${(product.price / 100).toFixed(2)}</span>
+                                <Badge className="bg-blue-50 text-blue-600 border-none text-xs">
+                                  {product.salesCount || 0} sales
+                                </Badge>
+                              </div>
+                            </CardContent>
+                          </Card>
+                        </Link>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="text-center py-12 bg-gray-50 rounded-2xl">
+                      <BookOpen className="h-12 w-12 text-gray-300 mx-auto mb-3" />
+                      <p className="text-gray-600 font-medium">No published products yet</p>
+                      <p className="text-sm text-gray-400 mt-1">Check back later for books, courses, and digital assets</p>
+                    </div>
+                  )}
                 </div>
               )}
 
               {/* Sessions Section */}
               {activeTab === 'sessions' && (
                 <div className="space-y-4">
-                  <div className="text-center py-12 bg-gray-50 rounded-2xl">
-                    <Users className="h-12 w-12 text-gray-300 mx-auto mb-3" />
-                    <p className="text-gray-600 font-medium">Coming Soon</p>
-                    <p className="text-sm text-gray-400 mt-1">Group sessions & workshops coming to the platform</p>
-                  </div>
+                  {workshops.length > 0 ? (
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                      {workshops.map((workshop: any) => (
+                        <Link key={workshop.id} href={`/sessions/${workshop.id}`}>
+                          <Card className="border-gray-200 rounded-2xl overflow-hidden hover:shadow-xl transition-all hover:-translate-y-1 group cursor-pointer">
+                            <div className="relative aspect-[16/10] overflow-hidden bg-gray-900">
+                              {workshop.thumbnailUrl ? (
+                                <img 
+                                  src={workshop.thumbnailUrl} 
+                                  alt={workshop.title}
+                                  className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300 opacity-60"
+                                />
+                              ) : (
+                                <div className="w-full h-full bg-gradient-to-br from-blue-600 to-indigo-700 flex items-center justify-center">
+                                  <Users className="h-16 w-16 text-white/20" />
+                                </div>
+                              )}
+                              <div className="absolute inset-0 bg-gradient-to-t from-gray-900/80 via-transparent to-transparent" />
+                              <Badge className="absolute top-3 left-3 bg-white/95 text-gray-900 border-none shadow-md text-xs font-bold px-3 py-1">
+                                {workshop.mode.toUpperCase()}
+                              </Badge>
+                              <div className="absolute bottom-3 left-3 right-3">
+                                <h3 className="font-bold text-white text-lg line-clamp-2 drop-shadow-md">
+                                  {workshop.title}
+                                </h3>
+                              </div>
+                            </div>
+                            <CardContent className="p-5">
+                              <div className="flex items-center gap-4 mb-3">
+                                <div className="flex items-center gap-2 text-sm text-gray-600">
+                                  <Clock className="h-4 w-4" />
+                                  {new Date(workshop.startDate).toLocaleDateString()}
+                                </div>
+                                <div className="flex items-center gap-2 text-sm text-gray-600">
+                                  <Users className="h-4 w-4" />
+                                  {workshop.registrations?.length || 0}/{workshop.maxParticipants || '∞'}
+                                </div>
+                              </div>
+                              <div className="flex items-center justify-between">
+                                <span className="text-2xl font-black text-gray-900">${(workshop.price / 100).toFixed(2)}</span>
+                                <Badge className="bg-green-50 text-green-600 border-none text-xs">
+                                  {workshop.duration} min
+                                </Badge>
+                              </div>
+                            </CardContent>
+                          </Card>
+                        </Link>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="text-center py-12 bg-gray-50 rounded-2xl">
+                      <Users className="h-12 w-12 text-gray-300 mx-auto mb-3" />
+                      <p className="text-gray-600 font-medium">No workshops yet</p>
+                      <p className="text-sm text-gray-400 mt-1">This consultant hasn't published any workshops or masterclasses</p>
+                    </div>
+                  )}
                 </div>
               )}
             </div>
@@ -966,18 +1057,70 @@ export default function ConsultantPublicProfilePage({ params }: { params: { cons
                         <CardContent className="p-4">
                           <div className="flex justify-between items-start mb-3">
                             <div>
-                              <p className="font-semibold text-gray-900">{review.clientName}</p>
-                              <div className="flex gap-0.5 mt-1">
-                                {[...Array(5)].map((_, i) => (
-                                  <Star key={i} className={`h-4 w-4 ${i < review.rating ? 'text-yellow-400 fill-yellow-400' : 'text-gray-200'}`} />
-                                ))}
+                                <p className="font-semibold text-gray-900">{review.clientName}</p>
+                                <div className="flex gap-0.5 mt-1">
+                                  {[...Array(5)].map((_, i) => (
+                                    <Star key={i} className={`h-4 w-4 ${i < review.rating ? 'text-yellow-400 fill-yellow-400' : 'text-gray-200'}`} />
+                                  ))}
+                                </div>
+                              </div>
+                              <div className="flex items-center gap-2">
+                                <span className="text-xs text-gray-400">
+                                  {new Date(review.createdAt).toLocaleDateString()}
+                                </span>
+                                {user?.uid === review.clientId && (
+                                    <div className="flex gap-1">
+                                        <Dialog open={editingReview?.id === review.id} onOpenChange={(open: boolean) => {
+                                            if (open) {
+                                                setEditingReview(review)
+                                                setEditReviewData({ rating: review.rating, comment: review.comment })
+                                            } else {
+                                                setEditingReview(null)
+                                            }
+                                        }}>
+                                            <DialogTrigger asChild>
+                                                <Button variant="ghost" size="icon" className="h-8 w-8 text-gray-400 hover:text-blue-500">
+                                                    <Briefcase className="h-4 w-4" /> {/* Using Briefcase as edit icon fallback or import Edit */}
+                                                </Button>
+                                            </DialogTrigger>
+                                            <DialogContent className="rounded-2xl">
+                                                <DialogHeader>
+                                                    <DialogTitle>Edit Your Review</DialogTitle>
+                                                </DialogHeader>
+                                                <div className="space-y-4 pt-4">
+                                                    <div className="flex gap-1">
+                                                        {[1,2,3,4,5].map(s => (
+                                                            <button key={s} onClick={() => setEditReviewData({...editReviewData, rating: s})}>
+                                                                <Star className={`h-6 w-6 ${s <= editReviewData.rating ? "text-yellow-400 fill-yellow-400" : "text-gray-300"}`} />
+                                                            </button>
+                                                        ))}
+                                                    </div>
+                                                    <Textarea 
+                                                        value={editReviewData.comment}
+                                                        onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setEditReviewData({...editReviewData, comment: e.target.value})}
+                                                        rows={4}
+                                                        className="rounded-xl border-gray-200"
+                                                    />
+                                                    <Button onClick={handleUpdateReview} className="w-full bg-blue-600 hover:bg-blue-700 rounded-xl">
+                                                        Save Changes
+                                                    </Button>
+                                                </div>
+                                            </DialogContent>
+                                        </Dialog>
+                                        
+                                        <Button 
+                                            variant="ghost" 
+                                            size="icon" 
+                                            className="h-8 w-8 text-gray-400 hover:text-red-500"
+                                            onClick={() => handleDeleteReview(review.id)}
+                                        >
+                                            <Trash2 className="h-4 w-4" />
+                                        </Button>
+                                    </div>
+                                )}
                               </div>
                             </div>
-                            <span className="text-xs text-gray-500 font-medium">
-                              {new Date(review.createdAt).toLocaleDateString()}
-                            </span>
-                          </div>
-                          <p className="text-sm text-gray-700 leading-relaxed">{review.comment}</p>
+                            <p className="text-gray-700 text-sm leading-relaxed">{review.comment}</p>
                         </CardContent>
                       </Card>
                     ))}

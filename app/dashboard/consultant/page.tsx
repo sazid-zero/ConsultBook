@@ -3,9 +3,23 @@
 import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { signOut } from "firebase/auth"
-import { collection, query, where, getDocs, doc, setDoc, updateDoc, addDoc } from "firebase/firestore"
+import { getConsultantDashboardDataWithDetails, toggleAvailability } from "@/app/actions/dashboard"
+import { cancelAppointment, rescheduleAppointment } from "@/app/actions/appointments"
+import { collection, query, where, getDocs } from "firebase/firestore"
 import { auth, db } from "@/lib/firebase"
 import { useAuth } from "@/lib/auth-context"
+import { checkAppointmentAlerts } from "@/app/actions/alerts"
+import { markNotificationAsRead, markAllAsRead } from "@/app/actions/notifications"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
+import { ScrollArea } from "@/components/ui/scroll-area"
+import { CheckCircle } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
@@ -76,6 +90,7 @@ export default function ConsultantDashboard() {
   const [logoutOpen, setLogoutOpen] = useState(false)
   // Add state for unread messages
   const [unreadMessages, setUnreadMessages] = useState(0)
+  const [stats, setStats] = useState<any>(null)
 
   // Add function to fetch unread message count
   const fetchUnreadMessages = async () => {
@@ -97,76 +112,68 @@ export default function ConsultantDashboard() {
   }
 
   useEffect(() => {
-    if (!loading && (!user || userData?.role !== "consultant")) {
-      router.push("/login")
-      return
-    }
+    // Debug logging
+    console.log("[Dashboard] Auth Check:", { loading, user: user?.uid, role: userData?.role, approved: userData?.approved })
 
-    if (!loading && userData?.role === "consultant" && !userData?.approved) {
-      router.push("/consultant-pending")
-      return
+    if (!loading) {
+      if (!user) {
+        console.log("[Dashboard] Redirecting to login (No User)")
+        router.push("/login")
+        return
+      }
+      
+      if (userData?.role !== "consultant") {
+        console.log("[Dashboard] Redirecting to login (Role mismatch):", userData?.role)
+        // If userData is missing but user exists, it might be a fetch failure. 
+        // We'll show a loading state or redirect.
+        if (!userData) {
+           // Allow a moment for data to load if it's lagging? 
+           // But 'loading' is false meant data fetch attempted.
+        }
+        router.push("/login")
+        return
+      }
+
+      if (!userData?.approved) {
+        console.log("[Dashboard] Redirecting to pending")
+        router.push("/consultant-pending")
+        return
+      }
     }
 
     // Call fetchUnreadMessages in useEffect
     if (user) {
-      fetchAppointments()
+      loadDashboardData()
       fetchUnreadMessages()
     }
-  }, [user, userData, loading, router])
+  }, [user, loading, router])
 
-  const fetchAppointments = async () => {
+  const loadDashboardData = async () => {
     try {
-      const appointmentsRef = collection(db, "appointments")
-      
-      // Fetch appointments where user is the consultant
-      const q1 = query(appointmentsRef, where("consultantId", "==", user?.uid))
-      const snapshot1 = await getDocs(q1)
-      
-      // Fetch appointments where user is the client/booker (booked another consultant)
-      const q2 = query(appointmentsRef, where("clientId", "==", user?.uid))
-      const snapshot2 = await getDocs(q2)
-
-      const appointmentsList: Appointment[] = []
-      
-      snapshot1.forEach((doc) => {
-        appointmentsList.push({ id: doc.id, ...doc.data() } as Appointment)
-      })
-      
-      snapshot2.forEach((doc) => {
-        appointmentsList.push({ id: doc.id, ...doc.data() } as Appointment)
-      })
-
-      // Remove duplicates (if any)
-      const uniqueAppointments = Array.from(new Map(appointmentsList.map(apt => [apt.id, apt])).values())
-
-      // Sort by date in JavaScript instead of Firestore
-      uniqueAppointments.sort((a, b) => {
-        const dateA = new Date(`${a.date}T${a.time}`)
-        const dateB = new Date(`${b.date}T${b.time}`)
-        return dateB.getTime() - dateA.getTime()
-      })
-
-      setAppointments(uniqueAppointments)
+      setLoadingAppointments(true)
+      const data = await getConsultantDashboardDataWithDetails(user!.uid)
+      if (data) {
+        setAppointments(data.appointments as any)
+        setIsAvailable(data.isAvailable)
+        setStats(data.stats)
+      }
     } catch (error) {
-      console.error("Error fetching appointments:", error)
+      console.error("Error loading dashboard data:", error)
     } finally {
       setLoadingAppointments(false)
     }
   }
 
+
   const handleAvailabilityToggle = async (available: boolean) => {
     try {
       if (user) {
-        // Use setDoc with merge to update or create the user document
-        await setDoc(
-          doc(db, "users", user.uid),
-          {
-            available: available,
-            updatedAt: new Date().toISOString(),
-          },
-          { merge: true },
-        )
-        setIsAvailable(available)
+        const result = await toggleAvailability(user.uid, available)
+        if (result.success) {
+           setIsAvailable(available)
+        } else {
+           throw new Error(result.error)
+        }
       }
     } catch (error) {
       console.error("Error updating availability:", error)
@@ -179,23 +186,10 @@ export default function ConsultantDashboard() {
 
     setProcessingAction(true)
     try {
-      await updateDoc(doc(db, "appointments", appointmentId), {
-        status: "cancelled",
-        cancelledAt: new Date().toISOString(),
-        cancelledBy: "consultant",
-      })
+      const result = await cancelAppointment(appointmentId, "consultant")
+      if (!result.success) throw new Error(result.error)
 
-      // Add notification for client
-      await addDoc(collection(db, "notifications"), {
-        recipientId: appointment.clientId,
-        recipientType: "client",
-        type: "appointment_cancelled",
-        title: "Appointment Cancelled",
-        message: `  ${userData?.name} has cancelled your appointment scheduled for ${appointment.date} at ${appointment.time}`,
-        appointmentId: appointmentId,
-        createdAt: new Date().toISOString(),
-        read: false,
-      })
+      // Notifications omitted for V1 update
 
       // Update local state
       setAppointments(
@@ -220,25 +214,10 @@ export default function ConsultantDashboard() {
 
     setProcessingAction(true)
     try {
-      await updateDoc(doc(db, "appointments", selectedAppointment!.id), {
-        date: rescheduleData.newDate,
-        time: rescheduleData.newTime,
-        rescheduledAt: new Date().toISOString(),
-        rescheduledBy: "consultant",
-        rescheduleReason: rescheduleData.reason,
-      })
+      const result = await rescheduleAppointment(selectedAppointment!.id, rescheduleData.newDate, rescheduleData.newTime, rescheduleData.reason, "consultant")
+      if (!result.success) throw new Error(result.error)
 
-      // Add notification for client
-      await addDoc(collection(db, "notifications"), {
-        recipientId: selectedAppointment!.clientId,
-        recipientType: "client",
-        type: "appointment_rescheduled",
-        title: "Appointment Rescheduled",
-        message: `  ${userData?.name} has rescheduled your appointment to ${rescheduleData.newDate} at ${rescheduleData.newTime}. Reason: ${rescheduleData.reason}`,
-        appointmentId: selectedAppointment!.id,
-        createdAt: new Date().toISOString(),
-        read: false,
-      })
+      // Notifications omitted
 
       // Update local state
       setAppointments(
@@ -268,7 +247,7 @@ export default function ConsultantDashboard() {
     return <div className="flex items-center justify-center min-h-screen">Loading...</div>
   }
 
-  const handleLogout = async () => {
+   const handleLogout = async () => {
     try {
       await signOut(auth)
       router.push("/")
@@ -288,37 +267,38 @@ export default function ConsultantDashboard() {
               <p className="text-gray-600 text-sm mt-1">Welcome back, {userData?.name}!</p>
             </div>
             <div className="flex items-center gap-4">
-              <Link href={`/consultant/${user?.uid}/profile`}>
+             <Link href={`/consultant/${user?.uid}/profile`}>
                 <Button 
                   variant="outline" 
-                  className="border-gray-300 text-gray-700 hover:bg-gray-50"
+                  className="border-gray-300 text-gray-700 hover:bg-gray-50 h-10 px-4 rounded-xl"
                 >
                   <User className="h-4 w-4 mr-2" />
                   View Profile
                 </Button>
               </Link>
-            <AlertDialog open={logoutOpen} onOpenChange={setLogoutOpen}>
-              <Button 
-                variant="outline" 
-                className="border-gray-300 text-gray-700 hover:bg-gray-50"
-                onClick={() => setLogoutOpen(true)}
-              >
-                <LogOut className="h-4 w-4 mr-2" />
-                Logout
-              </Button>
-              <AlertDialogContent>
-                <AlertDialogHeader>
-                  <AlertDialogTitle>Are you sure you want to logout?</AlertDialogTitle>
-                  <AlertDialogDescription>
-                    You will be signed out of your account.
-                  </AlertDialogDescription>
-                </AlertDialogHeader>
-                <div className="flex justify-end gap-3">
-                  <AlertDialogCancel>Cancel</AlertDialogCancel>
-                  <AlertDialogAction onClick={handleLogout} className="bg-red-600 hover:bg-red-700">Logout</AlertDialogAction>
-                </div>
-              </AlertDialogContent>
-            </AlertDialog>
+
+              <AlertDialog open={logoutOpen} onOpenChange={setLogoutOpen}>
+                <Button 
+                  variant="outline" 
+                  className="border-gray-300 text-gray-700 hover:bg-gray-50 h-10 px-4 rounded-xl"
+                  onClick={() => setLogoutOpen(true)}
+                >
+                  <LogOut className="h-4 w-4 mr-2" />
+                  Logout
+                </Button>
+                <AlertDialogContent className="rounded-2xl">
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>Are you sure you want to logout?</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      You will be signed out of your account.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <div className="flex justify-end gap-3 pt-4">
+                    <AlertDialogCancel className="rounded-xl border-gray-200">Cancel</AlertDialogCancel>
+                    <AlertDialogAction onClick={handleLogout} className="bg-red-600 hover:bg-red-700 rounded-xl px-6">Logout</AlertDialogAction>
+                  </div>
+                </AlertDialogContent>
+              </AlertDialog>
             </div>
           </div>
         </div>

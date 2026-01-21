@@ -2,8 +2,8 @@
 
 import { useState, useEffect, useRef } from "react"
 import { useRouter } from "next/navigation"
-import { doc, getDoc, setDoc, updateDoc } from "firebase/firestore"
-import { db } from "@/lib/firebase"
+import { getConsultantProfile, updateConsultantProfile } from "@/app/actions/profile"
+import { auth } from "@/lib/firebase"
 import { useAuth } from "@/lib/auth-context"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -13,7 +13,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Badge } from "@/components/ui/badge"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { Save, Eye, MapPin, DollarSign, Clock, User, Upload, Trash2 } from "lucide-react"
+import { Save, Eye, MapPin, DollarSign, Clock, User, Upload, Trash2, CheckCircle } from "lucide-react"
 import Link from "next/link"
 import Image from "next/image"
 import {
@@ -91,6 +91,7 @@ export default function ConsultantProfilePage() {
   const [profileHover, setProfileHover] = useState(false)
   const [coverHover, setCoverHover] = useState(false)
   const [removeConfirmOpen, setRemoveConfirmOpen] = useState(false)
+  const [showSuccessDialog, setShowSuccessDialog] = useState(false)
   const [certifications, setCertifications] = useState<Array<{ id: string; name: string; issuer: string; year: number }>>([])
   const [qualifications, setQualifications] = useState<Array<{ id: string; degree: string; university: string; year: number }>>([])
   const [specializations, setSpecializations] = useState<string[]>([])
@@ -191,11 +192,10 @@ export default function ConsultantProfilePage() {
           ...profile,
           profilePhoto: url,
           consultantId: user!.uid,
-          consultantName: userData!.name,
-          consultantEmail: userData!.email,
-          updatedAt: new Date().toISOString(),
         })
-        await setDoc(doc(db, "consultantProfiles", user!.uid), profileData, { merge: true })
+        const result = await updateConsultantProfile(profileData as any)
+        if (!result.success) throw new Error(result.error)
+
         setProfile(prev => ({ ...prev, profilePhoto: url }))
         setProfilePhoto([{
           id: "existing",
@@ -225,11 +225,10 @@ export default function ConsultantProfilePage() {
           ...profile,
           coverPhoto: url,
           consultantId: user!.uid,
-          consultantName: userData!.name,
-          consultantEmail: userData!.email,
-          updatedAt: new Date().toISOString(),
         })
-        await setDoc(doc(db, "consultantProfiles", user!.uid), profileData, { merge: true })
+        const result = await updateConsultantProfile(profileData as any)
+        if (!result.success) throw new Error(result.error)
+
         setProfile(prev => ({ ...prev, coverPhoto: url }))
         setCoverPhoto([{
           id: "existing",
@@ -254,11 +253,10 @@ export default function ConsultantProfilePage() {
         ...profile,
         coverPhoto: null,
         consultantId: user!.uid,
-        consultantName: userData!.name,
-        consultantEmail: userData!.email,
-        updatedAt: new Date().toISOString(),
       })
-      await setDoc(doc(db, "consultantProfiles", user!.uid), profileData, { merge: true })
+      const result = await updateConsultantProfile(profileData as any)
+      if (!result.success) throw new Error(result.error)
+
       setProfile(prev => ({ ...prev, coverPhoto: undefined }))
       setCoverPhoto([])
     } catch (error) {
@@ -270,18 +268,8 @@ export default function ConsultantProfilePage() {
 
   const fetchProfile = async () => {
     try {
-      const profileDoc = await getDoc(doc(db, "consultantProfiles", user!.uid))
-      let dataToLoad = null
-      
-      if (profileDoc.exists()) {
-        dataToLoad = profileDoc.data() as ConsultantProfile
-      } else {
-        // If consultantProfiles doesn't exist, load from users collection (registration data)
-        const userDoc = await getDoc(doc(db, "users", user!.uid))
-        if (userDoc.exists()) {
-          dataToLoad = userDoc.data() as any
-        }
-      }
+      const dataToLoad = await getConsultantProfile(user!.uid)
+      console.log("[Client] fetchProfile dataToLoad:", dataToLoad)
       
       if (dataToLoad) {
         // Merge with defaults to ensure all fields exist
@@ -295,17 +283,17 @@ export default function ConsultantProfilePage() {
           experience: dataToLoad.experience || "",
           languages: dataToLoad.languages || [],
           consultationModes: dataToLoad.consultationModes || [],
-          published: dataToLoad.published || false,
-          profilePhoto: dataToLoad.profilePhoto,
-          coverPhoto: dataToLoad.coverPhoto,
+          published: dataToLoad.isPublished || false,
+          profilePhoto: dataToLoad.profilePhoto || undefined,
+          coverPhoto: dataToLoad.coverPhoto || undefined,
           certifications: dataToLoad.certifications,
-          qualifications: dataToLoad.qualifications,
-          specializations: dataToLoad.specializations,
-          portfolioItems: dataToLoad.portfolioItems,
-          socialLinks: dataToLoad.socialLinks,
-          hoursDelivered: dataToLoad.hoursDelivered,
-          verified: dataToLoad.verified,
-          availability: dataToLoad.availability || {
+          qualifications: dataToLoad.education as any, // Map education to qualifications state
+          specializations: dataToLoad.specializations || [],
+          portfolioItems: dataToLoad.portfolioItems as any,
+          socialLinks: dataToLoad.socialLinks as any,
+          hoursDelivered: dataToLoad.hoursDelivered || 0,
+          verified: dataToLoad.isApproved || false, 
+          availability: (dataToLoad.availability as any) || {
             monday: [],
             tuesday: [],
             wednesday: [],
@@ -316,16 +304,16 @@ export default function ConsultantProfilePage() {
           },
         })
         if (dataToLoad.certifications) setCertifications((dataToLoad.certifications as any[]).map((c, i) => ({ id: String(i), ...c })))
-        if (dataToLoad.qualifications) setQualifications((dataToLoad.qualifications as any[]).map((q, i) => ({ id: String(i), ...q })))
-        // Handle specializations - if it's a string (from registration), split by comma; if array, use as-is
+        if (dataToLoad.education) setQualifications((dataToLoad.education as any[]).map((q, i) => ({ id: String(i), ...q })))
+        // Handle specializations
         if (dataToLoad.specializations) {
           const specs = typeof dataToLoad.specializations === 'string'
-            ? dataToLoad.specializations.split(',').map((s: string) => s.trim()).filter((s: string) => s)
+            ? (dataToLoad.specializations as string).split(',').map((s: string) => s.trim()).filter((s: string) => s)
             : dataToLoad.specializations as string[]
           setSpecializations(specs)
         }
         if (dataToLoad.portfolioItems) setPortfolioItems((dataToLoad.portfolioItems as any[]).map((p, i) => ({ id: String(i), ...p })))
-        if (dataToLoad.socialLinks) setSocialLinks(dataToLoad.socialLinks)
+        if (dataToLoad.socialLinks) setSocialLinks(dataToLoad.socialLinks as any)
         if (dataToLoad.profilePhoto) {
           setProfilePhoto([
             {
@@ -372,29 +360,17 @@ export default function ConsultantProfilePage() {
         profilePhoto: profilePhoto.length > 0 ? profilePhoto[0].url : null,
         coverPhoto: coverPhoto.length > 0 ? coverPhoto[0].url : null,
         certifications: certifications.map(({ id, ...rest }) => rest),
-        qualifications: qualifications.map(({ id, ...rest }) => rest),
+        education: qualifications.map(({ id, ...rest }) => rest), // Map qualifications state to education
         specializations,
         portfolioItems: portfolioItems.map(({ id, ...rest }) => rest),
         socialLinks,
         consultantId: user.uid,
-        consultantName: userData!.name,
-        consultantEmail: userData!.email,
-        updatedAt: new Date().toISOString(),
       })
 
-      // Use setDoc instead of updateDoc to create document if it doesn't exist
-      await setDoc(doc(db, "consultantProfiles", user.uid), profileData, { merge: true })
+      const result = await updateConsultantProfile(profileData as any)
+      if (!result.success) throw new Error(result.error)
 
-      // Also update the users collection with location data
-      await setDoc(doc(db, "users", user.uid), {
-        address: profile.address,
-        city: profile.city,
-        state: profile.state,
-        country: profile.country,
-        updatedAt: new Date().toISOString(),
-      }, { merge: true })
-
-      alert("Profile saved successfully!")
+      setShowSuccessDialog(true)
     } catch (error) {
       console.error("Error saving profile:", error)
       alert(`Error saving profile: ${error instanceof Error ? error.message : "Unknown error"}`)
@@ -422,28 +398,15 @@ export default function ConsultantProfilePage() {
         profilePhoto: profilePhoto.length > 0 ? profilePhoto[0].url : null,
         coverPhoto: coverPhoto.length > 0 ? coverPhoto[0].url : null,
         certifications: certifications.map(({ id, ...rest }) => rest),
-        qualifications: qualifications.map(({ id, ...rest }) => rest),
+        education: qualifications.map(({ id, ...rest }) => rest),
         specializations,
         portfolioItems: portfolioItems.map(({ id, ...rest }) => rest),
         socialLinks,
         consultantId: user.uid,
-        consultantName: userData!.name,
-        consultantEmail: userData!.email,
-        publishedAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
       })
 
-      // Use setDoc instead of updateDoc to create document if it doesn't exist
-      await setDoc(doc(db, "consultantProfiles", user.uid), profileData, { merge: true })
-
-      // Also update the users collection with location data
-      await setDoc(doc(db, "users", user.uid), {
-        address: profile.address,
-        city: profile.city,
-        state: profile.state,
-        country: profile.country,
-        updatedAt: new Date().toISOString(),
-      }, { merge: true })
+      const result = await updateConsultantProfile(profileData as any)
+      if (!result.success) throw new Error(result.error)
 
       setProfile({ ...profile, published: true })
       alert("Profile published successfully! You are now available for bookings.")
@@ -1045,6 +1008,28 @@ export default function ConsultantProfilePage() {
           </div>
         </div>
       </div>
+
+      <AlertDialog open={showSuccessDialog} onOpenChange={setShowSuccessDialog}>
+        <AlertDialogContent className="sm:max-w-[425px]">
+          <AlertDialogHeader className="flex flex-col items-center justify-center text-center space-y-4 pt-4">
+            <div className="rounded-full bg-green-100 p-3">
+              <CheckCircle className="h-12 w-12 text-green-600" />
+            </div>
+            <AlertDialogTitle className="text-xl font-semibold">Profile Saved Successfully!</AlertDialogTitle>
+            <AlertDialogDescription className="text-center text-gray-500">
+              Your consultant profile has been updated and your changes are now live.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <div className="flex justify-center p-4">
+            <AlertDialogAction 
+              onClick={() => setShowSuccessDialog(false)}
+              className="w-full sm:w-auto bg-green-600 hover:bg-green-700 min-w-[120px]"
+            >
+              Great, thanks!
+            </AlertDialogAction>
+          </div>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   )
 }

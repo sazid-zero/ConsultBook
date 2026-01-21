@@ -6,8 +6,8 @@ import { useState, useEffect } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
 import Link from "next/link"
 import { createUserWithEmailAndPassword } from "firebase/auth"
-import { doc, setDoc } from "firebase/firestore"
-import { auth, db } from "@/lib/firebase"
+import { auth } from "@/lib/firebase"
+import { registerUser } from "@/app/actions/register"
 import { useAuth } from "@/lib/auth-context"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -81,7 +81,7 @@ const PasswordStrength = ({ password }: { password: string }) => {
 export default function RegisterPage() {
   const router = useRouter()
   const searchParams = useSearchParams()
-  const { user, userData, loading: authLoading } = useAuth()
+  const { user, userData, loading: authLoading, refreshUserData } = useAuth()
   const [loading, setLoading] = useState(false)
   const [activeTab, setActiveTab] = useState("client")
   const [certificates, setCertificates] = useState<UploadedFile[]>([])
@@ -154,14 +154,17 @@ export default function RegisterPage() {
     try {
       const userCredential = await createUserWithEmailAndPassword(auth, clientData.email, clientData.password)
 
-      await setDoc(doc(db, "users", userCredential.user.uid), {
+      const result = await registerUser({
         uid: userCredential.user.uid,
         name: clientData.name,
         email: clientData.email,
         phone: clientData.phone,
         role: "client",
-        createdAt: new Date().toISOString(),
       })
+
+      if (!result.success) {
+        throw new Error(result.error || "Failed to save user data")
+      }
 
       toast.success("Registration Successful", {
         description: "Welcome to ConsultBook! Redirecting to your dashboard..."
@@ -286,26 +289,32 @@ export default function RegisterPage() {
         }
       }))
 
-      await setDoc(doc(db, "users", userCredential.user.uid), {
+      const result = await registerUser({
         uid: userCredential.user.uid,
         name: consultantData.name,
         email: consultantData.email,
         phone: consultantData.phone,
         role: "consultant",
-        consultantType: consultantData.consultantType, // Global immutable category
+        consultantType: consultantData.consultantType,
         specializations: specializationsList,
         address: consultantData.address,
         city: consultantData.city,
         state: consultantData.state,
         country: consultantData.country,
         qualifications: qualificationsData,
-        approved: false,
-        createdAt: new Date().toISOString(),
       })
+
+      if (!result.success) {
+        throw new Error(result.error || "Failed to save consultant data")
+      }
 
       toast.success("Application Submitted!", {
         description: "Your application has been submitted for review. We'll notify you soon."
       })
+      
+      // Force refresh user data to ensure AuthContext has the latest DB state (including role and approval status)
+      await refreshUserData(userCredential.user.uid)
+      
       router.push("/dashboard/consultant")
     } catch (error: any) {
       if (error.code === 'auth/email-already-in-use') {

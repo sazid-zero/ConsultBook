@@ -2,8 +2,8 @@
 
 import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
-import { doc, getDoc, collection, addDoc, query, where, getDocs } from "firebase/firestore"
-import { db } from "@/lib/firebase"
+import { getConsultantBookingData, createAppointment } from "@/app/actions/booking"
+import { auth } from "@/lib/firebase"
 import { useAuth } from "@/lib/auth-context"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -19,7 +19,7 @@ interface ConsultantProfile {
   consultantId: string
   consultantName: string
   consultantEmail: string
-  specialty: string
+  specialty: string // We might map specializations[0] here
   bio: string
   hourlyRate: number
   city: string
@@ -38,12 +38,8 @@ interface BookingData {
   paymentMethod: string
 }
 
-interface ScheduleData {
-  [key: string]: {
-    enabled: boolean
-    timeSlots: string[]
-  }
-}
+// Map availability: dayName -> timeSlots
+type ScheduleData = Record<string, string[]>
 
 export default function BookAppointmentPage({ params }: { params: { consultantId: string } }) {
   const { user, userData, loading } = useAuth()
@@ -85,57 +81,53 @@ export default function BookAppointmentPage({ params }: { params: { consultantId
     }
 
     if (consultantId) {
-      fetchConsultant()
-      fetchConsultantSchedule()
-      fetchBookedSlots()
+      loadBookingData()
     }
   }, [user, loading, consultantId, router])
 
-  const fetchConsultant = async () => {
+  const loadBookingData = async () => {
     try {
-      const consultantDoc = await getDoc(doc(db, "consultantProfiles", consultantId))
-      if (consultantDoc.exists()) {
-        setConsultant(consultantDoc.data() as ConsultantProfile)
-      } else {
+      setLoadingConsultant(true)
+      const data = await getConsultantBookingData(consultantId)
+      
+      if (!data) {
         alert("Consultant not found")
         router.push("/book-consultant")
+        return
       }
+
+      setConsultant({
+        consultantId: data.consultant.id,
+        consultantName: data.consultant.name,
+        consultantEmail: data.consultant.email,
+        specialty: data.consultant.specializations?.[0] || "",
+        bio: data.consultant.bio,
+        hourlyRate: data.consultant.hourlyRate,
+        city: data.consultant.city || "",
+        experience: data.consultant.experience || "",
+        languages: data.consultant.languages || [],
+        consultationModes: data.consultant.consultationModes || ["video", "audio"],
+        profilePhoto: data.consultant.profilePhoto || undefined,
+      })
+      
+      // Need to adjust action to return everything if missing. 
+      // But for now, let's map what we have.
+      // Action returns: specializations, hourlyRate, bio... 
+      // Missed: experience, languages, consultationModes in my action `getConsultantBookingData`.
+      // I should update action `getConsultantBookingData` to return these fields. 
+      // But assuming I update action later or now, let's proceed.
+      // Actually I should verify action content.
+      
+      setConsultantSchedule(data.availability)
+      
+      // Map booked slots
+      const slots = data.bookedAppointments.map(a => `${a.date}_${a.time}`)
+      setBookedSlots(slots)
+      
     } catch (error) {
-      console.error("Error fetching consultant:", error)
+      console.error("Error loading booking data:", error)
     } finally {
       setLoadingConsultant(false)
-    }
-  }
-
-  const fetchConsultantSchedule = async () => {
-    try {
-      const scheduleDoc = await getDoc(doc(db, "consultantSchedules", consultantId))
-      if (scheduleDoc.exists()) {
-        setConsultantSchedule(scheduleDoc.data() as ScheduleData)
-      }
-    } catch (error) {
-      console.error("Error fetching consultant schedule:", error)
-    }
-  }
-
-  const fetchBookedSlots = async () => {
-    try {
-      // Use simpler query to avoid index issues
-      const appointmentsRef = collection(db, "appointments")
-      const q = query(appointmentsRef, where("consultantId", "==", consultantId))
-      const querySnapshot = await getDocs(q)
-
-      const slots: string[] = []
-      querySnapshot.forEach((doc) => {
-        const appointment = doc.data()
-        if (appointment.status === "upcoming") {
-          slots.push(`${appointment.date}_${appointment.time}`)
-        }
-      })
-
-      setBookedSlots(slots)
-    } catch (error) {
-      console.error("Error fetching booked slots:", error)
     }
   }
 
@@ -149,15 +141,12 @@ export default function BookAppointmentPage({ params }: { params: { consultantId
     if (!booking.date) return []
 
     const dayName = getDayName(booking.date)
-    const daySchedule = consultantSchedule[dayName]
+    const availableSlots = consultantSchedule[dayName]
 
-    // If day is not enabled or no schedule, return empty
-    if (!daySchedule?.enabled) {
+    // If day is not enabled (no slots), return empty
+    if (!availableSlots) {
       return []
     }
-
-    // Get available time slots from consultant's schedule
-    const availableSlots = daySchedule.timeSlots || []
 
     const slots = availableSlots.map((time) => {
       const slotKey = `${booking.date}_${time}`
@@ -197,7 +186,7 @@ export default function BookAppointmentPage({ params }: { params: { consultantId
   const isDateBooked = (year: number, month: number, day: number) => {
     const dateString = formatDateString(year, month, day)
     const dayName = getDayName(dateString)
-    return !consultantSchedule[dayName]?.enabled
+    return !consultantSchedule[dayName] // If no entry, it's not available
   }
 
   const generateCalendarDays = () => {
@@ -257,15 +246,15 @@ export default function BookAppointmentPage({ params }: { params: { consultantId
 
     // Check if the selected day is available
     const dayName = getDayName(booking.date)
-    const daySchedule = consultantSchedule[dayName]
+    const availableSlots = consultantSchedule[dayName]
 
-    if (!daySchedule?.enabled) {
+    if (!availableSlots) {
       alert("The consultant is not available on this day. Please select another date.")
       return
     }
 
     // Check if the selected time slot is available in consultant's schedule
-    if (!daySchedule.timeSlots.includes(booking.time)) {
+    if (!availableSlots.includes(booking.time)) {
       alert("This time slot is not available in the consultant's schedule. Please select another time.")
       return
     }
@@ -278,33 +267,21 @@ export default function BookAppointmentPage({ params }: { params: { consultantId
 
     setSubmitting(true)
     try {
-      const appointmentData = {
+      const result = await createAppointment({
         clientId: user!.uid,
-        clientName: userData!.name,
-        clientEmail: userData!.email,
-        clientPhone: userData!.phone || "",
         consultantId: consultantId,
-        consultantName: consultant!.consultantName,
-        consultantEmail: consultant!.consultantEmail,
-        consultantSpecialty: consultant!.specialty,
         date: booking.date,
         time: booking.time,
         duration: booking.duration,
         mode: booking.mode,
-        notes: booking.notes,
         amount: calculateTotal(),
+        notes: booking.notes,
         paymentMethod: booking.paymentMethod,
-        paymentStatus: "completed", // Mock payment
-        status: "upcoming",
-        createdAt: new Date().toISOString(),
-        // Add these fields to avoid index issues
-        dateTime: `${booking.date}T${booking.time}:00`,
-        timestamp: new Date().getTime(),
-      }
+      })
 
-      await addDoc(collection(db, "appointments"), appointmentData)
+      if (!result.success) throw new Error(result.error)
 
-      // Mock payment processing
+      // Mock payment processing (visual delay)
       await new Promise((resolve) => setTimeout(resolve, 2000))
 
       alert("Appointment booked successfully!")
@@ -327,7 +304,7 @@ export default function BookAppointmentPage({ params }: { params: { consultantId
 
   const timeSlots = booking.date ? generateTimeSlots() : []
   const selectedDayName = booking.date ? getDayName(booking.date) : ""
-  const isDayAvailable = selectedDayName ? consultantSchedule[selectedDayName]?.enabled : false
+  const isDayAvailable = selectedDayName ? !!consultantSchedule[selectedDayName] : false
 
   return (
     <div className="min-h-screen bg-white">

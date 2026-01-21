@@ -1,5 +1,6 @@
 "use client"
 
+import { useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { signOut } from "firebase/auth"
 import { auth } from "@/lib/firebase"
@@ -7,13 +8,22 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Clock, Calendar, CheckCircle } from "lucide-react"
 
+import { useAuth } from "@/lib/auth-context"
+
 export default function ConsultantPendingPage() {
   const router = useRouter()
+  const { user, loading } = useAuth() // Get auth state
+
+  useEffect(() => {
+    if (!loading && !user) {
+        router.push("/login")
+    }
+  }, [user, loading, router])
 
   const handleLogout = async () => {
     try {
       await signOut(auth)
-      router.push("/")
+      // The useEffect will handle the redirect
     } catch (error) {
       console.error("Error signing out:", error)
     }

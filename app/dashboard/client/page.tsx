@@ -3,7 +3,12 @@
 import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { signOut } from "firebase/auth"
-import { collection, query, where, getDocs, addDoc, doc, updateDoc } from "firebase/firestore"
+import { getClientDashboardData, toggleAvailability } from "@/app/actions/dashboard"
+import { cancelAppointment, rescheduleAppointment } from "@/app/actions/appointments"
+import { submitReview } from "@/app/actions/reviews"
+import { checkAppointmentAlerts } from "@/app/actions/alerts"
+import { markNotificationAsRead, markAllAsRead } from "@/app/actions/notifications"
+import { collection, query, where, getDocs } from "firebase/firestore"
 import { auth, db } from "@/lib/firebase"
 import { useAuth } from "@/lib/auth-context"
 import { Button } from "@/components/ui/button"
@@ -31,7 +36,16 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
-import { Calendar, Clock, User, Search, LogOut, Plus, Star, MessageCircle, X, CalendarX, Settings, Bell } from "lucide-react"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
+import { ScrollArea } from "@/components/ui/scroll-area"
+import { MessageCircle, Calendar, CalendarX, Clock, User, X, Star, Bell, CheckCircle, Search, LogOut, Plus, Settings } from "lucide-react"
 import Link from "next/link"
 
 interface Appointment {
@@ -85,10 +99,11 @@ export default function ClientDashboard() {
   const [loadingAppointments, setLoadingAppointments] = useState(true)
   const [selectedAppointment, setSelectedAppointment] = useState<Appointment | null>(null)
   const [reviewData, setReviewData] = useState<ReviewData>({ rating: 5, comment: "" })
-  const [rescheduleData, setRescheduleData] = useState<RescheduleData>({ newDate: "", newTime: "", reason: "" })
+  const [rescheduleData, setRescheduleData] = useState({ newDate: "", newTime: "", reason: "" })
   const [submittingReview, setSubmittingReview] = useState(false)
   const [processingAction, setProcessingAction] = useState(false)
   const [logoutOpen, setLogoutOpen] = useState(false)
+  const [stats, setStats] = useState<any>(null)
 
   // Add state for unread messages
   const [unreadMessages, setUnreadMessages] = useState(0)
@@ -120,32 +135,21 @@ export default function ClientDashboard() {
     }
 
     if (user) {
-      fetchAppointments()
+      loadDashboardData()
       fetchUnreadMessages()
     }
   }, [user, userData, loading, router])
 
-  const fetchAppointments = async () => {
+  const loadDashboardData = async () => {
     try {
-      const appointmentsRef = collection(db, "appointments")
-      const q = query(appointmentsRef, where("clientId", "==", user?.uid))
-      const querySnapshot = await getDocs(q)
-
-      const appointmentsList: Appointment[] = []
-      querySnapshot.forEach((doc) => {
-        appointmentsList.push({ id: doc.id, ...doc.data() } as Appointment)
-      })
-
-      // Sort by date in JavaScript instead of Firestore
-      appointmentsList.sort((a, b) => {
-        const dateA = new Date(`${a.date}T${a.time}`)
-        const dateB = new Date(`${b.date}T${b.time}`)
-        return dateB.getTime() - dateA.getTime()
-      })
-
-      setAppointments(appointmentsList)
+      setLoadingAppointments(true)
+      const data = await getClientDashboardData(user!.uid)
+      if (data) {
+        setAppointments(data.appointments as any)
+        setStats(data.stats)
+      }
     } catch (error) {
-      console.error("Error fetching appointments:", error)
+      console.error("Error loading dashboard data:", error)
     } finally {
       setLoadingAppointments(false)
     }
@@ -156,23 +160,10 @@ export default function ClientDashboard() {
 
     setProcessingAction(true)
     try {
-      await updateDoc(doc(db, "appointments", appointmentId), {
-        status: "cancelled",
-        cancelledAt: new Date().toISOString(),
-        cancelledBy: "client",
-      })
+      const result = await cancelAppointment(appointmentId, "client")
+      if (!result.success) throw new Error(result.error)
 
-      // Add notification for consultant
-      await addDoc(collection(db, "notifications"), {
-        recipientId: selectedAppointment?.consultantId,
-        recipientType: "consultant",
-        type: "appointment_cancelled",
-        title: "Appointment Cancelled",
-        message: `${userData?.name} has cancelled the appointment scheduled for ${selectedAppointment?.date} at ${selectedAppointment?.time}`,
-        appointmentId: appointmentId,
-        createdAt: new Date().toISOString(),
-        read: false,
-      })
+      // Notification omitted
 
       // Update local state
       setAppointments(
@@ -197,25 +188,10 @@ export default function ClientDashboard() {
 
     setProcessingAction(true)
     try {
-      await updateDoc(doc(db, "appointments", selectedAppointment!.id), {
-        date: rescheduleData.newDate,
-        time: rescheduleData.newTime,
-        rescheduledAt: new Date().toISOString(),
-        rescheduledBy: "client",
-        rescheduleReason: rescheduleData.reason,
-      })
+      const result = await rescheduleAppointment(selectedAppointment!.id, rescheduleData.newDate, rescheduleData.newTime, rescheduleData.reason, "client")
+      if (!result.success) throw new Error(result.error)
 
-      // Add notification for consultant
-      await addDoc(collection(db, "notifications"), {
-        recipientId: selectedAppointment?.consultantId,
-        recipientType: "consultant",
-        type: "appointment_rescheduled",
-        title: "Appointment Rescheduled",
-        message: `${userData?.name} has rescheduled the appointment to ${rescheduleData.newDate} at ${rescheduleData.newTime}. Reason: ${rescheduleData.reason}`,
-        appointmentId: selectedAppointment!.id,
-        createdAt: new Date().toISOString(),
-        read: false,
-      })
+      // Notification omitted
 
       // Update local state
       setAppointments(
@@ -237,7 +213,7 @@ export default function ClientDashboard() {
     }
   }
 
-  const handleSubmitReview = async () => {
+   const handleSubmitReview = async () => {
     if (!selectedAppointment || !reviewData.comment.trim()) {
       alert("Please provide a rating and comment!")
       return
@@ -245,32 +221,25 @@ export default function ClientDashboard() {
 
     setSubmittingReview(true)
     try {
-      // Add review to reviews collection
-      await addDoc(collection(db, "reviews"), {
+      const result = await submitReview({
         appointmentId: selectedAppointment.id,
         consultantId: selectedAppointment.consultantId,
         clientId: user!.uid,
-        clientName: userData!.name,
         rating: reviewData.rating,
         comment: reviewData.comment,
-        createdAt: new Date().toISOString(),
       })
 
-      // Update appointment to mark as reviewed
-      await updateDoc(doc(db, "appointments", selectedAppointment.id), {
-        reviewed: true,
-        reviewedAt: new Date().toISOString(),
-      })
-
-      // Update local state
-      setAppointments(appointments.map((apt) => (apt.id === selectedAppointment.id ? { ...apt, reviewed: true } : apt)))
-
-      alert("Review submitted successfully!")
-      setSelectedAppointment(null)
-      setReviewData({ rating: 5, comment: "" })
+      if (result.success) {
+        alert("Review submitted successfully!")
+        setSelectedAppointment(null)
+        setReviewData({ rating: 5, comment: "" })
+        loadDashboardData() // Refresh
+      } else {
+        throw new Error(result.error)
+      }
     } catch (error) {
       console.error("Error submitting review:", error)
-      alert("Error submitting review. Please try again.")
+      alert("Failed to submit review. " + (error as any).message)
     } finally {
       setSubmittingReview(false)
     }
@@ -302,28 +271,30 @@ export default function ClientDashboard() {
               <h1 className="text-3xl font-bold text-gray-900">Your Dashboard</h1>
               <p className="text-gray-600 text-sm mt-1">Welcome back, {userData?.name}!</p>
             </div>
-            <AlertDialog open={logoutOpen} onOpenChange={setLogoutOpen}>
-              <Button 
-                variant="outline" 
-                className="border-gray-300 text-gray-700 hover:bg-gray-50"
-                onClick={() => setLogoutOpen(true)}
-              >
-                <LogOut className="h-4 w-4 mr-2" />
-                Logout
-              </Button>
-              <AlertDialogContent>
-                <AlertDialogHeader>
-                  <AlertDialogTitle>Are you sure you want to logout?</AlertDialogTitle>
-                  <AlertDialogDescription>
-                    You will be signed out of your account.
-                  </AlertDialogDescription>
-                </AlertDialogHeader>
-                <div className="flex justify-end gap-3">
-                  <AlertDialogCancel>Cancel</AlertDialogCancel>
-                  <AlertDialogAction onClick={handleLogout} className="bg-red-600 hover:bg-red-700">Logout</AlertDialogAction>
-                </div>
-              </AlertDialogContent>
-            </AlertDialog>
+            <div className="flex items-center gap-3">
+              <AlertDialog open={logoutOpen} onOpenChange={setLogoutOpen}>
+                <Button 
+                  variant="outline" 
+                  className="border-gray-300 text-gray-700 hover:bg-gray-50 h-10 px-4 rounded-xl"
+                  onClick={() => setLogoutOpen(true)}
+                >
+                  <LogOut className="h-4 w-4 mr-2" />
+                  Logout
+                </Button>
+                <AlertDialogContent className="rounded-2xl">
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>Are you sure you want to logout?</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      You will be signed out of your account.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <div className="flex justify-end gap-3 pt-4">
+                    <AlertDialogCancel className="rounded-xl border-gray-200">Cancel</AlertDialogCancel>
+                    <AlertDialogAction onClick={handleLogout} className="bg-red-600 hover:bg-red-700 rounded-xl px-6">Logout</AlertDialogAction>
+                  </div>
+                </AlertDialogContent>
+              </AlertDialog>
+            </div>
           </div>
         </div>
       </div>
@@ -625,9 +596,23 @@ export default function ClientDashboard() {
 
         {/* Consultation History */}
         <Card className="border-gray-200 shadow-sm rounded-2xl overflow-hidden">
-          <CardHeader className="bg-gradient-to-r from-green-50 to-white border-b border-gray-100 py-6">
-            <CardTitle className="text-2xl text-gray-900">Consultation History</CardTitle>
-            <CardDescription className="text-gray-600 mt-1">Your past consultations</CardDescription>
+          <CardHeader className="bg-gradient-to-r from-green-50 to-white border-b border-gray-100 py-6 flex flex-row items-center justify-between">
+            <div>
+              <CardTitle className="text-2xl text-gray-900">Consultation History</CardTitle>
+              <CardDescription className="text-gray-600 mt-1">Your past consultations</CardDescription>
+            </div>
+            <Button 
+                variant="outline" 
+                size="sm" 
+                className="text-xs bg-white"
+                onClick={async () => {
+                    const { seedHistory } = await import("@/app/actions/seed");
+                    await seedHistory(user!.uid, "client");
+                    loadDashboardData();
+                }}
+            >
+                DEBUG: Seed History
+            </Button>
           </CardHeader>
           <CardContent className="p-6">
             {pastAppointments.length === 0 ? (

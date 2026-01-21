@@ -2,11 +2,12 @@
 
 import { useState, useEffect } from "react"
 import Link from "next/link"
-import { usePathname } from "next/navigation"
+import { usePathname, useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { useAuth } from "@/lib/auth-context"
 import { collection, query, where, getDocs, updateDoc, doc } from "firebase/firestore"
 import { db } from "@/lib/firebase"
+import { getNotifications, markNotificationAsRead, markAllAsRead } from "@/app/actions/notifications"
 import { 
   Menu, 
   X, 
@@ -17,7 +18,10 @@ import {
   User, 
   LogOut,
   Settings,
-  Bell
+  Bell,
+  CheckCircle,
+  ShoppingCart,
+  BookOpen
 } from "lucide-react"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { 
@@ -27,6 +31,7 @@ import {
   SheetHeader,
   SheetTitle
 } from "@/components/ui/sheet"
+import { GlobalSearch } from "@/components/search/GlobalSearch"
 import { 
   Dialog,
   DialogTrigger,
@@ -43,6 +48,7 @@ import {
   DropdownMenuSeparator, 
   DropdownMenuTrigger 
 } from "@/components/ui/dropdown-menu"
+import { ScrollArea } from "@/components/ui/scroll-area"
 import {
   AlertDialog,
   AlertDialogAction,
@@ -60,12 +66,13 @@ import { Badge } from "@/components/ui/badge"
 
 interface Notification {
   id: string
-  type: string
+  userId: string
   title: string
-  message: string
-  appointmentId?: string
+  content: string
+  type: string
+  relatedId?: string
+  isRead: boolean
   createdAt: string
-  read: boolean
 }
 
 interface NavbarProps {
@@ -78,8 +85,11 @@ interface NavbarProps {
 export function Navbar({ notifications: propNotifications = [], unreadCount: propUnreadCount = 0, onNotificationRead, onNotificationClick }: NavbarProps) {
   const { user, userData, loading } = useAuth()
   const pathname = usePathname()
+  const router = useRouter()
   const [isOpen, setIsOpen] = useState(false)
-  const [notificationsOpen, setNotificationsOpen] = useState(false)
+  const [desktopNotificationsOpen, setDesktopNotificationsOpen] = useState(false)
+  const [mobileNotificationsOpen, setMobileNotificationsOpen] = useState(false)
+  const [cartCount, setCartCount] = useState(0)
   const [logoutOpen, setLogoutOpen] = useState(false)
   
   // Local state for notifications (fetched from Firestore)
@@ -104,28 +114,50 @@ export function Navbar({ notifications: propNotifications = [], unreadCount: pro
       return
     }
 
-    const fetchNotifications = async () => {
+    const fetchNotificationsData = async () => {
       try {
-        const notificationsRef = collection(db, "notifications")
-        const q = query(notificationsRef, where("recipientId", "==", user.uid))
-        const querySnapshot = await getDocs(q)
-
-        const notificationsList: Notification[] = []
-        querySnapshot.forEach((doc) => {
-          notificationsList.push({ id: doc.id, ...doc.data() } as Notification)
-        })
-
-        // Sort by date
-        notificationsList.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
-        setNotifications(notificationsList)
-        setUnreadCount(notificationsList.filter((n) => !n.read).length)
+        const result = await getNotifications(user.uid)
+        if (result.success && result.data) {
+          setNotifications(result.data as unknown as Notification[])
+          setUnreadCount(result.data.filter((n: any) => !n.isRead).length)
+        }
       } catch (error) {
         console.error("Error fetching notifications:", error)
       }
     }
 
-    fetchNotifications()
-  }, [user, userData])
+    fetchNotificationsData()
+    // Poll for notifications every 60 seconds (optional, but good for real-time feel without WebSockets yet)
+    const interval = setInterval(fetchNotificationsData, 60000)
+    return () => clearInterval(interval)
+  }, [user])
+
+  // Load cart count
+  useEffect(() => {
+    const updateCartCount = () => {
+      const savedCart = localStorage.getItem("consultbook_cart")
+      if (savedCart) {
+        const cart = JSON.parse(savedCart)
+        setCartCount(cart.length)
+      } else {
+        setCartCount(0)
+      }
+    }
+
+    updateCartCount()
+
+    // Listen for storage events (when cart is updated)
+    window.addEventListener("storage", updateCartCount)
+    
+    // Custom event for same-tab updates
+    const handleCartUpdate = () => updateCartCount()
+    window.addEventListener("cartUpdated", handleCartUpdate)
+
+    return () => {
+      window.removeEventListener("storage", updateCartCount)
+      window.removeEventListener("cartUpdated", handleCartUpdate)
+    }
+  }, [])
 
   // Check if user is admin - AFTER all hooks defined
   const isAdmin = typeof window !== 'undefined' && localStorage.getItem('adminSession') !== null
@@ -138,17 +170,23 @@ export function Navbar({ notifications: propNotifications = [], unreadCount: pro
   // Mark notification as read
   const handleMarkNotificationAsRead = async (notificationId: string) => {
     try {
-      await updateDoc(doc(db, "notifications", notificationId), {
-        read: true,
-        readAt: new Date().toISOString(),
-      })
-
-      setNotifications(notifications.map((notif) => (notif.id === notificationId ? { ...notif, read: true } : notif)))
-      setUnreadCount(Math.max(0, unreadCount - 1))
-      
+      await markNotificationAsRead(notificationId)
+      setNotifications(prev => prev.map((n) => n.id === notificationId ? { ...n, isRead: true } : n))
+      setUnreadCount(prev => Math.max(0, prev - 1))
       if (onNotificationRead) onNotificationRead(notificationId)
     } catch (error) {
       console.error("Error marking notification as read:", error)
+    }
+  }
+
+  const handleMarkAllRead = async () => {
+    if (!user) return
+    try {
+      await markAllAsRead(user.uid)
+      setNotifications(prev => prev.map(n => ({ ...n, isRead: true })))
+      setUnreadCount(0)
+    } catch (error) {
+      console.error("Error marking all as read:", error)
     }
   }
 
@@ -156,6 +194,7 @@ export function Navbar({ notifications: propNotifications = [], unreadCount: pro
     try {
       await signOut(auth)
       toast.success("Logged out successfully")
+      router.push("/login")
     } catch (error: any) {
       toast.error("Error logging out")
     }
@@ -175,11 +214,11 @@ export function Navbar({ notifications: propNotifications = [], unreadCount: pro
 
   const navLinks = [
     { name: "Home", href: "/", icon: Calendar },
+    { name: "Library", href: "/library", icon: BookOpen },
+    { name: "Sessions", href: "/sessions", icon: Calendar },
     ...(user ? [
       { name: "Dashboard", href: getDashboardHref(), icon: LayoutDashboard },
       { name: "Find Consultants", href: "/book-consultant", icon: Search },
-      { name: "Messages", href: "/messages", icon: MessageSquare },
-      
     ] : [
       { name: "Find Consultants", href: "/book-consultant", icon: Search },
       { name: "Help", href: "/help", icon: MessageSquare },
@@ -194,15 +233,21 @@ export function Navbar({ notifications: propNotifications = [], unreadCount: pro
     <header className="sticky top-0 z-50 w-full bg-white/80 backdrop-blur-md border-b border-gray-100">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
-          {/* Logo */}
-          <Link href="/" className="flex items-center gap-2 group">
-            <div className="bg-blue-600 p-1.5 rounded-lg group-hover:scale-110 transition-transform">
-              <Calendar className="h-5 w-5 text-white" />
+          <div className="flex items-center gap-8">
+            <Link href="/" className="flex items-center gap-2 group">
+              <div className="bg-blue-600 p-1.5 rounded-lg group-hover:scale-110 transition-transform">
+                <Calendar className="h-5 w-5 text-white" />
+              </div>
+              <span className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-gray-900 to-gray-600">
+                ConsultBook
+              </span>
+            </Link>
+
+            {/* Global Search */}
+            <div className="hidden lg:block">
+              <GlobalSearch />
             </div>
-            <span className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-gray-900 to-gray-600">
-              ConsultBook
-            </span>
-          </Link>
+          </div>
 
           {/* Desktop Navigation */}
           <nav className="hidden md:flex items-center gap-1">
@@ -228,56 +273,114 @@ export function Navbar({ notifications: propNotifications = [], unreadCount: pro
             {!loading && (
               <>
                 {user ? (
-                  <div className="flex items-center gap-3">
-                    <Dialog open={notificationsOpen} onOpenChange={setNotificationsOpen}>
-                      <DialogTrigger asChild>
-                        <Button 
-                          variant="ghost" 
-                          size="icon" 
-                          className="text-gray-500 hover:text-blue-600 relative"
-                        >
-                          <Bell className="h-5 w-5" />
-                          {unreadCount > 0 && (
-                            <Badge variant="destructive" className="absolute -top-2 -right-2 h-5 w-5 text-xs p-0 flex items-center justify-center">
-                              {unreadCount}
-                            </Badge>
-                          )}
-                        </Button>
-                      </DialogTrigger>
-                      <DialogContent className="max-w-md max-h-[80vh] overflow-y-auto">
-                        <DialogHeader>
-                          <DialogTitle>Notifications</DialogTitle>
-                          <DialogDescription>Recent updates and alerts</DialogDescription>
-                        </DialogHeader>
-                        <div className="space-y-3">
+                    <div className="flex items-center gap-3">
+                    <Link href="/messages">
+                      <Button 
+                        variant="ghost" 
+                        size="icon" 
+                        className={`text-gray-500 hover:text-blue-600 h-10 w-10 rounded-full hover:bg-gray-50 border border-transparent hover:border-gray-100 ${
+                          isActive("/messages") ? "text-blue-600 bg-blue-50 border-gray-100" : ""
+                        }`}
+                      >
+                        <MessageSquare className="h-5 w-5" />
+                      </Button>
+                    </Link>
+
+                    <Link href="/cart">
+                      <Button 
+                        variant="ghost" 
+                        size="icon" 
+                        className={`text-gray-500 hover:text-blue-600 h-10 w-10 rounded-full hover:bg-gray-50 border border-transparent hover:border-gray-100 relative ${
+                          isActive("/cart") ? "text-blue-600 bg-blue-50 border-gray-100" : ""
+                        }`}
+                      >
+                        <ShoppingCart className="h-5 w-5" />
+                        {cartCount > 0 && (
+                          <span className="absolute -top-1 -right-1 bg-blue-600 text-white text-[10px] font-bold w-5 h-5 flex items-center justify-center rounded-full border-2 border-white animate-in zoom-in duration-300">
+                            {cartCount}
+                          </span>
+                        )}
+                      </Button>
+                    </Link>
+
+                    <DropdownMenu open={desktopNotificationsOpen} onOpenChange={setDesktopNotificationsOpen}>
+                    <DropdownMenuTrigger asChild>
+                      <Button 
+                        variant="ghost" 
+                        size="icon" 
+                        className="text-gray-500 hover:text-blue-600 relative h-10 w-10 rounded-full hover:bg-gray-50 border border-transparent hover:border-gray-100"
+                      >
+                        <Bell className="h-5 w-5" />
+                        {unreadCount > 0 && (
+                          <span className="absolute -top-1 -right-1 bg-red-600 text-white text-[10px] font-bold w-5 h-5 flex items-center justify-center rounded-full border-2 border-white animate-in zoom-in duration-300">
+                            {unreadCount}
+                          </span>
+                        )}
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end" className="w-80 rounded-2xl p-2 shadow-xl border-gray-100 mt-1">
+                      <div className="flex items-center justify-between px-3 py-2 mb-1">
+                        <DropdownMenuLabel className="font-bold text-base p-0">Notifications</DropdownMenuLabel>
+                        {unreadCount > 0 && (
+                          <button 
+                            onClick={(e) => { e.stopPropagation(); handleMarkAllRead(); }}
+                            className="text-xs text-blue-600 hover:text-blue-700 font-medium"
+                          >
+                            Mark all read
+                          </button>
+                        )}
+                      </div>
+                      <DropdownMenuSeparator className="bg-gray-100" />
+                      <ScrollArea className="h-[400px]">
+                        <div className="p-1">
                           {notifications && notifications.length > 0 ? (
-                            notifications.slice(0, 10).map((notification) => (
-                              <div
-                                key={notification.id}
-                                className={`p-3 border rounded-lg cursor-pointer transition-colors ${
-                                  !notification.read ? "bg-blue-50 border-blue-200 hover:bg-blue-100" : "bg-gray-50 hover:bg-gray-100"
-                                }`}
-                                onClick={() => {
-                                  handleMarkNotificationAsRead(notification.id)
-                                  if (onNotificationClick) onNotificationClick(notification)
-                                }}
-                              >
-                                <p className="font-semibold text-sm text-gray-900">{notification.title}</p>
-                                <p className="text-xs text-gray-600 mt-1">{notification.message}</p>
-                                <p className="text-xs text-gray-400 mt-2">
-                                  {new Date(notification.createdAt).toLocaleDateString()}
-                                </p>
-                              </div>
-                            ))
+                            <div className="grid gap-1">
+                              {notifications.map((n) => (
+                                <div
+                                  key={n.id}
+                                  className={`p-3 rounded-xl cursor-pointer transition-all relative group ${
+                                    !n.isRead ? "bg-blue-50/50 hover:bg-blue-50" : "hover:bg-gray-50"
+                                  }`}
+                                  onClick={() => {
+                                    handleMarkNotificationAsRead(n.id)
+                                    if (onNotificationClick) onNotificationClick(n)
+                                    setDesktopNotificationsOpen(false)
+                                  }}
+                                >
+                                  <div className="flex items-start justify-between gap-2">
+                                    <p className={`text-sm leading-tight ${!n.isRead ? "font-bold text-gray-900" : "font-medium text-gray-700"}`}>
+                                      {n.title}
+                                    </p>
+                                    <span className="text-[10px] text-gray-400 whitespace-nowrap mt-0.5">
+                                      {new Date(n.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                    </span>
+                                  </div>
+                                  <p className="text-xs text-gray-600 mt-1.5 leading-relaxed line-clamp-2">{n.content}</p>
+                                  
+                                  {/* User liked the checkmark design from dashboard */}
+                                  <div className="absolute right-3 bottom-3 opacity-0 group-hover:opacity-100 transition-opacity">
+                                    <CheckCircle className="h-3.5 w-3.5 text-blue-500" />
+                                  </div>
+                                  
+                                  {!n.isRead && (
+                                    <div className="absolute right-3 top-3 w-1.5 h-1.5 bg-blue-600 rounded-full" />
+                                  )}
+                                </div>
+                              ))}
+                            </div>
                           ) : (
-                            <div className="text-center py-8">
-                              <Bell className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                              <p className="text-gray-500">No notifications yet</p>
+                            <div className="text-center py-12 px-4">
+                              <div className="bg-gray-50 w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-3">
+                                <Bell className="h-6 w-6 text-gray-300" />
+                              </div>
+                              <p className="text-gray-500 text-sm font-medium">All caught up!</p>
+                              <p className="text-[11px] text-gray-400 mt-0.5">No new notifications.</p>
                             </div>
                           )}
                         </div>
-                      </DialogContent>
-                    </Dialog>
+                      </ScrollArea>
+                    </DropdownMenuContent>
+                    </DropdownMenu>
                     
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
@@ -351,8 +454,8 @@ export function Navbar({ notifications: propNotifications = [], unreadCount: pro
           {/* Mobile Menu Toggle */}
           <div className="md:hidden flex items-center gap-2">
             {!loading && user && (
-              <Dialog open={notificationsOpen} onOpenChange={setNotificationsOpen}>
-                <DialogTrigger asChild>
+              <DropdownMenu open={mobileNotificationsOpen} onOpenChange={setMobileNotificationsOpen}>
+                <DropdownMenuTrigger asChild>
                   <Button 
                     variant="ghost" 
                     size="icon" 
@@ -365,42 +468,57 @@ export function Navbar({ notifications: propNotifications = [], unreadCount: pro
                       </Badge>
                     )}
                   </Button>
-                </DialogTrigger>
-                <DialogContent className="max-w-md max-h-[80vh] overflow-y-auto">
-                  <DialogHeader>
-                    <DialogTitle>Notifications</DialogTitle>
-                    <DialogDescription>Recent updates and alerts</DialogDescription>
-                  </DialogHeader>
-                  <div className="space-y-3">
-                    {notifications && notifications.length > 0 ? (
-                      notifications.slice(0, 10).map((notification) => (
-                        <div
-                          key={notification.id}
-                          className={`p-3 border rounded-lg cursor-pointer transition-colors ${
-                            !notification.read ? "bg-blue-50 border-blue-200 hover:bg-blue-100" : "bg-gray-50 hover:bg-gray-100"
-                          }`}
-                          onClick={() => {
-                            handleMarkNotificationAsRead(notification.id)
-                            if (onNotificationClick) onNotificationClick(notification)
-                            setNotificationsOpen(false)
-                          }}
-                        >
-                          <p className="font-semibold text-sm text-gray-900">{notification.title}</p>
-                          <p className="text-xs text-gray-600 mt-1">{notification.message}</p>
-                          <p className="text-xs text-gray-400 mt-2">
-                            {new Date(notification.createdAt).toLocaleDateString()}
-                          </p>
-                        </div>
-                      ))
-                    ) : (
-                      <div className="text-center py-8">
-                        <Bell className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                        <p className="text-gray-500">No notifications yet</p>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-[calc(100vw-32px)] sm:w-80 rounded-2xl p-2 shadow-xl border-gray-100 mt-2 mx-4">
+                   <div className="flex items-center justify-between px-3 py-2">
+                        <DropdownMenuLabel className="font-bold text-base p-0">Notifications</DropdownMenuLabel>
+                        {unreadCount > 0 && (
+                          <button 
+                            onClick={(e) => { e.stopPropagation(); handleMarkAllRead(); }}
+                            className="text-xs text-blue-600 font-medium"
+                          >
+                            Mark all read
+                          </button>
+                        )}
+                   </div>
+                   <DropdownMenuSeparator />
+                   <ScrollArea className="h-[400px]">
+                      <div className="p-1">
+                        {notifications && notifications.length > 0 ? (
+                          <div className="grid gap-1">
+                            {notifications.map((n) => (
+                              <div
+                                key={n.id}
+                                className={`p-3 rounded-xl cursor-pointer relative ${
+                                  !n.isRead ? "bg-blue-50/50" : ""
+                                }`}
+                                onClick={() => {
+                                  handleMarkNotificationAsRead(n.id)
+                                  if (onNotificationClick) onNotificationClick(n)
+                                  setMobileNotificationsOpen(false)
+                                }}
+                              >
+                                <div className="flex items-start justify-between gap-2">
+                                  <p className={`text-sm leading-tight ${!n.isRead ? "font-bold text-gray-900" : "font-medium text-gray-700"}`}>
+                                    {n.title}
+                                  </p>
+                                  <span className="text-[10px] text-gray-400 mt-0.5 whitespace-nowrap">
+                                    {new Date(n.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                  </span>
+                                </div>
+                                <p className="text-xs text-gray-600 mt-1">{n.content}</p>
+                              </div>
+                            ))}
+                          </div>
+                        ) : (
+                          <div className="text-center py-12">
+                             <p className="text-gray-500 text-sm">No notifications yet</p>
+                          </div>
+                        )}
                       </div>
-                    )}
-                  </div>
-                </DialogContent>
-              </Dialog>
+                   </ScrollArea>
+                </DropdownMenuContent>
+              </DropdownMenu>
             )}
             <Sheet open={isOpen} onOpenChange={setIsOpen}>
               <SheetTrigger asChild>

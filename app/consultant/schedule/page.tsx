@@ -2,43 +2,27 @@
 
 import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
-import { doc, getDoc, setDoc } from "firebase/firestore"
-import { db } from "@/lib/firebase"
+import { getConsultantSchedule, updateConsultantSchedule, type ScheduleData } from "@/app/actions/schedule"
 import { useAuth } from "@/lib/auth-context"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Switch } from "@/components/ui/switch"
 import { Badge } from "@/components/ui/badge"
-import { Calendar, ArrowLeft, Clock, Save } from "lucide-react"
-import Link from "next/link"
-
-interface ScheduleData {
-  [key: string]: {
-    enabled: boolean
-    timeSlots: string[]
-  }
-}
+import { Calendar, ArrowLeft, Clock, Save, Loader2, CheckCircle } from "lucide-react"
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog"
 
 const DAYS = ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"]
 const TIME_SLOTS = [
-  "09:00",
-  "09:30",
-  "10:00",
-  "10:30",
-  "11:00",
-  "11:30",
-  "12:00",
-  "12:30",
-  "13:00",
-  "13:30",
-  "14:00",
-  "14:30",
-  "15:00",
-  "15:30",
-  "16:00",
-  "16:30",
-  "17:00",
-  "17:30",
+  "09:00", "09:30", "10:00", "10:30", "11:00", "11:30",
+  "12:00", "12:30", "13:00", "13:30", "14:00", "14:30",
+  "15:00", "15:30", "16:00", "16:30", "17:00", "17:30",
 ]
 
 export default function ConsultantSchedulePage() {
@@ -46,6 +30,7 @@ export default function ConsultantSchedulePage() {
   const router = useRouter()
   const [schedule, setSchedule] = useState<ScheduleData>({})
   const [saving, setSaving] = useState(false)
+  const [showSuccessDialog, setShowSuccessDialog] = useState(false)
 
   useEffect(() => {
     if (!loading && (!user || userData?.role !== "consultant")) {
@@ -65,19 +50,9 @@ export default function ConsultantSchedulePage() {
 
   const fetchSchedule = async () => {
     try {
-      const scheduleDoc = await getDoc(doc(db, "consultantSchedules", user!.uid))
-      if (scheduleDoc.exists()) {
-        setSchedule(scheduleDoc.data() as ScheduleData)
-      } else {
-        // Initialize default schedule
-        const defaultSchedule: ScheduleData = {}
-        DAYS.forEach((day) => {
-          defaultSchedule[day] = {
-            enabled: true,
-            timeSlots: [],
-          }
-        })
-        setSchedule(defaultSchedule)
+      const result = await getConsultantSchedule(user!.uid)
+      if (result.success && result.data) {
+        setSchedule(result.data)
       }
     } catch (error) {
       console.error("Error fetching schedule:", error)
@@ -85,28 +60,19 @@ export default function ConsultantSchedulePage() {
   }
 
   const handleSaveSchedule = async () => {
-    if (!user) {
-      alert("User not authenticated!")
-      return
-    }
+    if (!user) return
 
     setSaving(true)
     try {
-      const scheduleData = {
-        ...schedule,
-        consultantId: user.uid,
-        consultantName: userData!.name,
-        consultantEmail: userData!.email,
-        updatedAt: new Date().toISOString(),
+      const result = await updateConsultantSchedule(user.uid, schedule)
+      if (result.success) {
+        setShowSuccessDialog(true)
+      } else {
+        throw new Error(result.error)
       }
-
-      // Use setDoc instead of updateDoc to create document if it doesn't exist
-      await setDoc(doc(db, "consultantSchedules", user.uid), scheduleData, { merge: true })
-
-      alert("Schedule saved successfully!")
     } catch (error) {
       console.error("Error saving schedule:", error)
-      alert(`Error saving schedule: ${error instanceof Error ? error.message : "Unknown error"}`)
+      alert("Failed to save schedule. Please try again.")
     } finally {
       setSaving(false)
     }
@@ -168,9 +134,24 @@ export default function ConsultantSchedulePage() {
       
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="mb-6">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Weekly Schedule</h1>
-          <p className="text-gray-600">Set your availability for each day of the week</p>
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
+          <div>
+            <h1 className="text-3xl font-bold text-gray-900 mb-2">Weekly Schedule</h1>
+            <p className="text-gray-600">Set your availability for each day of the week</p>
+          </div>
+          <Button onClick={handleSaveSchedule} disabled={saving} className="bg-blue-600 hover:bg-blue-700">
+            {saving ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Saving...
+              </>
+            ) : (
+              <>
+                <Save className="mr-2 h-4 w-4" />
+                Save Schedule
+              </>
+            )}
+          </Button>
         </div>
 
         <div className="space-y-6">
@@ -247,6 +228,28 @@ export default function ConsultantSchedulePage() {
           </ul>
         </div>
       </div>
+
+      <AlertDialog open={showSuccessDialog} onOpenChange={setShowSuccessDialog}>
+        <AlertDialogContent className="sm:max-w-[425px]">
+          <AlertDialogHeader className="flex flex-col items-center justify-center text-center space-y-4 pt-4">
+            <div className="rounded-full bg-green-100 p-3">
+              <CheckCircle className="h-12 w-12 text-green-600" />
+            </div>
+            <AlertDialogTitle className="text-xl font-semibold">Schedule Saved!</AlertDialogTitle>
+            <AlertDialogDescription className="text-center text-gray-500">
+              Your weekly availability has been successfully updated.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <div className="flex justify-center p-4">
+            <AlertDialogAction 
+              onClick={() => setShowSuccessDialog(false)}
+              className="w-full sm:w-auto bg-green-600 hover:bg-green-700 min-w-[120px]"
+            >
+              Okay
+            </AlertDialogAction>
+          </div>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   )
 }
