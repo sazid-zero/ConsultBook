@@ -18,8 +18,10 @@ import {
 import Link from "next/link"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { AddToCartButton } from "@/components/cart/AddToCartButton"
+import { useAuth } from "@/lib/auth-context"
 
 export default function LibraryPage() {
+  const { userData } = useAuth()
   const [products, setProducts] = useState<any[]>([])
   const [filteredProducts, setFilteredProducts] = useState<any[]>([])
   const [searchQuery, setSearchQuery] = useState("")
@@ -44,6 +46,16 @@ export default function LibraryPage() {
     // Filter by category
     if (selectedCategory !== "all") {
       filtered = filtered.filter(p => p.type === selectedCategory)
+    }
+
+    // Filter by category (Heuristic)
+    if (selectedCategory !== "all") {
+      const cat = selectedCategory.toLowerCase()
+      filtered = filtered.filter(p => 
+        p.title.toLowerCase().includes(cat) || 
+        p.description.toLowerCase().includes(cat) ||
+        p.type.toLowerCase().includes(cat)
+      )
     }
 
     // Filter by search query
@@ -89,11 +101,13 @@ export default function LibraryPage() {
                    <ArrowRight className="ml-2 h-4 w-4 group-hover:translate-x-1 transition-transform" />
                  </Button>
                </Link>
-               <Link href="/dashboard/consultant/library">
-                 <Button variant="outline" size="lg" className="h-12 px-8 rounded-xl border-gray-200 font-bold">
-                   Sell Your Work
-                 </Button>
-               </Link>
+               {userData?.role === 'consultant' && (
+                 <Link href="/dashboard/consultant/library">
+                   <Button variant="outline" size="lg" className="h-12 px-8 rounded-xl border-gray-200 font-bold">
+                     Sell Your Work
+                   </Button>
+                 </Link>
+               )}
             </div>
           </div>
         </div>

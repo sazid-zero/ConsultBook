@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
+import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { 
@@ -19,6 +20,7 @@ import Link from "next/link"
 import { toast } from "sonner"
 
 export default function CartPage() {
+  const router = useRouter()
   const [items, setItems] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
 
@@ -144,15 +146,8 @@ export default function CartPage() {
                         <Button 
                           className="w-full h-16 bg-blue-600 hover:bg-blue-700 text-white rounded-[24px] font-black text-lg shadow-2xl shadow-blue-100 transition-all hover:scale-[1.02] active:scale-[0.98] group"
                           onClick={() => {
-                            // For now, redirect to checkout with first item (products) or first workshop
-                            const firstProduct = items.find(i => i.type !== "workshop")
-                            const firstWorkshop = items.find(i => i.type === "workshop")
-                            
-                            if (firstProduct) {
-                              window.location.href = `/checkout?productId=${firstProduct.id}`
-                            } else if (firstWorkshop) {
-                              window.location.href = `/checkout?workshopId=${firstWorkshop.id}`
-                            }
+                            // Redirect to checkout with cart mode
+                            router.push("/checkout?cart=true")
                           }}
                         >
                           Checkout Now

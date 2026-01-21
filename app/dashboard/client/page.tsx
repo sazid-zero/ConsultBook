@@ -45,7 +45,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { ScrollArea } from "@/components/ui/scroll-area"
-import { MessageCircle, Calendar, CalendarX, Clock, User, X, Star, Bell, CheckCircle, Search, LogOut, Plus, Settings } from "lucide-react"
+import { MessageCircle, Calendar, CalendarX, Clock, User, X, Star, Bell, CheckCircle, Search, LogOut, Plus, Settings, ShoppingCart, Video } from "lucide-react"
 import Link from "next/link"
 
 interface Appointment {
@@ -96,8 +96,11 @@ export default function ClientDashboard() {
   const { user, userData, loading } = useAuth()
   const router = useRouter()
   const [appointments, setAppointments] = useState<Appointment[]>([])
+  const [upcomingSchedule, setUpcomingSchedule] = useState<any[]>([])
   const [loadingAppointments, setLoadingAppointments] = useState(true)
   const [selectedAppointment, setSelectedAppointment] = useState<Appointment | null>(null)
+  const [orders, setOrders] = useState<any[]>([])
+  const [registrations, setRegistrations] = useState<any[]>([])
   const [reviewData, setReviewData] = useState<ReviewData>({ rating: 5, comment: "" })
   const [rescheduleData, setRescheduleData] = useState({ newDate: "", newTime: "", reason: "" })
   const [submittingReview, setSubmittingReview] = useState(false)
@@ -111,17 +114,11 @@ export default function ClientDashboard() {
   // Add function to fetch unread message count
   const fetchUnreadMessages = async () => {
     try {
-      const conversationsRef = collection(db, "conversations")
-      const q = query(conversationsRef, where("clientId", "==", user?.uid))
-      const querySnapshot = await getDocs(q)
-
-      let totalUnread = 0
-      querySnapshot.forEach((doc) => {
-        const conversation = doc.data()
-        totalUnread += conversation.clientUnread || 0
-      })
-
-      setUnreadMessages(totalUnread)
+      const { getTotalUnreadMessages } = await import("@/app/actions/messages")
+      const result = await getTotalUnreadMessages(user!.uid)
+      if (result.success) {
+        setUnreadMessages(result.count)
+      }
     } catch (error) {
       console.error("Error fetching unread messages:", error)
     }
@@ -146,6 +143,9 @@ export default function ClientDashboard() {
       const data = await getClientDashboardData(user!.uid)
       if (data) {
         setAppointments(data.appointments as any)
+        setUpcomingSchedule(data.upcomingSchedule || [])
+        setOrders(data.orders || [])
+        setRegistrations(data.registrations || [])
         setStats(data.stats)
       }
     } catch (error) {
@@ -299,54 +299,63 @@ export default function ClientDashboard() {
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Quick Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-          <Card className="border-gray-200 shadow-sm rounded-2xl overflow-hidden bg-gradient-to-br from-blue-50 to-white">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-gray-600 text-sm font-medium mb-1">Upcoming</p>
-                  <p className="text-4xl font-bold text-gray-900">{upcomingAppointments.length}</p>
-                  <p className="text-xs text-gray-500 mt-2">appointments scheduled</p>
-                </div>
-                <div className="bg-blue-100 p-3 rounded-full">
-                  <Calendar className="h-6 w-6 text-blue-600" />
-                </div>
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-12">
+        {/* Stats Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+          <Card className="rounded-2xl border border-blue-100 bg-gradient-to-br from-blue-50/50 to-white shadow-sm overflow-hidden hover:shadow-xl group">
+            <CardContent className="p-6 flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-gray-500 mb-1">Upcoming Appointments</p>
+                <div className="text-4xl font-bold text-gray-900 group-hover:text-blue-700 transition-colors">{stats?.upcomingCount || 0}</div>
+              </div>
+              <div className="bg-blue-100 p-3 rounded-2xl shadow-inner shadow-blue-200/50">
+                <Calendar className="h-6 w-6 text-blue-600" />
               </div>
             </CardContent>
           </Card>
-
-          <Card className="border-gray-200 shadow-sm rounded-2xl overflow-hidden bg-gradient-to-br from-green-50 to-white">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-gray-600 text-sm font-medium mb-1">Completed</p>
-                  <p className="text-4xl font-bold text-gray-900">{pastAppointments.length}</p>
-                  <p className="text-xs text-gray-500 mt-2">consultations done</p>
-                </div>
-                <div className="bg-green-100 p-3 rounded-full">
-                  <User className="h-6 w-6 text-green-600" />
-                </div>
+          <Card className="rounded-2xl border border-emerald-100 bg-gradient-to-br from-emerald-50/50 to-white shadow-sm overflow-hidden hover:shadow-xl group">
+            <CardContent className="p-6 flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-gray-500 mb-1 tracking-wide">Completed Sessions</p>
+                <div className="text-4xl font-black text-gray-900 group-hover:text-emerald-700 transition-colors">{stats?.completedCount || 0}</div>
+              </div>
+              <div className="bg-emerald-100 p-3 rounded-2xl shadow-inner shadow-emerald-200/50">
+                <CheckCircle className="h-6 w-6 text-emerald-600" />
               </div>
             </CardContent>
           </Card>
-
-          <Card className="border-gray-200 shadow-sm rounded-2xl overflow-hidden bg-gradient-to-br from-purple-50 to-white">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
+          <Link href="/dashboard/client/purchases" className="block">
+            <Card className="rounded-2xl border border-purple-100 bg-gradient-to-br from-purple-50/50 to-white shadow-sm hover:shadow-xl transition-all cursor-pointer overflow-hidden group">
+              <CardContent className="p-6 flex items-center justify-between">
                 <div>
-                  <p className="text-gray-600 text-sm font-medium mb-1">Messages</p>
-                  <p className="text-4xl font-bold text-gray-900">{unreadMessages}</p>
-                  <p className="text-xs text-gray-500 mt-2">unread messages</p>
+                  <p className="text-sm font-medium text-gray-500 mb-1 tracking-wide">Purchased Assets</p>
+                  <div className="text-4xl font-black text-gray-900 group-hover:text-purple-700 transition-colors uppercase">{orders.length}</div>
                 </div>
-                <div className="bg-purple-100 p-3 rounded-full">
-                  <Bell className="h-6 w-6 text-purple-600" />
+                <div className="bg-purple-100 p-3 rounded-2xl shadow-inner shadow-purple-200/50 group-hover:scale-110 transition-transform">
+                  <ShoppingCart className="h-6 w-6 text-purple-600" />
                 </div>
-              </div>
-            </CardContent>
-          </Card>
+              </CardContent>
+            </Card>
+          </Link>
+          <Link href="/dashboard/client/sessions" className="block">
+            <Card className="rounded-2xl border border-orange-100 bg-gradient-to-br from-orange-50/50 to-white shadow-sm hover:shadow-xl transition-all cursor-pointer overflow-hidden group">
+              <CardContent className="p-6 flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-gray-500 mb-1 tracking-wide">Workshops Joined</p>
+                  <div className="text-4xl font-black text-gray-900 group-hover:text-orange-700 transition-colors">{registrations.length}</div>
+                </div>
+                <div className="bg-orange-100 p-3 rounded-2xl shadow-inner shadow-orange-200/50 group-hover:scale-110 transition-transform">
+                  <Video className="h-6 w-6 text-orange-600" />
+                </div>
+              </CardContent>
+            </Card>
+          </Link>
         </div>
+
+
+
+      
+
 
         {/* Quick Actions */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
@@ -383,208 +392,227 @@ export default function ClientDashboard() {
           </Link>
         </div>
 
-        {/* Upcoming Appointments */}
+        {/* Upcoming Appointments & Workshops */}
         <Card className="border-gray-200 shadow-sm rounded-2xl overflow-hidden mb-8">
           <CardHeader className="bg-gradient-to-r from-blue-50 to-white border-b border-gray-100 py-6">
-            <CardTitle className="text-2xl text-gray-900">Upcoming Appointments</CardTitle>
-            <CardDescription className="text-gray-600 mt-1">Your scheduled consultations</CardDescription>
+            <CardTitle className="text-2xl text-gray-900">Upcoming Appointments & Workshops</CardTitle>
+            <CardDescription className="text-gray-600 mt-1">Your scheduled sessions</CardDescription>
           </CardHeader>
           <CardContent className="p-6">
             {loadingAppointments ? (
               <div className="text-center py-12">
                 <div className="w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-                <p className="text-gray-500">Loading appointments...</p>
+                <p className="text-gray-500">Loading schedule...</p>
               </div>
-            ) : upcomingAppointments.length === 0 ? (
+            ) : upcomingSchedule.length === 0 ? (
               <div className="text-center py-12">
                 <div className="bg-gray-100 p-4 rounded-full w-16 h-16 mx-auto mb-4 flex items-center justify-center">
                   <Calendar className="h-8 w-8 text-gray-400" />
                 </div>
-                <p className="text-gray-900 font-semibold text-lg">No upcoming appointments</p>
-                <p className="text-gray-600 text-sm mt-2 mb-6">Book your first consultation today</p>
-                <Link href="/book-consultant">
-                  <Button className="bg-blue-600 hover:bg-blue-700 text-white shadow-md">Book Consultation</Button>
-                </Link>
+                <p className="text-gray-900 font-semibold text-lg">No upcoming sessions</p>
+                <p className="text-gray-600 text-sm mt-2 mb-6">Book your first consultation or workshop today</p>
+                <div className="flex gap-4 justify-center">
+                   <Link href="/book-consultant">
+                     <Button className="bg-blue-600 hover:bg-blue-700 text-white shadow-md">Book Consultation</Button>
+                   </Link>
+                   <Link href="/sessions">
+                     <Button variant="outline" className="text-blue-600 border-blue-200 hover:bg-blue-50">Join Workshop</Button>
+                   </Link>
+                </div>
               </div>
             ) : (
               <div className="space-y-4">
-                {upcomingAppointments.map((appointment) => (
-                  <div key={appointment.id} className="group border border-gray-200 rounded-xl p-5 hover:border-blue-300 hover:bg-blue-50 transition-all duration-300">
+                {upcomingSchedule.map((item: any) => (
+                  <div key={`${item.type}-${item.id}`} className="group border border-gray-200 rounded-xl p-5 hover:border-blue-300 hover:bg-blue-50 transition-all duration-300">
                     <div className="flex items-start justify-between gap-4">
                       <div className="flex items-start gap-4 flex-1 min-w-0">
-                        <div className="bg-blue-100 p-2.5 rounded-full flex-shrink-0 group-hover:bg-blue-200 transition-colors">
-                          <User className="h-5 w-5 text-blue-600" />
+                        <div className={`p-2.5 rounded-full flex-shrink-0 transition-colors ${item.type === 'workshop' ? 'bg-orange-100 group-hover:bg-orange-200' : 'bg-blue-100 group-hover:bg-blue-200'}`}>
+                          {item.type === 'workshop' ? (
+                             <Video className={`h-5 w-5 ${item.type === 'workshop' ? 'text-orange-600' : 'text-blue-600'}`} />
+                          ) : (
+                             <User className="h-5 w-5 text-blue-600" />
+                          )}
                         </div>
                         <div className="min-w-0 flex-1">
-                          <h4 className="font-bold text-gray-900 text-base">{appointment.consultantName}</h4>
-                          <p className="text-sm text-blue-600 font-medium">{appointment.consultantSpecialty}</p>
+                          <h4 className="font-bold text-gray-900 text-base">{item.title}</h4>
+                          <p className="text-sm text-gray-600 font-medium">{item.subtitle}</p>
+                          {item.consultantName && item.type === 'workshop' && <p className="text-sm text-gray-500 mt-0.5">by {item.consultantName}</p>}
+                          
                           <div className="flex items-center gap-3 mt-2">
-                            <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200 capitalize text-xs">
-                              {appointment.mode.replace("-", " ")}
+                            <Badge variant="outline" className={`${item.type === 'workshop' ? 'bg-orange-50 text-orange-700 border-orange-200' : 'bg-blue-50 text-blue-700 border-blue-200'} capitalize text-xs`}>
+                              {item.type === 'workshop' ? 'Workshop' : item.details.mode.replace("-", " ")}
                             </Badge>
                             <span className="text-sm text-gray-600 flex items-center gap-1">
                               <Calendar className="h-3.5 w-3.5" />
-                              {appointment.date} at {appointment.time}
+                              {item.displayDate} at {item.displayTime}
                             </span>
                           </div>
                         </div>
                       </div>
                       <div className="text-right flex-shrink-0">
-                        <p className="text-lg font-bold text-gray-900">৳{appointment.amount}</p>
-                        <p className="text-xs text-gray-500 font-medium">{appointment.duration} min</p>
-                        <Dialog>
-                          <DialogTrigger asChild>
-                            <Button 
-                              variant="outline" 
-                              size="sm" 
-                              className="mt-3 text-xs border-gray-300 text-gray-700 hover:bg-white group-hover:border-blue-300 group-hover:text-blue-600"
-                              onClick={() => setSelectedAppointment(appointment)}
-                            >
-                              View Details
-                            </Button>
-                          </DialogTrigger>
-                          <DialogContent className="max-w-2xl rounded-2xl">
-                            <DialogHeader>
-                              <DialogTitle className="text-2xl">Appointment Details</DialogTitle>
-                              <DialogDescription>
-                                Consultation with {selectedAppointment?.consultantName}
-                              </DialogDescription>
-                            </DialogHeader>
-                            {selectedAppointment && (
-                              <div className="space-y-6">
-                                <div className="grid grid-cols-2 gap-4">
-                                  <div>
-                                    <Label className="text-xs font-bold text-gray-400 uppercase tracking-wider block mb-1">Consultant</Label>
-                                    <p className="text-sm font-semibold text-gray-900">{selectedAppointment.consultantName}</p>
-                                  </div>
-                                  <div>
-                                    <Label className="text-xs font-bold text-gray-400 uppercase tracking-wider block mb-1">Specialty</Label>
-                                    <p className="text-sm font-semibold text-gray-900">{selectedAppointment.consultantSpecialty}</p>
-                                  </div>
-                                  <div>
-                                    <Label className="text-xs font-bold text-gray-400 uppercase tracking-wider block mb-1">Date & Time</Label>
-                                    <p className="text-sm font-semibold text-gray-900">{selectedAppointment.date} at {selectedAppointment.time}</p>
-                                  </div>
-                                  <div>
-                                    <Label className="text-xs font-bold text-gray-400 uppercase tracking-wider block mb-1">Duration</Label>
-                                    <p className="text-sm font-semibold text-gray-900">{selectedAppointment.duration} minutes</p>
-                                  </div>
-                                  <div>
-                                    <Label className="text-xs font-bold text-gray-400 uppercase tracking-wider block mb-1">Mode</Label>
-                                    <p className="text-sm font-semibold text-gray-900 capitalize">{selectedAppointment.mode.replace("-", " ")}</p>
-                                  </div>
-                                  <div>
-                                    <Label className="text-xs font-bold text-gray-400 uppercase tracking-wider block mb-1">Amount</Label>
-                                    <p className="text-sm font-semibold text-gray-900">৳{selectedAppointment.amount}</p>
-                                  </div>
-                                </div>
-
-                                {selectedAppointment.notes && (
-                                  <div>
-                                    <Label className="text-xs font-bold text-gray-400 uppercase tracking-wider block mb-2">Notes</Label>
-                                    <p className="text-sm text-gray-700 bg-gray-50 p-3 rounded-lg">{selectedAppointment.notes}</p>
-                                  </div>
-                                )}
-
-                                <div className="flex items-center gap-2 pt-4 border-t border-gray-100">
-                                  <Badge className="bg-blue-100 text-blue-700 border-none capitalize">{selectedAppointment.status}</Badge>
-                                  <Badge variant="outline">{selectedAppointment.paymentStatus}</Badge>
-                                </div>
-
-                                <div className="flex gap-3 pt-4 border-t border-gray-100">
-                                  <Link href={`/messages?consultantId=${selectedAppointment.consultantId}`} className="flex-1">
-                                    <Button variant="outline" className="w-full border-gray-300 text-gray-700 hover:bg-gray-50">
-                                      <MessageCircle className="h-4 w-4 mr-2" />
-                                      Message
-                                    </Button>
-                                  </Link>
-
-                                  <Dialog>
-                                    <DialogTrigger asChild>
-                                      <Button variant="outline" className="flex-1 border-gray-300 text-gray-700 hover:bg-gray-50">
-                                        <CalendarX className="h-4 w-4 mr-2" />
-                                        Reschedule
-                                      </Button>
-                                    </DialogTrigger>
-                                    <DialogContent className="rounded-2xl">
-                                      <DialogHeader>
-                                        <DialogTitle>Reschedule Appointment</DialogTitle>
-                                        <DialogDescription>Choose a new date and time</DialogDescription>
-                                      </DialogHeader>
-                                      <div className="space-y-4">
-                                        <div>
-                                          <Label htmlFor="newDate" className="font-semibold">New Date</Label>
-                                          <Input
-                                            id="newDate"
-                                            type="date"
-                                            value={rescheduleData.newDate}
-                                            onChange={(e) => setRescheduleData({ ...rescheduleData, newDate: e.target.value })}
-                                            min={new Date().toISOString().split("T")[0]}
-                                            className="mt-1.5 border-gray-200"
-                                          />
-                                        </div>
-                                        <div>
-                                          <Label htmlFor="newTime" className="font-semibold">New Time</Label>
-                                          <Input
-                                            id="newTime"
-                                            type="time"
-                                            value={rescheduleData.newTime}
-                                            onChange={(e) => setRescheduleData({ ...rescheduleData, newTime: e.target.value })}
-                                            className="mt-1.5 border-gray-200"
-                                          />
-                                        </div>
-                                        <div>
-                                          <Label htmlFor="reason" className="font-semibold">Reason for Rescheduling</Label>
-                                          <Textarea
-                                            id="reason"
-                                            value={rescheduleData.reason}
-                                            onChange={(e) => setRescheduleData({ ...rescheduleData, reason: e.target.value })}
-                                            placeholder="Let the consultant know why you're rescheduling..."
-                                            rows={3}
-                                            className="mt-1.5 border-gray-200 resize-none"
-                                          />
-                                        </div>
-                                        <Button
-                                          onClick={() => handleRescheduleAppointment()}
-                                          disabled={processingAction}
-                                          className="w-full bg-blue-600 hover:bg-blue-700 text-white"
-                                        >
-                                          {processingAction ? "Processing..." : "Confirm Reschedule"}
-                                        </Button>
-                                      </div>
-                                    </DialogContent>
-                                  </Dialog>
-
-                                  <AlertDialog>
-                                    <AlertDialogTrigger asChild>
-                                      <Button variant="destructive" size="sm" className="w-full bg-red-600 hover:bg-red-700">
-                                        <X className="h-4 w-4 mr-1" />
-                                        Cancel
-                                      </Button>
-                                    </AlertDialogTrigger>
-                                    <AlertDialogContent className="rounded-2xl">
-                                      <AlertDialogHeader>
-                                        <AlertDialogTitle>Cancel Appointment</AlertDialogTitle>
-                                        <AlertDialogDescription>
-                                          Are you sure you want to cancel this appointment? This action cannot be undone.
-                                        </AlertDialogDescription>
-                                      </AlertDialogHeader>
-                                      <AlertDialogFooter>
-                                        <AlertDialogCancel className="border-gray-300">Keep Appointment</AlertDialogCancel>
-                                        <AlertDialogAction 
-                                          className="bg-red-600 hover:bg-red-700"
-                                          onClick={() => handleCancelAppointment(selectedAppointment.id)}
-                                        >
-                                          Cancel Appointment
-                                        </AlertDialogAction>
-                                      </AlertDialogFooter>
-                                    </AlertDialogContent>
-                                  </AlertDialog>
-                                </div>
-                              </div>
-                            )}
-                          </DialogContent>
-                        </Dialog>
+                        <p className="text-lg font-bold text-gray-900">৳{item.amount}</p>
+                        <p className="text-xs text-gray-500 font-medium">{item.type === 'workshop' ? 'per seat' : 'consultation'}</p>
+                        
+                        {item.type === 'appointment' ? (
+                          <div className="mt-3 flex gap-2 justify-end">
+                            <Dialog>
+                              <DialogTrigger asChild>
+                                <Button 
+                                  variant="outline" 
+                                  size="sm" 
+                                  className="text-xs border-gray-300 text-gray-700 hover:bg-white group-hover:border-blue-300 group-hover:text-blue-600"
+                                  onClick={() => setSelectedAppointment(item.details)}
+                                >
+                                  View Details
+                                </Button>
+                              </DialogTrigger>
+                             <DialogContent className="max-w-2xl rounded-2xl">
+                             <DialogHeader>
+                               <DialogTitle className="text-2xl">Appointment Details</DialogTitle>
+                               <DialogDescription>
+                                 Consultation with {selectedAppointment?.consultantName}
+                               </DialogDescription>
+                             </DialogHeader>
+                             {selectedAppointment && (
+                               <div className="space-y-6">
+                                 <div className="grid grid-cols-2 gap-4">
+                                   <div>
+                                     <Label className="text-xs font-bold text-gray-400 uppercase tracking-wider block mb-1">Consultant</Label>
+                                     <p className="text-sm font-semibold text-gray-900">{selectedAppointment.consultantName}</p>
+                                   </div>
+                                   <div>
+                                     <Label className="text-xs font-bold text-gray-400 uppercase tracking-wider block mb-1">Specialty</Label>
+                                     <p className="text-sm font-semibold text-gray-900">{selectedAppointment.consultantSpecialty}</p>
+                                   </div>
+                                   <div>
+                                     <Label className="text-xs font-bold text-gray-400 uppercase tracking-wider block mb-1">Date & Time</Label>
+                                     <p className="text-sm font-semibold text-gray-900">{selectedAppointment.date} at {selectedAppointment.time}</p>
+                                   </div>
+                                   <div>
+                                     <Label className="text-xs font-bold text-gray-400 uppercase tracking-wider block mb-1">Mode</Label>
+                                     <p className="text-sm font-semibold text-gray-900 capitalize">{selectedAppointment.mode.replace("-", " ")}</p>
+                                   </div>
+                                   <div>
+                                     <Label className="text-xs font-bold text-gray-400 uppercase tracking-wider block mb-1">Amount</Label>
+                                     <p className="text-sm font-semibold text-gray-900">৳{selectedAppointment.amount}</p>
+                                   </div>
+                                 </div>
+ 
+                                 {selectedAppointment.notes && (
+                                   <div>
+                                     <Label className="text-xs font-bold text-gray-400 uppercase tracking-wider block mb-2">Notes</Label>
+                                     <p className="text-sm text-gray-700 bg-gray-50 p-3 rounded-lg">{selectedAppointment.notes}</p>
+                                   </div>
+                                 )}
+ 
+                                 <div className="flex items-center gap-2 pt-4 border-t border-gray-100">
+                                   <Badge className="bg-blue-100 text-blue-700 border-none capitalize">{selectedAppointment.status}</Badge>
+                                 </div>
+ 
+                                 <div className="flex gap-3 pt-4 border-t border-gray-100">
+                                   <Link href={`/messages?consultantId=${selectedAppointment.consultantId}`} className="flex-1">
+                                     <Button variant="outline" className="w-full border-gray-300 text-gray-700 hover:bg-gray-50">
+                                       <MessageCircle className="h-4 w-4 mr-2" />
+                                       Message
+                                     </Button>
+                                   </Link>
+ 
+                                   <Dialog>
+                                     <DialogTrigger asChild>
+                                       <Button variant="outline" className="flex-1 border-gray-300 text-gray-700 hover:bg-gray-50">
+                                         <CalendarX className="h-4 w-4 mr-2" />
+                                         Reschedule
+                                       </Button>
+                                     </DialogTrigger>
+                                     <DialogContent className="rounded-2xl">
+                                       <DialogHeader>
+                                         <DialogTitle>Reschedule Appointment</DialogTitle>
+                                         <DialogDescription>Choose a new date and time</DialogDescription>
+                                       </DialogHeader>
+                                       <div className="space-y-4">
+                                         <div>
+                                           <Label htmlFor="newDate" className="font-semibold">New Date</Label>
+                                           <Input
+                                             id="newDate"
+                                             type="date"
+                                             value={rescheduleData.newDate}
+                                             onChange={(e) => setRescheduleData({ ...rescheduleData, newDate: e.target.value })}
+                                             min={new Date().toISOString().split("T")[0]}
+                                             className="mt-1.5 border-gray-200"
+                                           />
+                                         </div>
+                                         <div>
+                                           <Label htmlFor="newTime" className="font-semibold">New Time</Label>
+                                           <Input
+                                             id="newTime"
+                                             type="time"
+                                             value={rescheduleData.newTime}
+                                             onChange={(e) => setRescheduleData({ ...rescheduleData, newTime: e.target.value })}
+                                             className="mt-1.5 border-gray-200"
+                                           />
+                                         </div>
+                                         <div>
+                                           <Label htmlFor="reason" className="font-semibold">Reason for Rescheduling</Label>
+                                           <Textarea
+                                             id="reason"
+                                             value={rescheduleData.reason}
+                                             onChange={(e) => setRescheduleData({ ...rescheduleData, reason: e.target.value })}
+                                             placeholder="Let the consultant know why you're rescheduling..."
+                                             rows={3}
+                                             className="mt-1.5 border-gray-200 resize-none"
+                                           />
+                                         </div>
+                                         <Button
+                                           onClick={() => handleRescheduleAppointment()}
+                                           disabled={processingAction}
+                                           className="w-full bg-blue-600 hover:bg-blue-700 text-white"
+                                         >
+                                           {processingAction ? "Processing..." : "Confirm Reschedule"}
+                                         </Button>
+                                       </div>
+                                     </DialogContent>
+                                   </Dialog>
+ 
+                                   <AlertDialog>
+                                     <AlertDialogTrigger asChild>
+                                       <Button variant="destructive" size="sm" className="w-full bg-red-600 hover:bg-red-700">
+                                         <X className="h-4 w-4 mr-1" />
+                                         Cancel
+                                       </Button>
+                                     </AlertDialogTrigger>
+                                     <AlertDialogContent className="rounded-2xl">
+                                       <AlertDialogHeader>
+                                         <AlertDialogTitle>Cancel Appointment</AlertDialogTitle>
+                                         <AlertDialogDescription>
+                                           Are you sure you want to cancel this appointment? This action cannot be undone.
+                                         </AlertDialogDescription>
+                                       </AlertDialogHeader>
+                                       <AlertDialogFooter>
+                                         <AlertDialogCancel className="border-gray-300">Keep Appointment</AlertDialogCancel>
+                                         <AlertDialogAction 
+                                           className="bg-red-600 hover:bg-red-700"
+                                           onClick={() => handleCancelAppointment(selectedAppointment.id)}
+                                         >
+                                           Cancel Appointment
+                                         </AlertDialogAction>
+                                       </AlertDialogFooter>
+                                     </AlertDialogContent>
+                                   </AlertDialog>
+                                 </div>
+                               </div>
+                             )}
+                           </DialogContent>
+                            </Dialog>
+                          </div>
+                        ) : (
+                          <div className="mt-3 text-right">
+                             <Link href={`/sessions/${item.details.workshopId}`}>
+                               <Button variant="outline" size="sm" className="text-xs border-orange-200 text-orange-700 hover:bg-orange-50 group-hover:border-orange-300">
+                                 View Workshop
+                               </Button>
+                             </Link>
+                          </div>
+                        )}
                       </div>
                     </div>
                   </div>
@@ -716,7 +744,8 @@ export default function ClientDashboard() {
             )}
           </CardContent>
         </Card>
-      </div>
+      
+    </div>
     </div>
   )
 }

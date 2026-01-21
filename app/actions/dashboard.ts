@@ -1,7 +1,7 @@
 "use server";
 
 import { db } from "@/lib/db";
-import { users, consultantProfiles, appointments, consultantSchedules, notifications, reviews } from "@/db/schema";
+import { users, consultantProfiles, appointments, consultantSchedules, notifications, reviews, productOrders, products, workshopRegistrations, workshops } from "@/db/schema";
 import { eq, and, desc, sql } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 
@@ -64,11 +64,11 @@ export async function getConsultantDashboardDataWithDetails(userId: string) {
             where: eq(consultantProfiles.consultantId, userId),
         });
 
-        // Consultant Appointments with Client Info
+        // Consultant Appointments
         const consultantApts = await db.select({
             id: appointments.id,
             clientId: appointments.clientId,
-            clientName: users.name, // Client Name
+            clientName: users.name, 
             clientEmail: users.email,
             date: appointments.date,
             time: appointments.time,
@@ -76,68 +76,104 @@ export async function getConsultantDashboardDataWithDetails(userId: string) {
             mode: appointments.mode,
             amount: appointments.amount,
             notes: appointments.notes,
-            consultantId: appointments.consultantId, // to filter earnings
+            consultantId: appointments.consultantId,
+            type: sql<string>`'appointment'`,
         })
         .from(appointments)
         .leftJoin(users, eq(appointments.clientId, users.uid))
         .where(eq(appointments.consultantId, userId))
         .orderBy(desc(appointments.date), desc(appointments.time));
 
-        // Client Appointments (Consultant acting as client) with Consultant Info
-        const clientApts = await db.select({
-            id: appointments.id,
-            clientId: appointments.clientId,
-            clientName: sql<string>`'You'`, // Self
-            clientEmail: sql<string>`''`,
-            date: appointments.date,
-            time: appointments.time,
-            status: appointments.status,
-            mode: appointments.mode,
-            amount: appointments.amount,
-            notes: appointments.notes,
-            consultantId: appointments.consultantId,
-            // We might want Consultant Name here
+        // Upcoming Workshops (Created by Consultant)
+        const myWorkshops = await db.select({
+            id: workshops.id,
+            title: workshops.title,
+            date: workshops.startDate,
+            duration: workshops.duration,
+            price: workshops.price,
+            mode: workshops.mode,
+            location: workshops.location,
+            maxParticipants: workshops.maxParticipants,
+            thumbnailUrl: workshops.thumbnailUrl,
+            type: sql<string>`'workshop'`,
         })
-        .from(appointments)
-        .where(eq(appointments.clientId, userId)) // No join for simplicity or join consultant
-        .orderBy(desc(appointments.date), desc(appointments.time));
+        .from(workshops)
+        .where(
+            and(
+                eq(workshops.consultantId, userId),
+                sql`${workshops.startDate} > NOW()`
+            )
+        )
+        .orderBy(workshops.startDate);
 
-        // Let's refine the join for clientApts to get Consultant Name if needed
-        // For dashboard list, we usually show "Client Name" column. 
-        // If I am observing as consultant, I want to see Client Name.
-        // If I am observing as client, I want to see Consultant Name.
-        // The dashboard UI unified them.
+        // Combine and Sort
+        // We need a unified structure for the "Upcoming" list
+        const upcomingAppointments = consultantApts.filter(a => a.status === "upcoming");
         
-        // Let's stick to returning a unified list where `clientName` is correctly populated for Consultant view.
-        
-        const allAppointments = [...consultantApts, ...clientApts];
-        const unique = Array.from(new Map(allAppointments.map(a => [a.id, a])).values());
-        
-        // Sort
-        unique.sort((a, b) => {
-             const dateA = new Date(`${a.date}T${a.time}`);
-             const dateB = new Date(`${b.date}T${b.time}`);
-             return dateB.getTime() - dateA.getTime();
-        });
+        const upcomingSchedule = [
+            ...upcomingAppointments.map(a => ({
+                id: a.id,
+                title: `Consultation with ${a.clientName || 'Client'}`,
+                subtitle: a.mode,
+                date: new Date(`${a.date}T${a.time}`), // Approximate date obj
+                displayDate: a.date,
+                displayTime: a.time,
+                type: 'appointment' as const,
+                amount: a.amount,
+                details: a, // Original data
+            })),
+            ...myWorkshops.map(w => ({
+                id: w.id,
+                title: w.title,
+                subtitle: `${w.duration} min • ${w.mode}`,
+                date: w.date,
+                displayDate: w.date.toISOString().split('T')[0],
+                displayTime: w.date.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}),
+                type: 'workshop' as const,
+                amount: w.price,
+                details: w,
+            }))
+        ].sort((a, b) => a.date.getTime() - b.date.getTime());
 
-        const upcoming = unique.filter(a => a.status === "upcoming");
-        const completed = unique.filter(a => a.status === "completed");
-        const totalEarnings = completed.filter(a => a.consultantId === userId).reduce((sum, a) => sum + (a.amount || 0), 0);
+        const completed = consultantApts.filter(a => a.status === "completed");
 
-        // Fetch unread notifications
+        // Fetch Earnings details
+        const productSales = await db.select({ amount: productOrders.amount })
+        .from(productOrders)
+        .leftJoin(products, eq(productOrders.productId, products.id))
+        .where(eq(products.consultantId, userId));
+
+        const productEarnings = productSales.reduce((sum, order) => sum + (order.amount || 0), 0);
+
+        const workshopSales = await db.select({ price: workshops.price })
+        .from(workshopRegistrations)
+        .leftJoin(workshops, eq(workshopRegistrations.workshopId, workshops.id))
+        .where(and(eq(workshops.consultantId, userId), eq(workshopRegistrations.paymentStatus, "completed")));
+
+        const workshopEarnings = workshopSales.reduce((sum, reg) => sum + (reg.price || 0), 0);
+
         const unreadNotifications = await db.query.notifications.findMany({
             where: and(eq(notifications.userId, userId), eq(notifications.isRead, false)),
             orderBy: [desc(notifications.createdAt)],
         });
 
+        const appointmentEarnings = completed.filter(a => a.consultantId === userId).reduce((sum, a) => sum + (a.amount || 0), 0);
+        const realProductEarnings = productEarnings / 100;
+        const grandTotal = appointmentEarnings + workshopEarnings + realProductEarnings;
+
         return {
-            appointments: unique,
+            appointments: consultantApts, // Legacy support
+            upcomingSchedule, // NEW: Unified list
             isAvailable: profile?.isAvailable ?? true,
             notifications: unreadNotifications,
             stats: {
-                upcomingCount: upcoming.length,
+                upcomingCount: upcomingSchedule.length,
                 completedCount: completed.length,
-                totalEarnings,
+                totalEarnings: grandTotal,
+                productEarnings: realProductEarnings,
+                productSalesCount: productSales.length,
+                workshopEarnings: workshopEarnings,
+                bookingEarnings: appointmentEarnings
             }
         };
 
@@ -157,10 +193,6 @@ export async function toggleAvailability(userId: string, isAvailable: boolean) {
       set: { isAvailable: isAvailable, updatedAt: new Date() }
     });
     
-    // Also update users table if needed for legacy? Not needed if we switched logic.
-    // Dashboard page reads from `profile` or `users`. 
-    // We should ensure frontend reads from correct source.
-    
     revalidatePath("/dashboard/consultant");
     return { success: true };
   } catch (error) {
@@ -171,7 +203,8 @@ export async function toggleAvailability(userId: string, isAvailable: boolean) {
 
 export async function getClientDashboardData(userId: string) {
   try {
-   const clientApts = await db.select({
+    // Client Appointments
+    const clientApts = await db.select({
             id: appointments.id,
             consultantId: appointments.consultantId,
             consultantName: users.name,
@@ -183,6 +216,7 @@ export async function getClientDashboardData(userId: string) {
             amount: appointments.amount,
             notes: appointments.notes,
             consultantSpecialty: sql<string>`${consultantProfiles.specializations}[1]`,
+            type: sql<string>`'appointment'`,
         })
         .from(appointments)
         .leftJoin(users, eq(appointments.consultantId, users.uid))
@@ -190,17 +224,108 @@ export async function getClientDashboardData(userId: string) {
         .where(eq(appointments.clientId, userId))
         .orderBy(desc(appointments.date), desc(appointments.time));
 
-    // Fetch reviews by this client to mark appointments as reviewed
+    // Client Workshop Registrations (Upcoming)
+    const upcomingWorkshops = await db.select({
+      id: workshopRegistrations.id,
+      workshopId: workshopRegistrations.workshopId,
+      status: workshopRegistrations.paymentStatus,
+      workshopTitle: workshops.title,
+      workshopDate: workshops.startDate,
+      duration: workshops.duration,
+      mode: workshops.mode,
+      price: workshops.price, 
+      consultantName: users.name,
+      type: sql<string>`'workshop'`,
+    })
+    .from(workshopRegistrations)
+    .leftJoin(workshops, eq(workshopRegistrations.workshopId, workshops.id))
+    .leftJoin(users, eq(workshops.consultantId, users.uid))
+    .where(
+        and(
+            eq(workshopRegistrations.clientId, userId),
+            sql`${workshops.startDate} > NOW()`
+        )
+    )
+    .orderBy(workshops.startDate);
+
+     // Unified Upcoming Schedule
+     const upcomingAppointments = clientApts.filter(a => a.status === "upcoming");
+     
+     const upcomingSchedule = [
+        ...upcomingAppointments.map(a => ({
+            id: a.id,
+            title: `Session with ${a.consultantName}`,
+            subtitle: a.consultantSpecialty,
+            consultantName: a.consultantName,
+            date: new Date(`${a.date}T${a.time}`),
+            displayDate: a.date,
+            displayTime: a.time,
+            type: 'appointment' as const,
+            amount: a.amount,
+            details: a,
+        })),
+        ...upcomingWorkshops.map(w => ({
+            id: w.id,
+            title: w.workshopTitle,
+            subtitle: `Workshop • ${w.mode}`,
+            consultantName: w.consultantName,
+            date: w.workshopDate,
+            displayDate: w.workshopDate.toISOString().split('T')[0],
+            displayTime: w.workshopDate.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}),
+            type: 'workshop' as const,
+            amount: w.price,
+            details: w,
+        }))
+     ].sort((a, b) => a.date.getTime() - b.date.getTime());
+
+
+    // Fetch reviews
     const clientReviews = await db.query.reviews.findMany({
         where: eq(reviews.clientId, userId),
     });
     const reviewedAppointmentIds = new Set(clientReviews.map(r => r.appointmentId));
 
-    // Fetch unread notifications
     const unreadNotifications = await db.query.notifications.findMany({
         where: and(eq(notifications.userId, userId), eq(notifications.isRead, false)),
         orderBy: [desc(notifications.createdAt)],
     });
+
+    const orders = await db.select({
+      id: productOrders.id,
+      productId: productOrders.productId,
+      amount: productOrders.amount,
+      status: productOrders.status,
+      purchaseDate: productOrders.createdAt,
+      productTitle: products.title,
+      productType: products.type,
+      thumbnailUrl: products.thumbnailUrl,
+      fileUrl: products.fileUrl,
+      consultantName: users.name,
+    })
+    .from(productOrders)
+    .leftJoin(products, eq(productOrders.productId, products.id))
+    .leftJoin(users, eq(products.consultantId, users.uid))
+    .where(eq(productOrders.clientId, userId))
+    .orderBy(desc(productOrders.createdAt));
+
+    const registrations = await db.select({
+      id: workshopRegistrations.id,
+      workshopId: workshopRegistrations.workshopId,
+      status: workshopRegistrations.paymentStatus,
+      registrationDate: workshopRegistrations.createdAt,
+      workshopTitle: workshops.title,
+      workshopDate: workshops.startDate,
+      duration: workshops.duration,
+      mode: workshops.mode,
+      location: workshops.location,
+      thumbnailUrl: workshops.thumbnailUrl,
+      consultantName: users.name,
+    })
+    .from(workshopRegistrations)
+    .leftJoin(workshops, eq(workshopRegistrations.workshopId, workshops.id))
+    .leftJoin(users, eq(workshops.consultantId, users.uid))
+    .where(eq(workshopRegistrations.clientId, userId))
+    .orderBy(desc(workshopRegistrations.createdAt));
 
     return {
         appointments: clientApts.map(a => ({
@@ -208,9 +333,12 @@ export async function getClientDashboardData(userId: string) {
             consultantSpecialty: a.consultantSpecialty || "Consultant",
             reviewed: reviewedAppointmentIds.has(a.id),
         })),
+        upcomingSchedule, // NEW: Unified list
+        orders,
+        registrations, // Keep full history here
         notifications: unreadNotifications,
         stats: {
-           upcomingCount: clientApts.filter(a => a.status === "upcoming").length,
+           upcomingCount: upcomingSchedule.length,
            completedCount: clientApts.filter(a => a.status === "completed").length,
         }
     };

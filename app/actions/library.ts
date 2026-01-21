@@ -113,6 +113,10 @@ export async function purchaseProduct(productId: string, clientId: string) {
 
     if (!product) return { success: false, error: "Product not found" }
 
+    if (product.consultantId === clientId) {
+      return { success: false, error: "You cannot purchase your own product." }
+    }
+
     const [order] = await pgDb.insert(productOrders).values({
       productId,
       clientId,

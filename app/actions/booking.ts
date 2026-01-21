@@ -82,6 +82,9 @@ interface CreateAppointmentData {
 
 export async function createAppointment(data: CreateAppointmentData) {
   try {
+    if (data.clientId === data.consultantId) {
+      return { success: false, error: "You cannot book an appointment with yourself." };
+    }
     // Validate slot availability? (Ideally yes, but UI does it too. Race condition possible.)
     // We'll skip complex validation for V1 migration and rely on UI + simple check.
     

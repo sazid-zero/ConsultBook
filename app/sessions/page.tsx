@@ -41,6 +41,15 @@ export default function SessionsPage() {
   useEffect(() => {
     let filtered = workshops
 
+    // Filter by category (Heuristic)
+    if (selectedCategory !== "all") {
+      const cat = selectedCategory.toLowerCase()
+      filtered = filtered.filter(w => 
+        w.title.toLowerCase().includes(cat) || 
+        w.description.toLowerCase().includes(cat)
+      )
+    }
+
     // Filter by search query
     if (searchQuery.trim()) {
       const query = searchQuery.toLowerCase()
@@ -51,7 +60,7 @@ export default function SessionsPage() {
     }
 
     setFilteredWorkshops(filtered)
-  }, [searchQuery, workshops])
+  }, [searchQuery, selectedCategory, workshops])
 
   if (loading) {
     return (

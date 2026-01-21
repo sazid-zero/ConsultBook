@@ -136,7 +136,11 @@ export default function MessagesPage() {
     if (result.success && result.data) {
       setMessages(result.data as any)
       if (userData) {
-        markConversationAsRead(conversationId, userData.role as any)
+        await markConversationAsRead(conversationId, userData.role as any)
+        
+        // Dispatch custom event to notify Navbar
+        window.dispatchEvent(new CustomEvent("messagesRead"))
+        
         setConversations(prev => prev.map(c => 
           c.id === conversationId 
             ? { ...c, [userData.role === "client" ? "clientUnread" : "consultantUnread"]: 0 }

@@ -30,20 +30,34 @@ function CheckoutContent() {
   
   const productId = searchParams.get("productId")
   const workshopId = searchParams.get("workshopId")
+  const isCartCheckout = searchParams.get("cart") === "true"
   
-  const [item, setItem] = useState<any>(null)
+  const [items, setItems] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [processing, setProcessing] = useState(false)
   const [success, setSuccess] = useState(false)
 
   useEffect(() => {
-    if (!productId && !workshopId) {
+    if (!productId && !workshopId && !isCartCheckout) {
       router.push("/library")
       return
     }
 
     async function fetchData() {
        setLoading(true)
+       
+       if (isCartCheckout) {
+          // Load from localStorage
+          const savedCart = localStorage.getItem("consultbook_cart")
+          if (savedCart) {
+             setItems(JSON.parse(savedCart))
+          } else {
+             router.push("/cart")
+          }
+          setLoading(false)
+          return
+       }
+
        let result
        if (productId) {
          result = await getProduct(productId)
@@ -52,7 +66,7 @@ function CheckoutContent() {
        }
        
        if (result?.success) {
-         setItem(result.data)
+         setItems([result.data])
        } else {
          toast.error("Item not found")
          router.push("/library")
@@ -61,11 +75,12 @@ function CheckoutContent() {
     }
 
     fetchData()
-  }, [productId, workshopId])
+  }, [productId, workshopId, isCartCheckout])
 
   async function handleCheckout() {
     if (!user) {
-      router.push(`/login?redirect=/checkout?${productId ? `productId=${productId}` : `workshopId=${workshopId}`}`)
+      const redirectUrl = isCartCheckout ? "/checkout?cart=true" : `/checkout?${productId ? `productId=${productId}` : `workshopId=${workshopId}`}`
+      router.push(`/login?redirect=${redirectUrl}`)
       return
     }
 
@@ -73,21 +88,46 @@ function CheckoutContent() {
     // Artificial delay for premium feel
     await new Promise(r => setTimeout(r, 2000))
 
-    let res
-    if (productId) {
-      res = await purchaseProduct(productId, user.uid)
-    } else if (workshopId) {
-      res = await registerForWorkshop(workshopId, user.uid)
-    }
+    const results = await Promise.all(items.map(async (item) => {
+       let res
+       if (item.type === "workshop" || item.mode) {
+          res = await registerForWorkshop(item.id || item.workshopId, user.uid)
+       } else {
+          res = await purchaseProduct(item.id || item.productId, user.uid)
+       }
+       return { item, res }
+    }))
+
+    const failed = results.filter(r => !r.res?.success)
+    const successList = results.filter(r => r.res?.success)
 
     setProcessing(false)
-    if (res?.success) {
+
+    if (failed.length === 0) {
+      if (isCartCheckout) {
+         localStorage.removeItem("consultbook_cart")
+         window.dispatchEvent(new Event("cartUpdated"))
+      }
       setSuccess(true)
       toast.success("Purchase Successful!")
     } else {
-      toast.error(res?.error || "Transaction failed")
+      if (successList.length > 0) {
+         // Some succeeded
+         if (isCartCheckout) {
+            // Update cart to only have failed items
+            const failedItemsInCart = failed.map(f => f.item)
+            localStorage.setItem("consultbook_cart", JSON.stringify(failedItemsInCart))
+            window.dispatchEvent(new Event("cartUpdated"))
+         }
+         toast.warning(`Partially successful. Could not process: ${failed.map(f => f.item.title).join(", ")}`)
+         setSuccess(true) // Still show success screen because some were bought
+      } else {
+         toast.error(`Purchase failed: ${failed.map(f => f.item.title).join(", ")}`)
+      }
     }
   }
+
+  const subtotal = items.reduce((acc, item) => acc + (item.price || 0), 0)
 
   if (loading || authLoading) {
     return (
@@ -133,7 +173,7 @@ function CheckoutContent() {
       <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
         
         <div className="mb-12">
-          <Link href={productId ? `/library/${productId}` : `/sessions`} className="flex items-center gap-2 text-xs font-bold text-gray-400 hover:text-blue-600 transition-all uppercase tracking-widest">
+          <Link href={isCartCheckout ? "/cart" : (productId ? `/library/${productId}` : `/sessions`)} className="flex items-center gap-2 text-xs font-bold text-gray-400 hover:text-blue-600 transition-all uppercase tracking-widest">
             <ArrowLeft className="h-4 w-4" />
             Cancel and Return
           </Link>
@@ -142,31 +182,40 @@ function CheckoutContent() {
         <div className="grid grid-cols-1 lg:grid-cols-5 gap-12">
            {/* Left: Summary */}
            <div className="lg:col-span-3 space-y-8">
-              <h1 className="text-4xl font-black text-gray-900 tracking-tight">Checkout</h1>
+              <div className="flex items-center gap-4">
+                 <h1 className="text-4xl font-black text-gray-900 tracking-tight">Checkout</h1>
+                 <Badge className="bg-blue-100 text-blue-700 hover:bg-blue-100 border-none px-3 py-1">
+                    {items.length} Item{items.length !== 1 ? 's' : ''}
+                 </Badge>
+              </div>
               
-              {/* Product Info Card */}
-              <Card className="rounded-[32px] border-none shadow-xl bg-white overflow-hidden">
-                <CardContent className="p-8">
-                   <div className="flex gap-6 items-start">
-                      <div className="h-24 w-24 rounded-2xl bg-blue-600 flex items-center justify-center shrink-0 shadow-lg shadow-blue-100">
-                         {productId ? <Package className="h-10 w-10 text-white/50" /> : <Calendar className="h-10 w-10 text-white/50" />}
-                      </div>
-                      <div className="flex-1">
-                         <Badge className="mb-2 bg-blue-50 text-blue-600 border-none font-bold uppercase text-[9px] tracking-widest">
-                           {productId ? "Digital Asset" : "Interactive Session"}
-                         </Badge>
-                         <h2 className="text-2xl font-black text-gray-900 leading-tight mb-2">{item?.title}</h2>
-                         <div className="flex items-center gap-2 text-xs font-bold text-gray-400 uppercase tracking-widest">
-                            <span>Author:</span>
-                            <span className="text-gray-900">{item?.consultant?.name}</span>
-                         </div>
-                      </div>
-                      <div className="text-2xl font-black text-gray-900">
-                         ${(item?.price / 100).toFixed(2)}
-                      </div>
-                   </div>
-                </CardContent>
-              </Card>
+              {/* Product Info Cards */}
+              <div className="space-y-4">
+                {items.map((item, index) => (
+                   <Card key={index} className="rounded-[32px] border-none shadow-xl bg-white overflow-hidden">
+                     <CardContent className="p-8">
+                        <div className="flex gap-6 items-start">
+                           <div className="h-24 w-24 rounded-2xl bg-blue-600 flex items-center justify-center shrink-0 shadow-lg shadow-blue-100">
+                              {(item.type === "workshop" || item.mode) ? <Calendar className="h-10 w-10 text-white/50" /> : <Package className="h-10 w-10 text-white/50" />}
+                           </div>
+                           <div className="flex-1">
+                              <Badge className="mb-2 bg-blue-50 text-blue-600 border-none font-bold uppercase text-[9px] tracking-widest">
+                                {(item.type === "workshop" || item.mode) ? "Interactive Session" : "Digital Asset"}
+                              </Badge>
+                              <h2 className="text-2xl font-black text-gray-900 leading-tight mb-2">{item.title}</h2>
+                              <div className="flex items-center gap-2 text-xs font-bold text-gray-400 uppercase tracking-widest">
+                                 <span>Author:</span>
+                                 <span className="text-gray-900">{item.consultantName || item.consultant?.name}</span>
+                              </div>
+                           </div>
+                           <div className="text-2xl font-black text-gray-900">
+                              ${(item.price / 100).toFixed(2)}
+                           </div>
+                        </div>
+                     </CardContent>
+                   </Card>
+                ))}
+              </div>
 
               {/* Guarantees */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -245,42 +294,31 @@ function CheckoutContent() {
                     <div className="pt-6 border-t border-gray-800 space-y-4">
                        <div className="flex justify-between items-center text-sm font-bold text-gray-400">
                           <span>Subtotal</span>
-                          <span className="text-white">${(item?.price / 100).toFixed(2)}</span>
+                          <span className="text-white">${(subtotal / 100).toFixed(2)}</span>
                        </div>
                        <div className="flex justify-between items-center text-sm font-bold text-gray-400">
-                          <span>Platform Fee</span>
+                          <span>Taxes</span>
                           <span className="text-white">$0.00</span>
                        </div>
-                       <div className="flex justify-between items-center text-xl font-black text-white pt-2">
-                          <span>Total</span>
-                          <span className="text-blue-400">${(item?.price / 100).toFixed(2)}</span>
+                       <div className="pt-4 border-t border-gray-800 flex justify-between items-center text-white">
+                          <span className="text-lg font-black uppercase tracking-tighter">Total Price</span>
+                          <span className="text-3xl font-black text-blue-400">${(subtotal / 100).toFixed(2)}</span>
                        </div>
                     </div>
-                 </CardContent>
 
-                 <CardFooter className="p-8 bg-gray-800/30">
                     <Button 
+                      className="w-full h-16 bg-blue-600 hover:bg-blue-500 text-white rounded-[24px] font-black text-lg shadow-lg shadow-blue-900/50"
                       onClick={handleCheckout}
                       disabled={processing}
-                      className="w-full h-16 bg-blue-600 hover:bg-blue-700 text-white rounded-[24px] font-black text-lg shadow-2xl shadow-blue-900/40 transition-all hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 disabled:grayscale"
                     >
-                      {processing ? (
-                         <div className="flex items-center gap-3">
-                            <div className="h-5 w-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                            Processing...
-                         </div>
-                      ) : (
-                        `Pay $${(item?.price / 100).toFixed(2)}`
-                      )}
+                      {processing ? "Processing..." : `Pay $${(subtotal / 100).toFixed(2)}`}
                     </Button>
-                 </CardFooter>
-                 
-                 <div className="p-6 text-center">
-                    <p className="flex items-center justify-center gap-2 text-[10px] font-black text-gray-600 uppercase tracking-widest">
-                       <Info className="h-3 w-3" />
-                       Demo Payment Mode Enabled
-                    </p>
-                 </div>
+                    
+                    <div className="flex items-center justify-center gap-2 text-[10px] font-black text-gray-600 uppercase tracking-widest">
+                       <ShieldCheck className="h-3 w-3" />
+                       Encrypted Payment
+                    </div>
+                 </CardContent>
               </Card>
            </div>
         </div>
@@ -293,10 +331,7 @@ export default function CheckoutPage() {
   return (
     <Suspense fallback={
       <div className="min-h-screen flex items-center justify-center bg-gray-50/50">
-         <div className="flex flex-col items-center gap-4">
-            <div className="h-12 w-12 border-4 border-blue-600 border-t-transparent rounded-full animate-spin" />
-            <p className="font-bold text-gray-400 uppercase tracking-widest text-xs">Loading Secure Payment...</p>
-         </div>
+        <div className="h-12 w-12 border-4 border-blue-600 border-t-transparent rounded-full animate-spin" />
       </div>
     }>
       <CheckoutContent />

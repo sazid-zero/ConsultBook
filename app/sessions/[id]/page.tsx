@@ -19,6 +19,7 @@ import {
 import Link from "next/link"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { AddToCartButton } from "@/components/cart/AddToCartButton"
+import { WorkshopRegistrationActions } from "@/components/marketplace/WorkshopRegistrationActions"
 import { notFound } from "next/navigation"
 
 export default async function WorkshopDetailsPage({ params }: { params: Promise<{ id: string }> }) {
@@ -187,19 +188,13 @@ export default async function WorkshopDetailsPage({ params }: { params: Promise<
                         <p className="text-xs font-bold text-gray-400 uppercase tracking-widest italic">All inclusive access</p>
                      </div>
 
-                     <div className="space-y-4">
-                        <Link href={`/checkout?workshopId=${workshop.id}`} className="w-full">
-                          <Button 
-                            className="w-full h-16 bg-blue-600 hover:bg-blue-700 text-white rounded-[24px] font-black text-lg shadow-2xl shadow-blue-200 transition-all hover:scale-[1.02] active:scale-[0.98] disabled:grayscale disabled:opacity-50"
-                            disabled={isFull}
-                          >
-                            {isFull ? "Workshop Full" : "Book Spot Now"}
-                          </Button>
-                        </Link>
-                        <Button variant="ghost" className="w-full h-14 text-gray-400 font-black text-xs uppercase tracking-widest hover:bg-gray-50 rounded-[20px]">
-                           Gift a Session
-                        </Button>
-                     </div>
+                     <WorkshopRegistrationActions 
+                        workshop={{
+                          id: workshop.id,
+                          consultantId: workshop.consultantId,
+                          isFull: isFull
+                        }}
+                     />
 
                      <div className="space-y-6 pt-8 border-t border-gray-50 text-center">
                         <div className="flex flex-col items-center gap-3">

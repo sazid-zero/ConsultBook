@@ -325,17 +325,17 @@ export default function ConsultantPublicProfilePage({ params }: { params: { cons
     <div className="min-h-screen bg-white">
       {/* Back Button & Header */}
       <div className="bg-white border-b border-gray-100 sticky top-0 z-10">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <button onClick={() => router.back()} className="inline-flex items-center gap-2 text-blue-600 hover:text-blue-700 font-medium text-sm">
             <ArrowLeft className="h-4 w-4" /> Back
           </button>
         </div>
       </div>
 
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 pt-0">
         {/* Hero Header with Cover Photo */}
         <div 
-          className="relative h-40 bg-gradient-to-r from-blue-500 via-blue-600 to-indigo-600 rounded-3xl mb-20 overflow-hidden"
+          className="relative h-60 bg-gradient-to-r from-blue-500 via-blue-600 to-indigo-600 rounded-3xl mb-20 overflow-hidden"
           onMouseEnter={() => isOwner && setCoverHover(true)}
           onMouseLeave={() => setCoverHover(false)}
         >
@@ -1144,16 +1144,28 @@ export default function ConsultantPublicProfilePage({ params }: { params: { cons
                     <p className="text-xs text-gray-600 mt-1">per hour consultation</p>
                   </div>
 
-                  <Link href={`/book-appointment/${consultant.consultantId}`} className="w-full">
-                    <Button className="w-full h-12 bg-blue-600 hover:bg-blue-700 text-white font-semibold text-base rounded-lg shadow-md">
-                      Book Appointment
+                  {isOwner ? (
+                    <Button 
+                      className="w-full h-12 bg-gray-900 hover:bg-gray-800 text-white font-semibold text-base rounded-lg shadow-md"
+                      onClick={() => router.push("/dashboard/consultant/profile")}
+                    >
+                      <Settings className="h-4 w-4 mr-2" />
+                      Edit Your Profile
                     </Button>
-                  </Link>
+                  ) : (
+                    <>
+                      <Link href={`/book-appointment/${consultant.consultantId}`} className="w-full">
+                        <Button className="w-full h-12 bg-blue-600 hover:bg-blue-700 text-white font-semibold text-base rounded-lg shadow-md">
+                          Book Appointment
+                        </Button>
+                      </Link>
 
-                  <Button variant="outline" className="w-full h-10 border-gray-300 text-gray-700 hover:bg-gray-50 font-medium">
-                    <MessageSquare className="h-4 w-4 mr-2" />
-                    Message Consultant
-                  </Button>
+                      <Button variant="outline" className="w-full h-10 border-gray-300 text-gray-700 hover:bg-gray-50 font-medium">
+                        <MessageSquare className="h-4 w-4 mr-2" />
+                        Message Consultant
+                      </Button>
+                    </>
+                  )}
                 </div>
 
                 <div className="space-y-3 pt-4 border-t border-gray-100">

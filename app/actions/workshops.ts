@@ -60,6 +60,7 @@ export async function createWorkshop(data: {
   price: number
   mode: "online" | "offline"
   location?: string
+  thumbnailUrl?: string
   maxParticipants?: number
   isPublished?: boolean
 }) {
@@ -118,6 +119,10 @@ export async function registerForWorkshop(workshopId: string, clientId: string) 
     })
 
     if (!workshop) return { success: false, error: "Workshop not found" }
+
+    if (workshop.consultantId === clientId) {
+      return { success: false, error: "You cannot register for your own workshop." }
+    }
 
     // Check if full
     if (workshop.maxParticipants && workshop.registrations.length >= workshop.maxParticipants) {

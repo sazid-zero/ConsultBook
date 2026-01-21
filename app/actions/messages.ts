@@ -73,6 +73,9 @@ export async function sendMessage(data: {
         updatedAt: new Date(),
       })
       .where(eq(conversations.id, data.conversationId))
+    
+    revalidatePath("/messages")
+    revalidatePath("/")
 
     return { success: true, data: newMessage }
   } catch (error) {
@@ -148,10 +151,37 @@ export async function markConversationAsRead(conversationId: string, role: "clie
         [unreadField]: 0,
       })
       .where(eq(conversations.id, conversationId))
+    
+    revalidatePath("/messages")
+    revalidatePath("/")
 
     return { success: true }
   } catch (error) {
     console.error("Error marking conversation as read:", error)
     return { success: false, error: "Failed to mark as read" }
+  }
+}
+
+export async function getTotalUnreadMessages(userId: string) {
+  try {
+    const userConversations = await db.query.conversations.findMany({
+      where: or(
+        eq(conversations.clientId, userId),
+        eq(conversations.consultantId, userId)
+      ),
+    })
+
+    const totalUnread = userConversations.reduce((total, conv) => {
+      if (conv.clientId === userId) {
+        return total + conv.clientUnread
+      } else {
+        return total + conv.consultantUnread
+      }
+    }, 0)
+
+    return { success: true, count: totalUnread }
+  } catch (error) {
+    console.error("Error getting total unread messages:", error)
+    return { success: false, count: 0 }
   }
 }

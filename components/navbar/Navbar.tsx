@@ -8,6 +8,7 @@ import { useAuth } from "@/lib/auth-context"
 import { collection, query, where, getDocs, updateDoc, doc } from "firebase/firestore"
 import { db } from "@/lib/firebase"
 import { getNotifications, markNotificationAsRead, markAllAsRead } from "@/app/actions/notifications"
+import { getTotalUnreadMessages } from "@/app/actions/messages"
 import { 
   Menu, 
   X, 
@@ -105,12 +106,14 @@ export function Navbar({ notifications: propNotifications = [], unreadCount: pro
 
   const [notifications, setNotifications] = useState<Notification[]>(propNotifications)
   const [unreadCount, setUnreadCount] = useState(propUnreadCount)
+  const [unreadMessagesCount, setUnreadMessagesCount] = useState(0)
 
   // Fetch notifications from Firestore for logged-in users
   useEffect(() => {
-    if (!user || !userData) {
+    if (!user) {
       setNotifications([])
       setUnreadCount(0)
+      setUnreadMessagesCount(0)
       return
     }
 
@@ -126,10 +129,34 @@ export function Navbar({ notifications: propNotifications = [], unreadCount: pro
       }
     }
 
+    const fetchUnreadMessagesCount = async () => {
+      try {
+        const result = await getTotalUnreadMessages(user.uid)
+        if (result.success) {
+          setUnreadMessagesCount(result.count)
+        }
+      } catch (error) {
+        console.error("Error fetching unread messages count:", error)
+      }
+    }
+
     fetchNotificationsData()
-    // Poll for notifications every 60 seconds (optional, but good for real-time feel without WebSockets yet)
-    const interval = setInterval(fetchNotificationsData, 60000)
-    return () => clearInterval(interval)
+    fetchUnreadMessagesCount()
+
+    // Poll for notifications and messages every 60 seconds
+    const interval = setInterval(() => {
+      fetchNotificationsData()
+      fetchUnreadMessagesCount()
+    }, 60000)
+
+    // Listen for custom events
+    const handleMessagesRead = () => fetchUnreadMessagesCount()
+    window.addEventListener("messagesRead", handleMessagesRead)
+
+    return () => {
+      clearInterval(interval)
+      window.removeEventListener("messagesRead", handleMessagesRead)
+    }
   }, [user])
 
   // Load cart count
@@ -278,11 +305,16 @@ export function Navbar({ notifications: propNotifications = [], unreadCount: pro
                       <Button 
                         variant="ghost" 
                         size="icon" 
-                        className={`text-gray-500 hover:text-blue-600 h-10 w-10 rounded-full hover:bg-gray-50 border border-transparent hover:border-gray-100 ${
+                        className={`text-gray-500 hover:text-blue-600 h-10 w-10 rounded-full hover:bg-gray-50 border border-transparent hover:border-gray-100 relative ${
                           isActive("/messages") ? "text-blue-600 bg-blue-50 border-gray-100" : ""
                         }`}
                       >
                         <MessageSquare className="h-5 w-5" />
+                        {unreadMessagesCount > 0 && (
+                          <span className="absolute -top-1 -right-1 bg-blue-600 text-white text-[10px] font-bold w-5 h-5 flex items-center justify-center rounded-full border-2 border-white animate-in zoom-in duration-300">
+                            {unreadMessagesCount}
+                          </span>
+                        )}
                       </Button>
                     </Link>
 
@@ -407,6 +439,51 @@ export function Navbar({ notifications: propNotifications = [], unreadCount: pro
                             <span>Dashboard</span>
                           </Link>
                         </DropdownMenuItem>
+                        {userData?.role === 'consultant' && (
+                          <>
+                            <DropdownMenuItem asChild>
+                              <Link href="/dashboard/consultant/sessions" className="flex items-center gap-2 cursor-pointer py-2">
+                                <Calendar className="h-4 w-4 text-gray-500" />
+                                <span>My Sessions</span>
+                              </Link>
+                            </DropdownMenuItem>
+                            <DropdownMenuItem asChild>
+                              <Link href="/dashboard/consultant/products" className="flex items-center gap-2 cursor-pointer py-2">
+                                <BookOpen className="h-4 w-4 text-gray-500" />
+                                <span>My Products</span>
+                              </Link>
+                            </DropdownMenuItem>
+                            <DropdownMenuSeparator />
+                            <DropdownMenuItem asChild>
+                              <Link href="/dashboard/client/purchases" className="flex items-center gap-2 cursor-pointer py-2">
+                                <ShoppingCart className="h-4 w-4 text-gray-500" />
+                                <span>My Purchases</span>
+                              </Link>
+                            </DropdownMenuItem>
+                            <DropdownMenuItem asChild>
+                              <Link href="/dashboard/client/sessions" className="flex items-center gap-2 cursor-pointer py-2">
+                                <Calendar className="h-4 w-4 text-gray-500" />
+                                <span>My Registered Sessions</span>
+                              </Link>
+                            </DropdownMenuItem>
+                          </>
+                        )}
+                        {userData?.role === 'client' && (
+                          <>
+                            <DropdownMenuItem asChild>
+                              <Link href="/dashboard/client/purchases" className="flex items-center gap-2 cursor-pointer py-2">
+                                <ShoppingCart className="h-4 w-4 text-gray-500" />
+                                <span>My Purchases</span>
+                              </Link>
+                            </DropdownMenuItem>
+                            <DropdownMenuItem asChild>
+                              <Link href="/dashboard/client/sessions" className="flex items-center gap-2 cursor-pointer py-2">
+                                <Calendar className="h-4 w-4 text-gray-500" />
+                                <span>My Sessions</span>
+                              </Link>
+                            </DropdownMenuItem>
+                          </>
+                        )}
                         <DropdownMenuItem asChild>
                           <Link href={getProfileHref()} className="flex items-center gap-2 cursor-pointer py-2">
                             <Settings className="h-4 w-4 text-gray-500" />
@@ -453,6 +530,22 @@ export function Navbar({ notifications: propNotifications = [], unreadCount: pro
 
           {/* Mobile Menu Toggle */}
           <div className="md:hidden flex items-center gap-2">
+            {!loading && user && (
+              <Link href="/messages">
+                <Button 
+                  variant="ghost" 
+                  size="icon" 
+                  className="text-gray-500 relative"
+                >
+                  <MessageSquare className="h-5 w-5" />
+                  {unreadMessagesCount > 0 && (
+                    <Badge variant="default" className="absolute -top-2 -right-2 h-5 w-5 text-xs p-0 flex items-center justify-center bg-blue-600">
+                      {unreadMessagesCount}
+                    </Badge>
+                  )}
+                </Button>
+              </Link>
+            )}
             {!loading && user && (
               <DropdownMenu open={mobileNotificationsOpen} onOpenChange={setMobileNotificationsOpen}>
                 <DropdownMenuTrigger asChild>
@@ -572,6 +665,62 @@ export function Navbar({ notifications: propNotifications = [], unreadCount: pro
                         </Link>
                       ))}
                     </nav>
+
+                    {user && (
+                      <div className="mt-8 pt-8 border-t border-gray-50">
+                        <h3 className="px-4 text-xs font-semibold text-gray-400 uppercase tracking-wider mb-4">My Items</h3>
+                        <div className="space-y-1">
+                          {userData?.role === 'consultant' && (
+                            <>
+                              <Link 
+                                href="/dashboard/consultant/products" 
+                                onClick={() => setIsOpen(false)}
+                                className="flex items-center gap-4 px-4 py-3 rounded-xl text-gray-600 hover:bg-gray-50"
+                              >
+                                <BookOpen className="h-5 w-5 text-gray-400" />
+                                <span className="text-base">My Products</span>
+                              </Link>
+                              <Link 
+                                href="/dashboard/client/purchases" 
+                                onClick={() => setIsOpen(false)}
+                                className="flex items-center gap-4 px-4 py-3 rounded-xl text-gray-600 hover:bg-gray-50"
+                              >
+                                <ShoppingCart className="h-5 w-5 text-gray-400" />
+                                <span className="text-base">My Purchases</span>
+                              </Link>
+                              <Link 
+                                href="/dashboard/client/sessions" 
+                                onClick={() => setIsOpen(false)}
+                                className="flex items-center gap-4 px-4 py-3 rounded-xl text-gray-600 hover:bg-gray-50"
+                              >
+                                <Calendar className="h-5 w-5 text-gray-400" />
+                                <span className="text-base">My Registered Sessions</span>
+                              </Link>
+                            </>
+                          )}
+                          {userData?.role === 'client' && (
+                            <>
+                              <Link 
+                                href="/dashboard/client/purchases" 
+                                onClick={() => setIsOpen(false)}
+                                className="flex items-center gap-4 px-4 py-3 rounded-xl text-gray-600 hover:bg-gray-50"
+                              >
+                                <ShoppingCart className="h-5 w-5 text-gray-400" />
+                                <span className="text-base">My Purchases</span>
+                              </Link>
+                              <Link 
+                                href="/dashboard/client/sessions" 
+                                onClick={() => setIsOpen(false)}
+                                className="flex items-center gap-4 px-4 py-3 rounded-xl text-gray-600 hover:bg-gray-50"
+                              >
+                                <Calendar className="h-5 w-5 text-gray-400" />
+                                <span className="text-base">My Sessions</span>
+                              </Link>
+                            </>
+                          )}
+                        </div>
+                      </div>
+                    )}
 
                     <div className="mt-8 pt-8 border-t border-gray-50">
                       <h3 className="px-4 text-xs font-semibold text-gray-400 uppercase tracking-wider mb-4">Account</h3>

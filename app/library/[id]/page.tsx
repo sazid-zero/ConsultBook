@@ -17,6 +17,7 @@ import {
 import Link from "next/link"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { AddToCartButton } from "@/components/cart/AddToCartButton"
+import { ProductPurchaseActions } from "@/components/marketplace/ProductPurchaseActions"
 import { notFound } from "next/navigation"
 
 export default async function ProductDetailsPage({ params }: { params: Promise<{ id: string }> }) {
@@ -210,24 +211,16 @@ export default async function ProductDetailsPage({ params }: { params: Promise<{
                     </div>
                  </div>
 
-                 <div className="space-y-4 mb-8">
-                   <Link href={`/checkout?productId=${product.id}`}>
-                    <Button className="w-full h-14 bg-blue-600 hover:bg-blue-700 text-white rounded-2xl font-black text-lg shadow-xl shadow-blue-100 transition-all hover:scale-[1.02] active:scale-[0.98]">
-                      Buy Now
-                    </Button>
-                   </Link>
-                    <AddToCartButton 
-                      item={{
-                        id: product.id,
-                        title: product.title,
-                        price: product.price,
-                        type: product.type.replace('_', ' '),
-                        consultantName: product.consultant?.name || "Consultant"
-                      }}
-                      className="w-full h-14 border-gray-100 text-gray-600 hover:bg-gray-50 rounded-2xl font-bold flex items-center justify-center gap-2"
-                      variant="outline"
-                    />
-                 </div>
+                 <ProductPurchaseActions 
+                    product={{
+                      id: product.id,
+                      title: product.title,
+                      price: product.price,
+                      type: product.type.replace('_', ' '),
+                      consultantId: product.consultantId,
+                      consultantName: product.consultant?.name || "Consultant"
+                    }}
+                 />
 
                  <div className="space-y-6 pt-6 border-t border-gray-50">
                    <div className="flex items-center gap-3 text-sm font-bold text-gray-900">
