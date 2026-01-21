@@ -9,6 +9,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Switch } from "@/components/ui/switch"
 import { Badge } from "@/components/ui/badge"
 import { Calendar, ArrowLeft, Clock, Save, Loader2, CheckCircle } from "lucide-react"
+import { toast } from "sonner"
 import {
   AlertDialog,
   AlertDialogAction,
@@ -72,7 +73,7 @@ export default function ConsultantSchedulePage() {
       }
     } catch (error) {
       console.error("Error saving schedule:", error)
-      alert("Failed to save schedule. Please try again.")
+      toast.error("Failed to save schedule. Please try again.")
     } finally {
       setSaving(false)
     }

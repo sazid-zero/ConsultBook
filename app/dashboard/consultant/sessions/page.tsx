@@ -47,6 +47,16 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog"
 import { getWorkshops, getWorkshop, createWorkshop, updateWorkshop, deleteWorkshop } from "@/app/actions/workshops"
 import { toast } from "sonner"
 import Link from "next/link"
@@ -66,6 +76,8 @@ export default function ConsultantWorkshopsPage() {
   const [selectedWorkshop, setSelectedWorkshop] = useState<any>(null)
   const [participants, setParticipants] = useState<any[]>([])
   const [participantsLoading, setParticipantsLoading] = useState(false)
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
+  const [workshopToDelete, setWorkshopToDelete] = useState<string | null>(null)
   
   const [uploading, setUploading] = useState(false)
   const [formData, setFormData] = useState({
@@ -233,11 +245,12 @@ export default function ConsultantWorkshopsPage() {
      }
   }
 
-  const handleDelete = async (id: string) => {
-    if (!confirm("Are you sure you want to delete this workshop? This cannot be undone.")) return
+  const confirmDelete = async () => {
+    if (!workshopToDelete) return
 
+    setIsSubmitting(true)
     try {
-      const result = await deleteWorkshop(id)
+      const result = await deleteWorkshop(workshopToDelete)
       if (result.success) {
         toast.success("Workshop deleted successfully")
         loadWorkshops()
@@ -247,7 +260,16 @@ export default function ConsultantWorkshopsPage() {
     } catch (error) {
       console.error("Error deleting workshop:", error)
       toast.error("An error occurred")
+    } finally {
+      setIsSubmitting(false)
+      setIsDeleteDialogOpen(false)
+      setWorkshopToDelete(null)
     }
+  }
+
+  const handleDeleteTrigger = (id: string) => {
+    setWorkshopToDelete(id)
+    setIsDeleteDialogOpen(true)
   }
 
   const openEdit = (workshop: any) => {
@@ -391,7 +413,7 @@ export default function ConsultantWorkshopsPage() {
                             <Users className="h-4 w-4 mr-2" />
                             View Participants
                           </DropdownMenuItem>
-                          <DropdownMenuItem className="text-red-600 focus:text-red-600" onClick={() => handleDelete(workshop.id)}>
+                          <DropdownMenuItem className="text-red-600 focus:text-red-600" onClick={() => handleDeleteTrigger(workshop.id)}>
                             <Trash2 className="h-4 w-4 mr-2" />
                             Delete Workshop
                           </DropdownMenuItem>
@@ -513,6 +535,31 @@ export default function ConsultantWorkshopsPage() {
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Delete Confirmation */}
+      <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will permanently delete the workshop and all of its associated data including registrations. This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isSubmitting}>Cancel</AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={(e) => {
+                e.preventDefault();
+                confirmDelete();
+              }}
+              className="bg-red-600 hover:bg-red-700 text-white"
+              disabled={isSubmitting}
+            >
+              {isSubmitting ? "Deleting..." : "Delete Workshop"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   )
 }

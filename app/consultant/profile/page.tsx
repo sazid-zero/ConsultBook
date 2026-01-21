@@ -16,6 +16,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Save, Eye, MapPin, DollarSign, Clock, User, Upload, Trash2, CheckCircle } from "lucide-react"
 import Link from "next/link"
 import Image from "next/image"
+import { toast } from "sonner"
 import {
   AlertDialog,
   AlertDialogAction,
@@ -152,7 +153,7 @@ export default function ConsultantProfilePage() {
     
     if (!uploadPreset) {
       console.error("Cloudinary upload preset not configured")
-      alert("Upload configuration error. Please contact support.")
+      toast.error("Upload configuration error. Please contact support.")
       return null
     }
     
@@ -175,7 +176,7 @@ export default function ConsultantProfilePage() {
       return data.secure_url
     } catch (error) {
       console.error("Error uploading to Cloudinary:", error)
-      alert(`Upload failed: ${error instanceof Error ? error.message : "Unknown error"}`)
+      toast.error(`Upload failed: ${error instanceof Error ? error.message : "Unknown error"}`)
       return null
     }
   }
@@ -344,12 +345,12 @@ export default function ConsultantProfilePage() {
 
   const handleSaveProfile = async () => {
     if (!profile.bio.trim() || profile.hourlyRate <= 0 || !profile.city.trim()) {
-      alert("Please fill in all required fields (Bio, Hourly Rate, City)!")
+      toast.error("Please fill in all required fields (Bio, Hourly Rate, City)!")
       return
     }
 
     if (!user) {
-      alert("User not authenticated!")
+      toast.error("User not authenticated!")
       return
     }
 
@@ -373,7 +374,7 @@ export default function ConsultantProfilePage() {
       setShowSuccessDialog(true)
     } catch (error) {
       console.error("Error saving profile:", error)
-      alert(`Error saving profile: ${error instanceof Error ? error.message : "Unknown error"}`)
+      toast.error(`Error saving profile: ${error instanceof Error ? error.message : "Unknown error"}`)
     } finally {
       setSaving(false)
     }
@@ -381,12 +382,12 @@ export default function ConsultantProfilePage() {
 
   const handlePublishProfile = async () => {
     if (!profile.bio.trim() || profile.hourlyRate <= 0 || !profile.city.trim()) {
-      alert("Please complete all required fields before publishing!")
+      toast.error("Please complete all required fields before publishing!")
       return
     }
 
     if (!user) {
-      alert("User not authenticated!")
+      toast.error("User not authenticated!")
       return
     }
 
@@ -409,10 +410,10 @@ export default function ConsultantProfilePage() {
       if (!result.success) throw new Error(result.error)
 
       setProfile({ ...profile, published: true })
-      alert("Profile published successfully! You are now available for bookings.")
+      toast.success("Profile published successfully! You are now available for bookings.")
     } catch (error) {
       console.error("Error publishing profile:", error)
-      alert(`Error publishing profile: ${error instanceof Error ? error.message : "Unknown error"}`)
+      toast.error(`Error publishing profile: ${error instanceof Error ? error.message : "Unknown error"}`)
     } finally {
       setSaving(false)
     }

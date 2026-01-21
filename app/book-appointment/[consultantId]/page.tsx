@@ -13,6 +13,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Textarea } from "@/components/ui/textarea"
 import { Badge } from "@/components/ui/badge"
 import { Calendar, ArrowLeft, User, MapPin, DollarSign, Clock, CreditCard, ChevronLeft, ChevronRight } from "lucide-react"
+import { toast } from "sonner"
 import Link from "next/link"
 
 interface ConsultantProfile {
@@ -91,7 +92,7 @@ export default function BookAppointmentPage({ params }: { params: { consultantId
       const data = await getConsultantBookingData(consultantId)
       
       if (!data) {
-        alert("Consultant not found")
+        toast.error("Consultant not found")
         router.push("/book-consultant")
         return
       }
@@ -121,7 +122,7 @@ export default function BookAppointmentPage({ params }: { params: { consultantId
       setConsultantSchedule(data.availability)
       
       // Map booked slots
-      const slots = data.bookedAppointments.map(a => `${a.date}_${a.time}`)
+      const slots = data.bookedAppointments.map((a: any) => `${a.date}_${a.time}`)
       setBookedSlots(slots)
       
     } catch (error) {
@@ -240,7 +241,7 @@ export default function BookAppointmentPage({ params }: { params: { consultantId
 
   const handleSubmitBooking = async () => {
     if (!booking.date || !booking.time || !booking.mode || !booking.paymentMethod) {
-      alert("Please fill in all required fields!")
+      toast.error("Please fill in all required fields!")
       return
     }
 
@@ -249,19 +250,19 @@ export default function BookAppointmentPage({ params }: { params: { consultantId
     const availableSlots = consultantSchedule[dayName]
 
     if (!availableSlots) {
-      alert("The consultant is not available on this day. Please select another date.")
+      toast.error("The consultant is not available on this day. Please select another date.")
       return
     }
 
     // Check if the selected time slot is available in consultant's schedule
     if (!availableSlots.includes(booking.time)) {
-      alert("This time slot is not available in the consultant's schedule. Please select another time.")
+      toast.error("This time slot is not available in the consultant's schedule. Please select another time.")
       return
     }
 
     const slotKey = `${booking.date}_${booking.time}`
     if (bookedSlots.includes(slotKey)) {
-      alert("This time slot is already booked. Please select another time.")
+      toast.error("This time slot is already booked. Please select another time.")
       return
     }
 
@@ -283,12 +284,12 @@ export default function BookAppointmentPage({ params }: { params: { consultantId
 
       // Mock payment processing (visual delay)
       await new Promise((resolve) => setTimeout(resolve, 2000))
-
-      alert("Appointment booked successfully!")
+      
+      toast.success("Appointment booked successfully!")
       router.push(userData?.role === "consultant" ? "/dashboard/consultant" : "/dashboard/client")
     } catch (error) {
       console.error("Error booking appointment:", error)
-      alert("Error booking appointment. Please try again.")
+      toast.error("Error booking appointment. Please try again.")
     } finally {
       setSubmitting(false)
     }

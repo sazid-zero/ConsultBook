@@ -19,12 +19,14 @@ import { getConsultantReviews, updateReview, deleteReview } from "@/app/actions/
 import { getProducts, deleteProduct } from "@/app/actions/library"
 import { getWorkshops, deleteWorkshop } from "@/app/actions/workshops"
 import Image from "next/image"
+import { toast } from "sonner"
 import {
   AlertDialog,
   AlertDialogAction,
   AlertDialogCancel,
   AlertDialogContent,
   AlertDialogDescription,
+  AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
@@ -98,6 +100,9 @@ export default function ConsultantPublicProfilePage({ params }: { params: { cons
   const [activeTab, setActiveTab] = useState<'books' | 'sessions'>('books')
   const [editingReview, setEditingReview] = useState<Review | null>(null)
   const [editReviewData, setEditReviewData] = useState({ rating: 5, comment: "" })
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
+  const [itemToDelete, setItemToDelete] = useState<{ id: string, type: 'product' | 'workshop' | 'review' } | null>(null)
+  const [isDeleting, setIsDeleting] = useState(false)
   const [products, setProducts] = useState<any[]>([])
   const [workshops, setWorkshops] = useState<any[]>([])
   const profileFileInputRef = useRef<HTMLInputElement>(null)
@@ -266,33 +271,53 @@ export default function ConsultantPublicProfilePage({ params }: { params: { cons
     }
   }
 
-  const handleDeleteProduct = async (id: string) => {
-    if (!confirm("Are you sure you want to delete this product?")) return
-    const result = await deleteProduct(id)
-    if (result.success) {
-      setProducts(products.filter(p => p.id !== id))
-    }
+  const handleDeleteProduct = (id: string) => {
+    setItemToDelete({ id, type: 'product' })
+    setIsDeleteDialogOpen(true)
   }
 
-  const handleDeleteWorkshop = async (id: string) => {
-    if (!confirm("Are you sure you want to delete this workshop?")) return
-    const result = await deleteWorkshop(id)
-    if (result.success) {
-      setWorkshops(workshops.filter(w => w.id !== id))
-    }
+  const handleDeleteWorkshop = (id: string) => {
+    setItemToDelete({ id, type: 'workshop' })
+    setIsDeleteDialogOpen(true)
   }
 
-  const handleDeleteReview = async (reviewId: string) => {
-    if (!confirm("Are you sure you want to delete your review?")) return
+  const confirmDelete = async () => {
+    if (!itemToDelete) return
+    setIsDeleting(true)
     try {
-        const result = await deleteReview(reviewId)
+      if (itemToDelete.type === 'product') {
+        const result = await deleteProduct(itemToDelete.id)
         if (result.success) {
-            setReviews(reviews.filter(r => r.id !== reviewId))
-            fetchConsultant() // Refresh stats
+          setProducts(products.filter(p => p.id !== itemToDelete.id))
+          toast.success("Product deleted successfully")
         }
+      } else if (itemToDelete.type === 'workshop') {
+        const result = await deleteWorkshop(itemToDelete.id)
+        if (result.success) {
+          setWorkshops(workshops.filter(w => w.id !== itemToDelete.id))
+          toast.success("Workshop deleted successfully")
+        }
+      } else if (itemToDelete.type === 'review') {
+        const result = await deleteReview(itemToDelete.id)
+        if (result.success) {
+          setReviews(reviews.filter(r => r.id !== itemToDelete.id))
+          fetchConsultant() // Refresh stats
+          toast.success("Review deleted successfully")
+        }
+      }
     } catch (error) {
-        console.error("Error deleting review:", error)
+      console.error("Error deleting item:", error)
+      toast.error("An error occurred during deletion")
+    } finally {
+      setIsDeleting(false)
+      setIsDeleteDialogOpen(false)
+      setItemToDelete(null)
     }
+  }
+
+  const handleDeleteReview = (reviewId: string) => {
+    setItemToDelete({ id: reviewId, type: 'review' })
+    setIsDeleteDialogOpen(true)
   }
 
   const handleUpdateReview = async () => {
@@ -1251,6 +1276,31 @@ export default function ConsultantPublicProfilePage({ params }: { params: { cons
           </div>
         </div>
       </div>
+
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will permanently delete this {itemToDelete?.type}. This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter className="flex gap-2">
+            <AlertDialogCancel disabled={isDeleting}>Cancel</AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={(e) => {
+                e.preventDefault();
+                confirmDelete();
+              }}
+              className="bg-red-600 hover:bg-red-700 text-white"
+              disabled={isDeleting}
+            >
+              {isDeleting ? "Deleting..." : "Delete Permanently"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   )
 }

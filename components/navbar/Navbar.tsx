@@ -270,14 +270,14 @@ export function Navbar({ notifications: propNotifications = [], unreadCount: pro
               </span>
             </Link>
 
-            {/* Global Search */}
+            {/* Global Search - Desktop */}
             <div className="hidden lg:block">
               <GlobalSearch />
             </div>
           </div>
 
           {/* Desktop Navigation */}
-          <nav className="hidden md:flex items-center gap-1">
+          <nav className="hidden lg:flex items-center gap-1">
             {navLinks.map((link) => (
               <Link key={link.name} href={link.href}>
                 <Button 
@@ -296,7 +296,7 @@ export function Navbar({ notifications: propNotifications = [], unreadCount: pro
           </nav>
 
           {/* Desktop Actions */}
-          <div className="hidden md:flex items-center gap-4">
+          <div className="hidden lg:flex items-center gap-4">
             {!loading && (
               <>
                 {user ? (
@@ -528,8 +528,9 @@ export function Navbar({ notifications: propNotifications = [], unreadCount: pro
             )}
           </div>
 
-          {/* Mobile Menu Toggle */}
-          <div className="md:hidden flex items-center gap-2">
+          {/* Mobile Menu Toggle & Actions */}
+          <div className="lg:hidden flex items-center gap-2">
+            <GlobalSearch />
             {!loading && user && (
               <Link href="/messages">
                 <Button 

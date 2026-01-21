@@ -20,6 +20,7 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { CheckCircle } from "lucide-react"
+import { toast } from "sonner"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
@@ -92,6 +93,8 @@ export default function ConsultantDashboard() {
   const [unreadMessages, setUnreadMessages] = useState(0)
   const [stats, setStats] = useState<any>(null)
   const [upcomingSchedule, setUpcomingSchedule] = useState<any[]>([])
+  const [cancelDialogOpen, setCancelDialogOpen] = useState(false)
+  const [appointmentToCancel, setAppointmentToCancel] = useState<{id: string, apt: Appointment} | null>(null)
 
   // Add function to fetch unread message count
   const fetchUnreadMessages = async () => {
@@ -173,38 +176,45 @@ export default function ConsultantDashboard() {
       }
     } catch (error) {
       console.error("Error updating availability:", error)
-      alert(`Error updating availability: ${error instanceof Error ? error.message : "Unknown error"}`)
+      toast.error(`Error updating availability: ${error instanceof Error ? error.message : "Unknown error"}`)
     }
   }
 
-  const handleCancelAppointment = async (appointmentId: string, appointment: Appointment) => {
-    if (!confirm("Are you sure you want to cancel this appointment?")) return
+  const confirmCancelAppointment = async () => {
+    if (!appointmentToCancel) return
 
     setProcessingAction(true)
     try {
-      const result = await cancelAppointment(appointmentId, "consultant")
+      const result = await cancelAppointment(appointmentToCancel.id, "consultant")
       if (!result.success) throw new Error(result.error)
 
       // Notifications omitted for V1 update
 
       // Update local state
       setAppointments(
-        appointments.map((apt) => (apt.id === appointmentId ? { ...apt, status: "cancelled" as const } : apt)),
+        appointments.map((apt) => (apt.id === appointmentToCancel.id ? { ...apt, status: "cancelled" as const } : apt)),
       )
 
-      alert("Appointment cancelled successfully!")
+      toast.success("Appointment cancelled successfully!")
       setSelectedAppointment(null)
     } catch (error) {
       console.error("Error cancelling appointment:", error)
-      alert("Error cancelling appointment. Please try again.")
+      toast.error("Error cancelling appointment. Please try again.")
     } finally {
       setProcessingAction(false)
+      setCancelDialogOpen(false)
+      setAppointmentToCancel(null)
     }
+  }
+
+  const handleCancelTrigger = (id: string, apt: Appointment) => {
+    setAppointmentToCancel({ id, apt })
+    setCancelDialogOpen(true)
   }
 
   const handleRescheduleAppointment = async () => {
     if (!rescheduleData.newDate || !rescheduleData.newTime || !rescheduleData.reason.trim()) {
-      alert("Please fill in all fields!")
+      toast.error("Please fill in all fields!")
       return
     }
 
@@ -224,12 +234,12 @@ export default function ConsultantDashboard() {
         ),
       )
 
-      alert("Appointment rescheduled successfully!")
+      toast.success("Appointment rescheduled successfully!")
       setSelectedAppointment(null)
       setRescheduleData({ newDate: "", newTime: "", reason: "" })
     } catch (error) {
       console.error("Error rescheduling appointment:", error)
-      alert("Error rescheduling appointment. Please try again.")
+      toast.error("Error rescheduling appointment. Please try again.")
     } finally {
       setProcessingAction(false)
     }
@@ -527,6 +537,153 @@ export default function ConsultantDashboard() {
           </CardContent>
         </Card>
       </div>
+      {/* Appointment Details Dialog */}
+      <Dialog open={!!selectedAppointment} onOpenChange={(open) => !open && setSelectedAppointment(null)}>
+        <DialogContent className="max-w-2xl rounded-2xl">
+          <DialogHeader>
+            <DialogTitle className="text-2xl">Appointment Details</DialogTitle>
+            <DialogDescription>
+              Consultation with {selectedAppointment?.clientName}
+            </DialogDescription>
+          </DialogHeader>
+          {selectedAppointment && (
+            <div className="space-y-6">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label className="text-xs font-bold text-gray-400 uppercase tracking-wider block mb-1">Client</Label>
+                  <p className="text-sm font-semibold text-gray-900">{selectedAppointment.clientName}</p>
+                </div>
+                <div>
+                  <Label className="text-xs font-bold text-gray-400 uppercase tracking-wider block mb-1">Email</Label>
+                  <p className="text-sm font-semibold text-gray-900">{selectedAppointment.clientEmail}</p>
+                </div>
+                <div>
+                  <Label className="text-xs font-bold text-gray-400 uppercase tracking-wider block mb-1">Date & Time</Label>
+                  <p className="text-sm font-semibold text-gray-900">{selectedAppointment.date} at {selectedAppointment.time}</p>
+                </div>
+                <div>
+                  <Label className="text-xs font-bold text-gray-400 uppercase tracking-wider block mb-1">Mode</Label>
+                  <p className="text-sm font-semibold text-gray-900 capitalize">{selectedAppointment.mode.replace("-", " ")}</p>
+                </div>
+                <div>
+                  <Label className="text-xs font-bold text-gray-400 uppercase tracking-wider block mb-1">Fee</Label>
+                  <p className="text-sm font-semibold text-gray-900">৳{selectedAppointment.amount}</p>
+                </div>
+              </div>
+
+              {selectedAppointment.notes && (
+                <div>
+                  <Label className="text-xs font-bold text-gray-400 uppercase tracking-wider block mb-2">Client Notes</Label>
+                  <p className="text-sm text-gray-700 bg-gray-50 p-3 rounded-lg">{selectedAppointment.notes}</p>
+                </div>
+              )}
+
+              <div className="flex items-center gap-2 pt-4 border-t border-gray-100">
+                <Badge className="bg-blue-100 text-blue-700 border-none capitalize">{selectedAppointment.status}</Badge>
+              </div>
+
+              <div className="flex gap-3 pt-4 border-t border-gray-100">
+                <Link href={`/messages?clientId=${selectedAppointment.clientId}`} className="flex-1">
+                  <Button variant="outline" className="w-full border-gray-300 text-gray-700 hover:bg-gray-50">
+                    <MessageCircle className="h-4 w-4 mr-2" />
+                    Message Client
+                  </Button>
+                </Link>
+
+                <Dialog>
+                  <DialogTrigger asChild>
+                    <Button variant="outline" className="flex-1 border-gray-300 text-gray-700 hover:bg-gray-50 font-bold">
+                      <CalendarX className="h-4 w-4 mr-2" />
+                      Reschedule
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent className="rounded-2xl">
+                    <DialogHeader>
+                      <DialogTitle>Reschedule Appointment</DialogTitle>
+                      <DialogDescription>Choose a new date and time</DialogDescription>
+                    </DialogHeader>
+                    <div className="space-y-4">
+                      <div>
+                        <Label htmlFor="newDate" className="font-semibold">New Date</Label>
+                        <Input
+                          id="newDate"
+                          type="date"
+                          value={rescheduleData.newDate}
+                          onChange={(e) => setRescheduleData({ ...rescheduleData, newDate: e.target.value })}
+                          min={new Date().toISOString().split("T")[0]}
+                          className="mt-1.5 border-gray-200"
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="newTime" className="font-semibold">New Time</Label>
+                        <Input
+                          id="newTime"
+                          type="time"
+                          value={rescheduleData.newTime}
+                          onChange={(e) => setRescheduleData({ ...rescheduleData, newTime: e.target.value })}
+                          className="mt-1.5 border-gray-200"
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="reason" className="font-semibold">Reason for Rescheduling</Label>
+                        <Textarea
+                          id="reason"
+                          value={rescheduleData.reason}
+                          onChange={(e) => setRescheduleData({ ...rescheduleData, reason: e.target.value })}
+                          placeholder="Inform the client why you're rescheduling..."
+                          rows={3}
+                          className="mt-1.5 border-gray-200 resize-none"
+                        />
+                      </div>
+                      <Button
+                        onClick={() => handleRescheduleAppointment()}
+                        disabled={processingAction}
+                        className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold h-11"
+                      >
+                        {processingAction ? "Processing..." : "Confirm Reschedule"}
+                      </Button>
+                    </div>
+                  </DialogContent>
+                </Dialog>
+
+                <Button 
+                  variant="destructive" 
+                  className="flex-1 bg-red-600 hover:bg-red-700 font-bold"
+                  onClick={() => handleCancelTrigger(selectedAppointment.id, selectedAppointment)}
+                >
+                  <X className="h-4 w-4 mr-2" />
+                  Cancel
+                </Button>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Cancellation Confirmation */}
+      <AlertDialog open={cancelDialogOpen} onOpenChange={setCancelDialogOpen}>
+        <AlertDialogContent className="rounded-2xl">
+          <AlertDialogHeader>
+            <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will cancel the appointment with {appointmentToCancel?.apt?.clientName}. This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter className="flex gap-2">
+            <AlertDialogCancel disabled={processingAction}>Back</AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={(e) => {
+                e.preventDefault();
+                confirmCancelAppointment();
+              }}
+              className="bg-red-600 hover:bg-red-700 text-white"
+              disabled={processingAction}
+            >
+              {processingAction ? "Cancelling..." : "Confirm Cancellation"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   )
 }

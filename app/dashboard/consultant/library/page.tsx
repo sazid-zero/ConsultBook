@@ -42,6 +42,16 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog"
 
 export default function ConsultantLibraryDashboard() {
   const { user } = useAuth()
@@ -51,6 +61,8 @@ export default function ConsultantLibraryDashboard() {
   const [isEditOpen, setIsEditOpen] = useState(false)
   const [selectedProduct, setSelectedProduct] = useState<any>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
+  const [productToDelete, setProductToDelete] = useState<string | null>(null)
   
   // Form State
   const [newProduct, setNewProduct] = useState({
@@ -162,14 +174,24 @@ export default function ConsultantLibraryDashboard() {
     }
   }
 
-  async function handleDelete(id: string) {
-    if (confirm("Are you sure you want to delete this product?")) {
-      const result = await deleteProduct(id)
-      if (result.success) {
-        toast.success("Product deleted")
-        fetchProducts()
-      }
+  async function confirmDelete() {
+    if (!productToDelete) return
+    setIsSubmitting(true)
+    const result = await deleteProduct(productToDelete)
+    setIsSubmitting(false)
+    if (result.success) {
+      toast.success("Product deleted")
+      fetchProducts()
+      setIsDeleteDialogOpen(false)
+      setProductToDelete(null)
+    } else {
+      toast.error("Failed to delete product")
     }
+  }
+
+  function handleDeleteTrigger(id: string) {
+    setProductToDelete(id)
+    setIsDeleteDialogOpen(true)
   }
 
   const stats = [
@@ -354,7 +376,7 @@ export default function ConsultantLibraryDashboard() {
                     <Button variant="ghost" size="icon" className="h-10 w-10 rounded-xl text-gray-400 hover:text-blue-600" onClick={() => handleEdit(product)}>
                        <Edit3 className="h-4 w-4" />
                     </Button>
-                    <Button variant="ghost" size="icon" className="h-10 w-10 rounded-xl text-gray-400 hover:text-red-600" onClick={() => handleDelete(product.id)}>
+                    <Button variant="ghost" size="icon" className="h-10 w-10 rounded-xl text-gray-400 hover:text-red-600" onClick={() => handleDeleteTrigger(product.id)}>
                        <Trash2 className="h-4 w-4" />
                     </Button>
                   </div>
@@ -457,6 +479,30 @@ export default function ConsultantLibraryDashboard() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+        <AlertDialogContent className="rounded-2xl">
+          <AlertDialogHeader>
+            <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will permanently delete this product and its history. This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter className="flex gap-2">
+            <AlertDialogCancel disabled={isSubmitting}>Cancel</AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={(e) => {
+                e.preventDefault();
+                confirmDelete();
+              }}
+              className="bg-red-600 hover:bg-red-700 text-white"
+              disabled={isSubmitting}
+            >
+              {isSubmitting ? "Deleting..." : "Delete Permanently"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   )
 }

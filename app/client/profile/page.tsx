@@ -13,6 +13,7 @@ import { Label } from "@/components/ui/label"
 import { Badge } from "@/components/ui/badge"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Calendar, Save, User, Mail, Phone, Lock, Upload } from "lucide-react"
+import { toast } from "sonner"
 import Link from "next/link"
 
 interface UploadedFile {
@@ -86,7 +87,7 @@ export default function ClientProfilePage() {
     
     if (!uploadPreset) {
       console.error("Cloudinary upload preset not configured")
-      alert("Upload configuration error. Please contact support.")
+      toast.error("Upload configuration error. Please contact support.")
       return null
     }
     
@@ -109,7 +110,7 @@ export default function ClientProfilePage() {
       return data.secure_url
     } catch (error) {
       console.error("Error uploading to Cloudinary:", error)
-      alert(`Upload failed: ${error instanceof Error ? error.message : "Unknown error"}`)
+      toast.error(`Upload failed: ${error instanceof Error ? error.message : "Unknown error"}`)
       return null
     }
   }
@@ -144,12 +145,12 @@ export default function ClientProfilePage() {
 
   const handleSaveProfile = async () => {
     if (!profile.name.trim() || !profile.phone.trim()) {
-      alert("Please fill in all required fields!")
+      toast.error("Please fill in all required fields!")
       return
     }
 
     if (!user) {
-      alert("User not authenticated!")
+      toast.error("User not authenticated!")
       return
     }
 
@@ -173,13 +174,13 @@ export default function ClientProfilePage() {
         })
       }
 
-      alert("Profile updated successfully!")
+      toast.success("Profile updated successfully!")
 
       // Refresh the page to get updated data
       window.location.reload()
     } catch (error) {
       console.error("Error updating profile:", error)
-      alert(`Error updating profile: ${error instanceof Error ? error.message : "Unknown error"}`)
+      toast.error(`Error updating profile: ${error instanceof Error ? error.message : "Unknown error"}`)
     } finally {
       setSaving(false)
     }
@@ -187,33 +188,33 @@ export default function ClientProfilePage() {
 
   const handleUpdatePassword = async () => {
     if (!passwords.current || !passwords.new || !passwords.confirm) {
-      alert("Please fill in all password fields!")
+      toast.error("Please fill in all password fields!")
       return
     }
 
     if (passwords.new !== passwords.confirm) {
-      alert("New passwords don't match!")
+      toast.error("New passwords don't match!")
       return
     }
 
     if (passwords.new.length < 6) {
-      alert("Password must be at least 6 characters long!")
+      toast.error("Password must be at least 6 characters long!")
       return
     }
 
     if (!user) {
-      alert("User not authenticated!")
+      toast.error("User not authenticated!")
       return
     }
 
     setUpdatingPassword(true)
     try {
       await updatePassword(user, passwords.new)
-      alert("Password updated successfully!")
+      toast.success("Password updated successfully!")
       setPasswords({ current: "", new: "", confirm: "" })
     } catch (error) {
       console.error("Error updating password:", error)
-      alert(`Error updating password: ${error instanceof Error ? error.message : "Unknown error"}`)
+      toast.error(`Error updating password: ${error instanceof Error ? error.message : "Unknown error"}`)
     } finally {
       setUpdatingPassword(false)
     }

@@ -17,6 +17,7 @@ import { Badge } from "@/components/ui/badge"
 import { Label } from "@/components/ui/label"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
+import { toast } from "sonner"
 import {
   Dialog,
   DialogContent,
@@ -106,6 +107,8 @@ export default function ClientDashboard() {
   const [submittingReview, setSubmittingReview] = useState(false)
   const [processingAction, setProcessingAction] = useState(false)
   const [logoutOpen, setLogoutOpen] = useState(false)
+  const [cancelDialogOpen, setCancelDialogOpen] = useState(false)
+  const [appointmentToCancel, setAppointmentToCancel] = useState<string | null>(null)
   const [stats, setStats] = useState<any>(null)
 
   // Add state for unread messages
@@ -155,34 +158,39 @@ export default function ClientDashboard() {
     }
   }
 
-  const handleCancelAppointment = async (appointmentId: string) => {
-    if (!confirm("Are you sure you want to cancel this appointment?")) return
+  const confirmCancelAppointment = async () => {
+    if (!appointmentToCancel) return
 
     setProcessingAction(true)
     try {
-      const result = await cancelAppointment(appointmentId, "client")
+      const result = await cancelAppointment(appointmentToCancel, "client")
       if (!result.success) throw new Error(result.error)
-
-      // Notification omitted
 
       // Update local state
       setAppointments(
-        appointments.map((apt) => (apt.id === appointmentId ? { ...apt, status: "cancelled" as const } : apt)),
+        appointments.map((apt) => (apt.id === appointmentToCancel ? { ...apt, status: "cancelled" as const } : apt)),
       )
 
-      alert("Appointment cancelled successfully!")
+      toast.success("Appointment cancelled successfully!")
       setSelectedAppointment(null)
     } catch (error) {
       console.error("Error cancelling appointment:", error)
-      alert("Error cancelling appointment. Please try again.")
+      toast.error("Error cancelling appointment. Please try again.")
     } finally {
       setProcessingAction(false)
+      setCancelDialogOpen(false)
+      setAppointmentToCancel(null)
     }
+  }
+
+  const handleCancelTrigger = (id: string) => {
+    setAppointmentToCancel(id)
+    setCancelDialogOpen(true)
   }
 
   const handleRescheduleAppointment = async () => {
     if (!rescheduleData.newDate || !rescheduleData.newTime || !rescheduleData.reason.trim()) {
-      alert("Please fill in all fields!")
+      toast.error("Please fill in all fields!")
       return
     }
 
@@ -202,12 +210,12 @@ export default function ClientDashboard() {
         ),
       )
 
-      alert("Appointment rescheduled successfully!")
+      toast.success("Appointment rescheduled successfully!")
       setSelectedAppointment(null)
       setRescheduleData({ newDate: "", newTime: "", reason: "" })
     } catch (error) {
       console.error("Error rescheduling appointment:", error)
-      alert("Error rescheduling appointment. Please try again.")
+      toast.error("Error rescheduling appointment. Please try again.")
     } finally {
       setProcessingAction(false)
     }
@@ -215,7 +223,7 @@ export default function ClientDashboard() {
 
    const handleSubmitReview = async () => {
     if (!selectedAppointment || !reviewData.comment.trim()) {
-      alert("Please provide a rating and comment!")
+      toast.error("Please provide a rating and comment!")
       return
     }
 
@@ -230,7 +238,7 @@ export default function ClientDashboard() {
       })
 
       if (result.success) {
-        alert("Review submitted successfully!")
+        toast.success("Review submitted successfully!")
         setSelectedAppointment(null)
         setReviewData({ rating: 5, comment: "" })
         loadDashboardData() // Refresh
@@ -239,7 +247,7 @@ export default function ClientDashboard() {
       }
     } catch (error) {
       console.error("Error submitting review:", error)
-      alert("Failed to submit review. " + (error as any).message)
+      toast.error("Failed to submit review. " + (error as any).message)
     } finally {
       setSubmittingReview(false)
     }
@@ -591,7 +599,7 @@ export default function ClientDashboard() {
                                          <AlertDialogCancel className="border-gray-300">Keep Appointment</AlertDialogCancel>
                                          <AlertDialogAction 
                                            className="bg-red-600 hover:bg-red-700"
-                                           onClick={() => handleCancelAppointment(selectedAppointment.id)}
+                                           onClick={() => handleCancelTrigger(selectedAppointment.id)}
                                          >
                                            Cancel Appointment
                                          </AlertDialogAction>
@@ -745,6 +753,30 @@ export default function ClientDashboard() {
           </CardContent>
         </Card>
       
+      {/* Cancel Appointment Dialog */}
+      <AlertDialog open={cancelDialogOpen} onOpenChange={setCancelDialogOpen}>
+        <AlertDialogContent className="rounded-2xl">
+          <AlertDialogHeader>
+            <AlertDialogTitle>Cancel Appointment</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to cancel this appointment? This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter className="flex gap-2">
+            <AlertDialogCancel disabled={processingAction}>Keep Appointment</AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={(e) => {
+                e.preventDefault();
+                confirmCancelAppointment();
+              }}
+              className="bg-red-600 hover:bg-red-700 text-white"
+              disabled={processingAction}
+            >
+              {processingAction ? "Cancelling..." : "Confirm Cancellation"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
     </div>
   )

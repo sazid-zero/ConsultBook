@@ -7,7 +7,7 @@ import { useAuth } from "@/lib/auth-context"
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
 import { Badge } from "@/components/ui/badge"
-import { Send, User, MessageCircle, Paperclip, ChevronLeft, MoreVertical, Search, Info, X } from "lucide-react"
+import { Send, User, MessageCircle, Paperclip, ChevronLeft, MoreVertical, Search, Info, X, Bell, Trash2 } from "lucide-react"
 import { 
   getConversations, 
   getMessages, 
@@ -18,6 +18,21 @@ import {
 import { toast } from "sonner"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { formatDistanceToNow } from "date-fns"
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from "@/components/ui/dialog"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+  DropdownMenuSeparator,
+} from "@/components/ui/dropdown-menu"
+import { ScrollArea } from "@/components/ui/scroll-area"
 
 interface Message {
   id: string
@@ -74,16 +89,49 @@ export default function MessagesPage() {
   const [pendingAttachments, setPendingAttachments] = useState<PendingAttachment[]>([])
   const [searchQuery, setSearchQuery] = useState("")
   const [isTyping, setIsTyping] = useState(false) // Mock typing state for UI demo
+  const [mediaView, setMediaView] = useState<{ url: string, type: 'image' | 'file' } | null>(null)
+  const [isInfoOpen, setIsInfoOpen] = useState(false)
+  const [isMoreOpen, setIsMoreOpen] = useState(false)
   const messagesEndRef = useRef<HTMLDivElement>(null)
+  const scrollContainerRef = useRef<HTMLDivElement>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
+  const scrollToBottom = (instant = false) => {
+    if (messagesEndRef.current) {
+      messagesEndRef.current.scrollIntoView({ behavior: instant ? "auto" : "smooth" })
+    }
   }
 
+  // Handle auto-scrolling
   useEffect(() => {
-    scrollToBottom()
-  }, [messages])
+    if (messages.length > 0) {
+      // Check if user is near bottom
+      const container = scrollContainerRef.current
+      if (container) {
+        const isNearBottom = container.scrollHeight - container.scrollTop <= container.clientHeight + 100
+        
+        // If it's my own message (optimistic UI or new incoming), or if we're already near bottom
+        const lastMessage = messages[messages.length - 1]
+        const isMyMessage = lastMessage.senderId === user?.uid
+
+        if (isMyMessage || isNearBottom) {
+          scrollToBottom()
+        }
+      } else {
+        // Initial load or first message
+        scrollToBottom(true)
+      }
+    }
+  }, [messages, user?.uid])
+
+  // Scroll to bottom on initial load of a conversation
+  useEffect(() => {
+    if (selectedConversation && !loadingMessages) {
+       // Short delay to ensure DOM is updated
+       const timer = setTimeout(() => scrollToBottom(true), 100)
+       return () => clearTimeout(timer)
+    }
+  }, [selectedConversation, loadingMessages])
 
   const consultantIdParam = searchParams.get("consultantId")
   const clientIdParam = searchParams.get("clientId")
@@ -425,17 +473,43 @@ export default function MessagesPage() {
               </div>
 
               <div className="flex items-center gap-2">
-                <Button variant="ghost" size="icon" className="text-gray-400 hover:text-blue-600 rounded-full hidden sm:flex">
+                <Button 
+                  variant="ghost" 
+                  size="icon" 
+                  className="text-gray-400 hover:text-blue-600 rounded-full hidden sm:flex"
+                  onClick={() => setIsInfoOpen(true)}
+                >
                   <Info className="h-5 w-5" />
                 </Button>
-                <Button variant="ghost" size="icon" className="text-gray-400 hover:text-blue-600 rounded-full">
-                  <MoreVertical className="h-5 w-5" />
-                </Button>
+                
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" size="icon" className="text-gray-400 hover:text-blue-600 rounded-full">
+                      <MoreVertical className="h-5 w-5" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-48 rounded-xl">
+                    <DropdownMenuItem className="cursor-pointer">
+                      <Search className="h-4 w-4 mr-2" />
+                      Search in chat
+                    </DropdownMenuItem>
+                    <DropdownMenuItem className="cursor-pointer">
+                      <Bell className="h-4 w-4 mr-2" />
+                      Mute notifications
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem className="text-red-600 cursor-pointer">
+                      <Trash2 className="h-4 w-4 mr-2" />
+                      Clear history
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
               </div>
             </header>
 
             {/* Messages Area */}
             <div 
+              ref={scrollContainerRef}
               className="flex-1 overflow-y-auto p-4 lg:p-6 bg-[#f8f9fc] space-y-6 scrollbar-hide"
               data-lenis-prevent
             >
@@ -474,7 +548,10 @@ export default function MessagesPage() {
                         <div className={`flex ${isMe ? "justify-end" : "justify-start"}`}>
                           <div className={`flex flex-col max-w-[75%] lg:max-w-[65%] ${isMe ? "items-end" : "items-start"}`}>
                             {msg.type === "image" && msg.fileUrl && (
-                              <div className="mb-2 rounded-2xl overflow-hidden shadow-sm border border-gray-100">
+                              <div 
+                                className="mb-2 rounded-2xl overflow-hidden shadow-sm border border-gray-100 cursor-zoom-in hover:opacity-95 transition-opacity"
+                                onClick={() => setMediaView({ url: msg.fileUrl!, type: 'image' })}
+                              >
                                 <img src={msg.fileUrl} alt="attachment" className="max-w-full h-auto max-h-[300px] object-cover" />
                               </div>
                             )}
@@ -637,6 +714,77 @@ export default function MessagesPage() {
           scrollbar-width: none;
         }
       ` }} />
+
+      {/* Media Full View Dialog */}
+      <Dialog open={!!mediaView} onOpenChange={(open) => !open && setMediaView(null)}>
+        <DialogContent className="max-w-4xl p-0 overflow-hidden bg-transparent border-none shadow-none">
+          <DialogHeader className="sr-only">
+            <DialogTitle>Image Preview</DialogTitle>
+          </DialogHeader>
+          <div className="relative w-full h-full flex items-center justify-center p-4">
+             {mediaView?.type === 'image' && (
+               <img 
+                 src={mediaView.url} 
+                 alt="Full view" 
+                 className="max-w-full max-h-[90vh] object-contain rounded-lg shadow-2xl" 
+               />
+             )}
+             <Button 
+               variant="ghost" 
+               size="icon" 
+               className="absolute top-4 right-4 bg-black/20 hover:bg-black/40 text-white rounded-full backdrop-blur-md"
+               onClick={() => setMediaView(null)}
+             >
+               <X className="h-6 w-6" />
+             </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Conversation Info Dialog */}
+      <Dialog open={isInfoOpen} onOpenChange={setIsInfoOpen}>
+        <DialogContent className="sm:max-w-[400px] rounded-3xl">
+          <DialogHeader>
+            <DialogTitle>Conversation Details</DialogTitle>
+            <DialogDescription>
+              Information about your chat with {otherUser?.name}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="py-6 flex flex-col items-center text-center">
+            <Avatar className="h-24 w-24 border-4 border-white shadow-xl mb-4">
+              <AvatarImage src={otherUser?.profilePhoto || ""} className="object-cover" />
+              <AvatarFallback className="bg-blue-600 text-white text-3xl font-bold">
+                {otherUser?.name?.charAt(0)}
+              </AvatarFallback>
+            </Avatar>
+            <h3 className="text-xl font-bold text-gray-900">{otherUser?.name}</h3>
+            <p className="text-sm text-gray-500 mt-1 capitalize">{userData?.role === 'client' ? 'Expert Consultant' : 'Client'}</p>
+            
+            <div className="w-full mt-8 grid grid-cols-2 gap-4">
+               <div className="bg-gray-50 p-4 rounded-2xl flex flex-col items-center">
+                  <span className="text-xs text-gray-400 uppercase font-bold tracking-widest mb-1">Messages</span>
+                  <span className="text-lg font-bold text-gray-900">{messages.length}</span>
+               </div>
+               <div className="bg-gray-50 p-4 rounded-2xl flex flex-col items-center">
+                  <span className="text-xs text-gray-400 uppercase font-bold tracking-widest mb-1">Files</span>
+                  <span className="text-lg font-bold text-gray-900">
+                    {messages.filter(m => m.type !== 'text').length}
+                  </span>
+               </div>
+            </div>
+          </div>
+          <div className="space-y-3">
+             <Button variant="outline" className="w-full rounded-xl justify-start text-gray-700" onClick={() => setIsInfoOpen(false)}>
+                <User className="h-4 w-4 mr-3 text-gray-400" />
+                View Profile
+             </Button>
+             <Button variant="outline" className="w-full rounded-xl justify-start text-gray-700" onClick={() => setIsInfoOpen(false)}>
+                <Paperclip className="h-4 w-4 mr-3 text-gray-400" />
+                Shared Documents
+             </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }
