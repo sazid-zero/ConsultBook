@@ -70,7 +70,7 @@ export default function ConsultantLibraryDashboard() {
     setLoading(true)
     const result = await getProducts({ consultantId: user?.uid })
     if (result.success) {
-      setProducts(result.data)
+      setProducts(result.data || [])
     }
     setLoading(false)
   }

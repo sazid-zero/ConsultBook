@@ -122,13 +122,13 @@ export async function getConsultantDashboardDataWithDetails(userId: string) {
                 amount: a.amount,
                 details: a, // Original data
             })),
-            ...myWorkshops.map(w => ({
+            ...myWorkshops.filter(w => w.date).map(w => ({
                 id: w.id,
                 title: w.title,
                 subtitle: `${w.duration} min • ${w.mode}`,
-                date: w.date,
-                displayDate: w.date.toISOString().split('T')[0],
-                displayTime: w.date.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}),
+                date: w.date!,
+                displayDate: w.date!.toISOString().split('T')[0],
+                displayTime: w.date!.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}),
                 type: 'workshop' as const,
                 amount: w.price,
                 details: w,
@@ -264,14 +264,16 @@ export async function getClientDashboardData(userId: string) {
             amount: a.amount,
             details: a,
         })),
-        ...upcomingWorkshops.map(w => ({
+        ...upcomingWorkshops.filter(w => w.workshopDate).map(w => ({
             id: w.id,
+            workshopId: w.workshopId,
+            status: w.status,
             title: w.workshopTitle,
             subtitle: `Workshop • ${w.mode}`,
             consultantName: w.consultantName,
-            date: w.workshopDate,
-            displayDate: w.workshopDate.toISOString().split('T')[0],
-            displayTime: w.workshopDate.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}),
+            date: w.workshopDate!,
+            displayDate: w.workshopDate!.toISOString().split('T')[0],
+            displayTime: w.workshopDate!.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}),
             type: 'workshop' as const,
             amount: w.price,
             details: w,
