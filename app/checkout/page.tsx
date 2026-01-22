@@ -46,6 +46,9 @@ function CheckoutContent() {
     async function fetchData() {
        setLoading(true)
        
+       // Scroll to top on mount
+       window.scrollTo(0, 0)
+       
        if (isCartCheckout) {
           // Load from localStorage
           const savedCart = localStorage.getItem("consultbook_cart")

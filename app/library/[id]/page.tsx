@@ -20,6 +20,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { AddToCartButton } from "@/components/cart/AddToCartButton"
 import { ProductPurchaseActions } from "@/components/marketplace/ProductPurchaseActions"
 import { notFound } from "next/navigation"
+import { ScrollFix } from "@/components/scroll-fix"
 
 export default async function ProductDetailsPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
@@ -34,6 +35,7 @@ export default async function ProductDetailsPage({ params }: { params: Promise<{
 
   return (
     <div className="min-h-screen bg-white">
+      <ScrollFix />
       {/* Top Navigation Bar (Sub) */}
       <div className="border-b border-gray-100 bg-gray-50/50 sticky top-16 z-40 backdrop-blur-sm">
         <div className="max-w-7xl mx-auto px-4 h-12 flex items-center justify-between">
