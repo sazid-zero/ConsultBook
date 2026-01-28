@@ -22,24 +22,28 @@ export default function HomePage() {
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
 
       {/* Hero Section */}
-      <section className="relative h-[calc(100vh-64px)] items-center flex justify-center overflow-hidden bg-white">
-        <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-5" />
+      <section className="relative h-[calc(100vh-64px)] items-center flex justify-center overflow-hidden">
+        <div 
+          className="absolute inset-0 bg-cover bg-center bg-no-repeat transition-transform duration-1000"
+          style={{ backgroundImage: "url('/images/hero-bg.png')" }}
+        />
+        <div className="absolute inset-0 bg-black/60 backdrop-blur-[2px]" />
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 text-center">
-          <Badge className="mb-6 bg-blue-50 text-blue-600 border-blue-100 hover:bg-blue-100 transition-colors px-4 py-1.5 text-sm font-bold rounded-full shadow-sm">
+          <Badge className="mb-6 bg-white/10 text-white border-white/20 hover:bg-white/20 transition-colors px-4 py-1.5 text-sm font-bold rounded-full shadow-sm">
             v3.0 Now Live — The Expert Ecosystem
           </Badge>
-          <h1 className="text-5xl lg:text-7xl font-black text-gray-900 mb-8 tracking-tight leading-tight">
+          <h1 className="text-5xl lg:text-7xl font-black text-white mb-8 tracking-tight leading-tight">
             The World's Most <br className="hidden lg:block" /> 
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-600">Powerful Knowledge Hub</span>
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-indigo-400">Powerful Knowledge Hub</span>
           </h1>
-          <p className="text-xl text-gray-600 mb-12 max-w-3xl mx-auto leading-relaxed">
+          <p className="text-xl text-gray-300 mb-12 max-w-3xl mx-auto leading-relaxed">
             From 1-on-1 consultations to exclusive digital masterclasses and expert-led workshops. 
             Everything you need to accelerate your growth in one unified platform.
           </p>
           <div className="flex flex-col sm:flex-row justify-center gap-4 mb-16">
             {!loading && user ? (
               <Link href={dashboardHref}>
-                <Button size="lg" className="px-10 h-14 bg-blue-600 hover:bg-blue-700 text-lg font-bold rounded-2xl shadow-xl shadow-blue-200 transition-all hover:scale-105 active:scale-95">
+                <Button size="lg" className="px-10 h-14 bg-blue-600 hover:bg-blue-700 text-lg font-bold rounded-2xl shadow-lg shadow-blue-900/20 transition-all hover:scale-105 active:scale-95">
                   Access My Dashboard
                   <ChevronRight className="ml-2 h-5 w-5" />
                 </Button>
@@ -47,12 +51,12 @@ export default function HomePage() {
             ) : (
               <>
                 <Link href="/register?type=client">
-                  <Button size="lg" className="px-10 h-14 bg-blue-600 hover:bg-blue-700 text-lg font-bold rounded-2xl shadow-xl shadow-blue-200 transition-all hover:scale-105 active:scale-95 w-full sm:w-auto">
+                  <Button size="lg" className="px-10 h-14 bg-blue-600 hover:bg-blue-700 text-lg font-bold rounded-2xl shadow-lg shadow-blue-900/20 transition-all hover:scale-105 active:scale-95 w-full sm:w-auto">
                     Start Learning
                   </Button>
                 </Link>
                 <Link href="/register?type=consultant">
-                  <Button variant="outline" size="lg" className="px-10 h-14 border-gray-200 hover:bg-black hover:text-white text-lg font-bold rounded-2xl transition-all w-full sm:w-auto">
+                  <Button variant="outline" size="lg" className="px-10 h-14 border-white/20 bg-white/5 text-white hover:bg-white hover:text-black text-lg font-bold rounded-2xl transition-all w-full sm:w-auto">
                     Become an Expert
                   </Button>
                 </Link>
@@ -61,18 +65,18 @@ export default function HomePage() {
           </div>
 
           {/* Feature Badges */}
-          <div className="flex flex-wrap justify-center gap-6 opacity-60">
+          <div className="flex flex-wrap justify-center gap-6 opacity-80">
             <div className="flex items-center gap-2">
-              <CheckCircle className="h-5 w-5 text-green-500" />
-              <span className="text-sm font-bold text-gray-600">Verified Professionals</span>
+              <CheckCircle className="h-5 w-5 text-green-400" />
+              <span className="text-sm font-bold text-gray-300">Verified Professionals</span>
             </div>
             <div className="flex items-center gap-2">
-              <CheckCircle className="h-5 w-5 text-green-500" />
-              <span className="text-sm font-bold text-gray-600">Secure Payments</span>
+              <CheckCircle className="h-5 w-5 text-green-400" />
+              <span className="text-sm font-bold text-gray-300">Secure Payments</span>
             </div>
             <div className="flex items-center gap-2">
-              <CheckCircle className="h-5 w-5 text-green-500" />
-              <span className="text-sm font-bold text-gray-600">Lifetime Access</span>
+              <CheckCircle className="h-5 w-5 text-green-400" />
+              <span className="text-sm font-bold text-gray-300">Lifetime Access</span>
             </div>
           </div>
         </div>
