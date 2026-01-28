@@ -23,10 +23,8 @@ import { AddToCartButton } from "@/components/cart/AddToCartButton"
 import { WorkshopRegistrationActions } from "@/components/marketplace/WorkshopRegistrationActions"
 import { notFound } from "next/navigation"
 import { ScrollFix } from "@/components/scroll-fix"
-<<<<<<< HEAD
+
 import { WorkshopStatusBanner } from "@/components/marketplace/WorkshopStatusBanner"
-=======
->>>>>>> 911c633a9fde3ffe3c7378bf69b6162e8b1f2cd1
 
 export default async function WorkshopDetailsPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
@@ -67,15 +65,12 @@ export default async function WorkshopDetailsPage({ params }: { params: Promise<
               <Badge className="mb-4 bg-blue-50 text-blue-700 hover:bg-blue-50 border-blue-100 px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest">
                 Interactive {workshop.mode} Session
               </Badge>
-<<<<<<< HEAD
               
               <WorkshopStatusBanner workshop={{ 
                 startDate: workshop.startDate, 
                 registrations: registrations 
               }} />
 
-=======
->>>>>>> 911c633a9fde3ffe3c7378bf69b6162e8b1f2cd1
               <h1 className="text-4xl sm:text-6xl font-black text-gray-900 mb-8 leading-[1.1] tracking-tight">
                 {workshop.title}
               </h1>
@@ -208,13 +203,12 @@ export default async function WorkshopDetailsPage({ params }: { params: Promise<
                         workshop={{
                           id: workshop.id,
                           consultantId: workshop.consultantId,
-<<<<<<< HEAD
                           isFull: isFull,
                           startDate: workshop.startDate,
                           registrations: registrations
-=======
+
                           isFull: isFull
->>>>>>> 911c633a9fde3ffe3c7378bf69b6162e8b1f2cd1
+
                         }}
                      />
 

@@ -10,22 +10,17 @@ interface WorkshopRegistrationActionsProps {
     id: string
     consultantId: string
     isFull: boolean
-<<<<<<< HEAD
     startDate: string | Date
     registrations: any[]
-=======
->>>>>>> 911c633a9fde3ffe3c7378bf69b6162e8b1f2cd1
+
   }
 }
 
 export function WorkshopRegistrationActions({ workshop }: WorkshopRegistrationActionsProps) {
   const { user } = useAuth()
   const isHost = user?.uid === workshop.consultantId
-<<<<<<< HEAD
   const isRegistered = user && workshop.registrations?.some(reg => reg.clientId === user.uid)
   const isCompleted = new Date(workshop.startDate) < new Date()
-=======
->>>>>>> 911c633a9fde3ffe3c7378bf69b6162e8b1f2cd1
 
   return (
     <div className="space-y-4">
@@ -42,7 +37,7 @@ export function WorkshopRegistrationActions({ workshop }: WorkshopRegistrationAc
           </p>
         </div>
       )}
-<<<<<<< HEAD
+
       
       {!isHost && !isRegistered && !isCompleted && (
         <Link href={workshop.isFull ? "#" : `/checkout?workshopId=${workshop.id}`} className="w-full">
@@ -67,7 +62,7 @@ export function WorkshopRegistrationActions({ workshop }: WorkshopRegistrationAc
             <p className="text-gray-400 font-black text-sm uppercase tracking-widest leading-tight">This session has <br/> concluded</p>
         </div>
       )}
-=======
+
       <Link href={isHost || workshop.isFull ? "#" : `/checkout?workshopId=${workshop.id}`} className="w-full">
         <Button 
           className="w-full h-16 bg-blue-600 hover:bg-blue-700 text-white rounded-[24px] font-black text-lg shadow-2xl shadow-blue-200 transition-all hover:scale-[1.02] active:scale-[0.98] disabled:grayscale disabled:opacity-50"
@@ -76,7 +71,6 @@ export function WorkshopRegistrationActions({ workshop }: WorkshopRegistrationAc
           {workshop.isFull ? "Workshop Full" : "Book Spot Now"}
         </Button>
       </Link>
->>>>>>> 911c633a9fde3ffe3c7378bf69b6162e8b1f2cd1
     </div>
   )
 }
