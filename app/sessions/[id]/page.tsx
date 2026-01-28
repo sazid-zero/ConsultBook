@@ -207,8 +207,6 @@ export default async function WorkshopDetailsPage({ params }: { params: Promise<
                           startDate: workshop.startDate,
                           registrations: registrations
 
-                          isFull: isFull
-
                         }}
                      />
 
