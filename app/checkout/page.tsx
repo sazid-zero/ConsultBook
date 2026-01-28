@@ -22,6 +22,12 @@ import Link from "next/link"
 import { toast } from "sonner"
 import { Badge } from "@/components/ui/badge"
 import { Suspense } from "react"
+import { loadStripe } from "@stripe/stripe-js"
+import { Elements } from "@stripe/react-stripe-js"
+import { createPaymentIntent } from "@/app/actions/payments"
+import StripePaymentForm from "@/components/payments/StripePaymentForm"
+
+const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!)
 
 function CheckoutContent() {
   const searchParams = useSearchParams()
@@ -36,6 +42,14 @@ function CheckoutContent() {
   const [loading, setLoading] = useState(true)
   const [processing, setProcessing] = useState(false)
   const [success, setSuccess] = useState(false)
+  const [clientSecret, setClientSecret] = useState<string | null>(null)
+
+  useEffect(() => {
+    if (!authLoading && !user) {
+      const redirectUrl = isCartCheckout ? "/checkout?cart=true" : `/checkout?${productId ? `productId=${productId}` : `workshopId=${workshopId}`}`
+      router.push(`/login?redirect=${redirectUrl}`)
+    }
+  }, [user, authLoading])
 
   useEffect(() => {
     if (!productId && !workshopId && !isCartCheckout) {
@@ -80,23 +94,32 @@ function CheckoutContent() {
     fetchData()
   }, [productId, workshopId, isCartCheckout])
 
-  async function handleCheckout() {
-    if (!user) {
-      const redirectUrl = isCartCheckout ? "/checkout?cart=true" : `/checkout?${productId ? `productId=${productId}` : `workshopId=${workshopId}`}`
-      router.push(`/login?redirect=${redirectUrl}`)
-      return
+  useEffect(() => {
+    if (items.length > 0 && !clientSecret) {
+      const fetchSecret = async () => {
+        const payload = items.map(item => ({
+          id: item.id || item.productId || item.workshopId,
+          type: (item.type === 'workshop' || item.mode) ? 'workshop' : 'product' as any
+        }))
+        const res = await createPaymentIntent(payload)
+        if (res.success && res.clientSecret) {
+          setClientSecret(res.clientSecret)
+        } else {
+          toast.error("Could not initialize payment: " + res.error)
+        }
+      }
+      fetchSecret()
     }
+  }, [items, clientSecret])
 
+  async function handlePaymentSuccess() {
     setProcessing(true)
-    // Artificial delay for premium feel
-    await new Promise(r => setTimeout(r, 2000))
-
     const results = await Promise.all(items.map(async (item) => {
        let res
        if (item.type === "workshop" || item.mode) {
-          res = await registerForWorkshop(item.id || item.workshopId, user.uid)
+          res = await registerForWorkshop(item.id || item.workshopId, user!.uid)
        } else {
-          res = await purchaseProduct(item.id || item.productId, user.uid)
+          res = await purchaseProduct(item.id || item.productId, user!.uid)
        }
        return { item, res }
     }))
@@ -115,24 +138,22 @@ function CheckoutContent() {
       toast.success("Purchase Successful!")
     } else {
       if (successList.length > 0) {
-         // Some succeeded
          if (isCartCheckout) {
-            // Update cart to only have failed items
             const failedItemsInCart = failed.map(f => f.item)
             localStorage.setItem("consultbook_cart", JSON.stringify(failedItemsInCart))
             window.dispatchEvent(new Event("cartUpdated"))
          }
          toast.warning(`Partially successful. Could not process: ${failed.map(f => f.item.title).join(", ")}`)
-         setSuccess(true) // Still show success screen because some were bought
+         setSuccess(true)
       } else {
-         toast.error(`Purchase failed: ${failed.map(f => f.item.title).join(", ")}`)
+         toast.error(`Order processing failed: ${failed.map(f => f.item.title).join(", ")}`)
       }
     }
   }
 
   const subtotal = items.reduce((acc, item) => acc + (item.price || 0), 0)
 
-  if (loading || authLoading) {
+  if (loading || authLoading || !user) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50/50">
          <div className="flex flex-col items-center gap-4">
@@ -172,10 +193,10 @@ function CheckoutContent() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50/50 py-16">
-      <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-gray-50/50 py-8">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         
-        <div className="mb-12">
+        <div className="mb-8">
           <Link href={isCartCheckout ? "/cart" : (productId ? `/library/${productId}` : `/sessions`)} className="flex items-center gap-2 text-xs font-bold text-gray-400 hover:text-blue-600 transition-all uppercase tracking-widest">
             <ArrowLeft className="h-4 w-4" />
             Cancel and Return
@@ -254,74 +275,33 @@ function CheckoutContent() {
                    <CardDescription className="text-gray-400 font-medium">Complete your transaction</CardDescription>
                  </CardHeader>
                  
-                 <CardContent className="p-8 space-y-6">
-                    <div className="space-y-4">
-                       <div className="grid gap-2">
-                         <label className="text-[10px] font-black text-gray-500 uppercase tracking-[0.2em]">Card Details</label>
-                         <div className="relative group">
-                            <CreditCard className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-600 transition-colors group-focus-within:text-blue-400" />
-                            <input 
-                              type="text" 
-                              placeholder="4242 4242 4242 4242" 
-                              readOnly
-                              value="4242 4242 4242 4242"
-                              className="w-full pl-12 pr-6 py-4 bg-gray-800/50 border border-gray-700/50 rounded-2xl text-white font-bold text-sm focus:outline-none focus:ring-4 focus:ring-blue-500/20 active:bg-gray-800 transition-all cursor-not-allowed"
-                            />
-                         </div>
-                       </div>
-                       
-                       <div className="grid grid-cols-2 gap-4">
-                          <div className="grid gap-2">
-                            <label className="text-[10px] font-black text-gray-500 uppercase tracking-[0.2em]">Expiry</label>
-                            <input 
-                              type="text" 
-                              placeholder="MM/YY" 
-                              value="12/28"
-                              readOnly
-                              className="w-full px-6 py-4 bg-gray-800/50 border border-gray-700/50 rounded-2xl text-white font-bold text-sm focus:outline-none cursor-not-allowed"
-                            />
-                          </div>
-                          <div className="grid gap-2">
-                            <label className="text-[10px] font-black text-gray-500 uppercase tracking-[0.2em]">CVC</label>
-                            <input 
-                              type="text" 
-                              placeholder="123" 
-                              value="***"
-                              readOnly
-                              className="w-full px-6 py-4 bg-gray-800/50 border border-gray-700/50 rounded-2xl text-white font-bold text-sm focus:outline-none cursor-not-allowed"
-                            />
-                          </div>
-                       </div>
-                    </div>
-
-                    <div className="pt-6 border-t border-gray-800 space-y-4">
-                       <div className="flex justify-between items-center text-sm font-bold text-gray-400">
-                          <span>Subtotal</span>
-                          <span className="text-white">${(subtotal / 100).toFixed(2)}</span>
-                       </div>
-                       <div className="flex justify-between items-center text-sm font-bold text-gray-400">
-                          <span>Taxes</span>
-                          <span className="text-white">$0.00</span>
-                       </div>
-                       <div className="pt-4 border-t border-gray-800 flex justify-between items-center text-white">
-                          <span className="text-lg font-black uppercase tracking-tighter">Total Price</span>
-                          <span className="text-3xl font-black text-blue-400">${(subtotal / 100).toFixed(2)}</span>
-                       </div>
-                    </div>
-
-                    <Button 
-                      className="w-full h-16 bg-blue-600 hover:bg-blue-500 text-white rounded-[24px] font-black text-lg shadow-lg shadow-blue-900/50"
-                      onClick={handleCheckout}
-                      disabled={processing}
-                    >
-                      {processing ? "Processing..." : `Pay $${(subtotal / 100).toFixed(2)}`}
-                    </Button>
-                    
-                    <div className="flex items-center justify-center gap-2 text-[10px] font-black text-gray-600 uppercase tracking-widest">
-                       <ShieldCheck className="h-3 w-3" />
-                       Encrypted Payment
-                    </div>
-                 </CardContent>
+                  <CardContent className="p-8 space-y-6">
+                     {clientSecret ? (
+                        <Elements 
+                          stripe={stripePromise} 
+                          options={{ 
+                            clientSecret,
+                            appearance: {
+                              theme: 'night',
+                              variables: {
+                                colorPrimary: '#3b82f6',
+                              }
+                            }
+                          }}
+                        >
+                           <StripePaymentForm 
+                             amount={subtotal} 
+                             onSuccess={handlePaymentSuccess} 
+                             isLoading={processing}
+                           />
+                        </Elements>
+                     ) : (
+                        <div className="flex flex-col items-center justify-center py-12 gap-4 text-gray-500">
+                           <div className="h-8 w-8 border-2 border-blue-600 border-t-transparent rounded-full animate-spin" />
+                           <p className="text-xs font-bold uppercase tracking-widest">Enabling secure gateway...</p>
+                        </div>
+                     )}
+                  </CardContent>
               </Card>
            </div>
         </div>

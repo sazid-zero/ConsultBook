@@ -23,7 +23,7 @@ export async function getConsultantBookingData(consultantId: string) {
     
     // Transform schedules to simple object { monday: ['09:00', ...], ... }
     const availability: Record<string, string[]> = {};
-    schedules.forEach(s => {
+    schedules.forEach((s: any) => {
        if (s.isEnabled) {
          availability[s.dayOfWeek] = s.timeSlots || [];
        }
@@ -56,7 +56,7 @@ export async function getConsultantBookingData(consultantId: string) {
         consultationModes: profile?.consultationModes || ["video", "audio"],
       },
       availability,
-      bookedAppointments: bookedAppointments.map(a => ({
+      bookedAppointments: bookedAppointments.map((a: any) => ({
         date: a.date,
         time: a.time,
         duration: a.duration,
@@ -78,6 +78,7 @@ interface CreateAppointmentData {
   amount: number;
   notes?: string;
   paymentMethod?: string;
+  paymentStatus?: "pending" | "completed" | "refunded";
 }
 
 export async function createAppointment(data: CreateAppointmentData) {
@@ -97,7 +98,7 @@ export async function createAppointment(data: CreateAppointmentData) {
       mode: data.mode,
       amount: data.amount,
       status: "upcoming",
-      paymentStatus: "pending", // Or "completed" if handling payment instantly
+      paymentStatus: data.paymentStatus || "pending", 
       paymentMethod: data.paymentMethod,
       notes: data.notes,
       createdAt: new Date(), 

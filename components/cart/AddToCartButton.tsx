@@ -3,6 +3,8 @@
 import { Button } from "@/components/ui/button"
 import { ShoppingCart } from "lucide-react"
 import { toast } from "sonner"
+import { useAuth } from "@/lib/auth-context"
+import { useRouter, usePathname } from "next/navigation"
 
 interface AddToCartButtonProps {
   item: {
@@ -19,7 +21,17 @@ interface AddToCartButtonProps {
 }
 
 export function AddToCartButton({ item, variant = "default", className, children, disabled }: AddToCartButtonProps) {
+  const { user } = useAuth()
+  const router = useRouter()
+  const pathname = usePathname()
+
   const addToCart = () => {
+    if (!user) {
+      toast.error("Please login to add items to your cart")
+      router.push(`/login?redirect=${pathname}`)
+      return
+    }
+
     const savedCart = localStorage.getItem("consultbook_cart")
     let cart = savedCart ? JSON.parse(savedCart) : []
     
