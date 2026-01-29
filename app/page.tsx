@@ -91,7 +91,7 @@ export default function HomePage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
             {/* Left - Professional Clean Mockup */}
-            <div className="relative h-96 lg:h-full min-h-96 flex items-center justify-center">
+            <div className="relative h-96 lg:h-full min-h-96 flex items-center justify-center overflow-hidden pointer-events-none shadow-2xl">
               <div className="relative w-full h-full bg-white rounded-2xl shadow-2xl overflow-hidden border border-gray-200 group">
                 {/* Header */}
                 <div className="bg-gradient-to-r from-gray-50 to-white border-b border-gray-200 px-6 py-4 flex items-center justify-between">
