@@ -1,5 +1,7 @@
 "use client"
 
+import React from "react"
+
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -120,7 +122,7 @@ export default function HomePage() {
                   {/* Consultant 1 */}
                   <div className="px-6 py-4 border-b border-gray-100 hover:bg-gray-50 transition-colors cursor-pointer group/card">
                     <div className="flex items-start gap-4">
-                      <img src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=48&h=48&fit=crop" alt="Fatima Ahmed" className="w-12 h-12 rounded-full object-cover flex-shrink-0" />
+                      <img src="https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=128&h=128&fit=crop" alt="Fatima Ahmed" className="w-12 h-12 rounded-full object-cover flex-shrink-0" />
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center justify-between gap-2 mb-1">
                           <h4 className="font-semibold text-gray-900 text-sm">Fatima Ahmed</h4>
@@ -141,7 +143,7 @@ export default function HomePage() {
                   {/* Consultant 2 */}
                   <div className="px-6 py-4 border-b border-gray-100 hover:bg-gray-50 transition-colors cursor-pointer group/card">
                     <div className="flex items-start gap-4">
-                      <img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=48&h=48&fit=crop" alt="Anik Islam" className="w-12 h-12 rounded-full object-cover flex-shrink-0" />
+                      <img src="https://images.unsplash.com/photo-1556157382-97eda2d62296?w=128&h=128&fit=crop" alt="Anik Islam" className="w-12 h-12 rounded-full object-cover flex-shrink-0" />
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center justify-between gap-2 mb-1">
                           <h4 className="font-semibold text-gray-900 text-sm">Anik Islam</h4>
@@ -162,7 +164,7 @@ export default function HomePage() {
                   {/* Consultant 3 */}
                   <div className="px-6 py-4 border-b border-gray-100 hover:bg-gray-50 transition-colors cursor-pointer group/card ">
                     <div className="flex items-start gap-4">
-                      <img src="https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=48&h=48&fit=crop" alt="Priya Chakraborty" className="w-12 h-12 rounded-full object-cover flex-shrink-0" />
+                      <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSExB73QWelAdzbMJ-YbNAf8UHq-ZZaLhqZcA&s" alt="Priya Chakraborty" className="w-12 h-12 rounded-full object-cover flex-shrink-0" />
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center justify-between gap-2 mb-1">
                           <h4 className="font-semibold text-gray-900 text-sm">Priya Chakraborty</h4>
@@ -265,7 +267,7 @@ export default function HomePage() {
               <div className="p-6">
                 <div className="flex items-start justify-between mb-4">
                   <div>
-                    <img src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=64&h=64&fit=crop" alt="Fatima Ahmed" className="w-16 h-16 rounded-full border-4 border-blue-100 shadow-lg object-cover" />
+                    <img src="https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=128&h=128&fit=crop" alt="Fatima Ahmed" className="w-16 h-16 rounded-full border-4 border-blue-100 shadow-lg object-cover" />
                   </div>
                   <div className="flex items-center gap-1 bg-yellow-50 px-2 py-1 rounded-lg">
                     <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
@@ -312,7 +314,7 @@ export default function HomePage() {
               <div className="p-6">
                 <div className="flex items-start justify-between mb-4">
                   <div>
-                    <img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=64&h=64&fit=crop" alt="Anik Islam" className="w-16 h-16 rounded-full border-4 border-indigo-100 shadow-lg object-cover" />
+                    <img src="https://images.unsplash.com/photo-1556157382-97eda2d62296?w=128&h=128&fit=crop" alt="Anik Islam" className="w-16 h-16 rounded-full border-4 border-indigo-100 shadow-lg object-cover" />
                   </div>
                   <div className="flex items-center gap-1 bg-yellow-50 px-2 py-1 rounded-lg">
                     <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
@@ -359,7 +361,7 @@ export default function HomePage() {
               <div className="p-6">
                 <div className="flex items-start justify-between mb-4">
                   <div>
-                    <img src="https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=64&h=64&fit=crop" alt="Priya Chakraborty" className="w-16 h-16 rounded-full border-4 border-purple-100 shadow-lg object-cover" />
+                    <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSExB73QWelAdzbMJ-YbNAf8UHq-ZZaLhqZcA&s" alt="Priya Chakraborty" className="w-16 h-16 rounded-full border-4 border-purple-100 shadow-lg object-cover" />
                   </div>
                   <div className="flex items-center gap-1 bg-yellow-50 px-2 py-1 rounded-lg">
                     <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
@@ -594,9 +596,9 @@ export default function HomePage() {
                 <div className="flex items-center justify-between pt-6 border-t border-gray-50">
                    <div className="flex items-center gap-2">
                      <div className="w-8 h-8 rounded-full bg-gray-100 overflow-hidden">
-                       <img src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=32&h=32&fit=crop" alt="Author" />
+                       <img src="https://technicalraju.com/wp-content/uploads/2024/07/Muslim-Beautiful-Girl-Pic-and-Hijab-Girl-Pic-for-Profile-Sample-1024x1024.jpg" alt="Author" />
                      </div>
-                     <span className="text-sm font-bold text-gray-700">Sarah Drasner</span>
+                     <span className="text-sm font-bold text-gray-700">Fatima Ahmed</span>
                    </div>
                    <div className="flex items-center gap-1">
                      <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
@@ -625,9 +627,9 @@ export default function HomePage() {
                 <div className="flex items-center justify-between pt-6 border-t border-gray-50">
                    <div className="flex items-center gap-2">
                      <div className="w-8 h-8 rounded-full bg-gray-100 overflow-hidden">
-                       <img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=32&h=32&fit=crop" alt="Author" />
+                       <img src="https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?w=64&h=64&fit=crop" alt="Author" />
                      </div>
-                     <span className="text-sm font-bold text-gray-700">Marcus Aurelius</span>
+                     <span className="text-sm font-bold text-gray-700">Rohan Hasan</span>
                    </div>
                    <div className="flex items-center gap-1">
                      <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
@@ -656,9 +658,9 @@ export default function HomePage() {
                 <div className="flex items-center justify-between pt-6 border-t border-gray-50">
                    <div className="flex items-center gap-2">
                      <div className="w-8 h-8 rounded-full bg-gray-100 overflow-hidden">
-                       <img src="https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=32&h=32&fit=crop" alt="Author" />
+                       <img src="https://images.unsplash.com/photo-1589386417686-0d34b5903d23?w=64&h=64&fit=crop" alt="Author" />
                      </div>
-                     <span className="text-sm font-bold text-gray-700">Elena Gilbert</span>
+                     <span className="text-sm font-bold text-gray-700">Zarif Hussain</span>
                    </div>
                    <div className="flex items-center gap-1">
                      <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
@@ -726,8 +728,10 @@ export default function HomePage() {
                        </div>
                        <h4 className="text-xl font-black text-gray-900 mb-2">Public Speaking for Introverts</h4>
                        <div className="flex items-center gap-2">
-                          <div className="w-8 h-8 rounded-full bg-gray-200" />
-                          <span className="text-sm font-bold text-gray-600">with John Maxwell</span>
+                          <div className="w-8 h-8 rounded-full bg-gray-200 overflow-hidden">
+                             <img src="https://images.unsplash.com/photo-1573497019940-1c28c88b4f3e?w=64&h=64&fit=crop" alt="Dr. Sameer Khan" />
+                          </div>
+                          <span className="text-sm font-bold text-gray-600">with Dr. Sameera</span>
                        </div>
                     </div>
                  </div>
@@ -827,13 +831,18 @@ export default function HomePage() {
                      </div>
                      <div className="space-y-6">
                         <div className="flex gap-4">
-                           <div className="w-12 h-12 rounded-full bg-blue-600 animate-pulse" />
+                           <div className="w-12 h-12 rounded-full bg-blue-600 overflow-hidden flex-shrink-0 relative">
+                              <img src="https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=128&h=128&fit=crop" alt="Fatima" className="w-full h-full object-cover" />
+                              <div className="absolute inset-0 ring-1 ring-blue-500/20 rounded-full" />
+                           </div>
                            <div className="flex-1 bg-white p-4 rounded-2xl rounded-tl-none shadow-sm border border-gray-100 italic text-gray-500 text-sm">
                               "Hi Akash! I've uploaded the strategy roadmap to our chat. Let's discuss it during our call tomorrow."
                            </div>
                         </div>
                         <div className="flex gap-4 flex-row-reverse">
-                           <div className="w-12 h-12 rounded-full bg-indigo-600" />
+                           <div className="w-12 h-12 rounded-full bg-indigo-600 overflow-hidden flex-shrink-0">
+                              <img src="https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=128&h=128&fit=crop" alt="Akash" className="w-full h-full object-cover" />
+                           </div>
                            <div className="flex-1 bg-blue-600 p-4 rounded-2xl rounded-tr-none shadow-sm text-white text-sm font-medium">
                               "Perfect! Just reviewed it. The growth projections look incredible. Can't wait!"
                            </div>
@@ -949,7 +958,7 @@ export default function HomePage() {
                     <div className="flex items-start justify-between mb-5">
                       <div className="flex items-start gap-4">
                         <div className="relative">
-                          <img src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=56&h=56&fit=crop" alt="Fatima Ahmed" className="w-14 h-14 rounded-full object-cover ring-4 ring-indigo-50" />
+                          <img src="https://technicalraju.com/wp-content/uploads/2024/07/Muslim-Beautiful-Girl-Pic-and-Hijab-Girl-Pic-for-Profile-Sample-1024x1024.jpg" alt="Fatima Ahmed" className="w-14 h-14 rounded-full object-cover ring-4 ring-indigo-50" />
                           <div className="absolute -bottom-1 -right-1 w-5 h-5 bg-green-500 rounded-full border-2 border-white"></div>
                         </div>
                         <div>
@@ -1003,7 +1012,7 @@ export default function HomePage() {
                     <div className="flex items-start justify-between mb-5">
                       <div className="flex items-start gap-4">
                         <div className="relative">
-                          <img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=56&h=56&fit=crop" alt="Anik Islam" className="w-14 h-14 rounded-full object-cover ring-4 ring-purple-50" />
+                          <img src="https://img.freepik.com/premium-photo/engaging-lifestyle-photograph-capturing-modern-young-indian-man_948023-4921.jpg?semt=ais_user_personalization&w=740&q=80" alt="Anik Islam" className="w-14 h-14 rounded-full object-cover ring-4 ring-purple-50" />
                           <div className="absolute -bottom-1 -right-1 w-5 h-5 bg-gray-400 rounded-full border-2 border-white"></div>
                         </div>
                         <div>
@@ -1175,7 +1184,7 @@ export default function HomePage() {
               </p>
               <div className="flex items-center gap-4">
                 <div className="w-14 h-14 bg-gradient-to-br from-blue-400 to-blue-600 rounded-full flex items-center justify-center text-white font-bold text-lg">
-                  <img src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=56&h=56&fit=crop" alt="Saira Begum" className="w-full h-full rounded-full object-cover" />
+                  <img src="https://images.unsplash.com/photo-1488426862026-3ee34a7d66df?w=128&h=128&fit=crop" alt="Saira Begum" className="w-full h-full rounded-full object-cover" />
                 </div>
                 <div>
                 <p className="font-semibold text-gray-900">Saira Begum</p>
@@ -1196,7 +1205,7 @@ export default function HomePage() {
               </p>
               <div className="flex items-center gap-4">
                 <div className="w-14 h-14 bg-gradient-to-br from-indigo-400 to-indigo-600 rounded-full flex items-center justify-center text-white font-bold text-lg">
-                  <img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=56&h=56&fit=crop" alt="Ashraf Rahman" className="w-full h-full rounded-full object-cover" />
+                  <img src="https://images.unsplash.com/photo-1522529599102-193c0d76b5b6?w=128&h=128&fit=crop" alt="Ashraf Rahman" className="w-full h-full rounded-full object-cover" />
                 </div>
                 <div>
                 <p className="font-semibold text-gray-900">Ashraf Rahman</p>
@@ -1217,7 +1226,7 @@ export default function HomePage() {
               </p>
               <div className="flex items-center gap-4">
                 <div className="w-14 h-14 bg-gradient-to-br from-purple-400 to-purple-600 rounded-full flex items-center justify-center text-white font-bold text-lg">
-                  <img src="https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=56&h=56&fit=crop" alt="Nadia Khan" className="w-full h-full rounded-full object-cover" />
+                  <img src="https://images.unsplash.com/photo-1551836022-d5d88e9218df?w=128&h=128&fit=crop" alt="Nadia Khan" className="w-full h-full rounded-full object-cover" />
                 </div>
                 <div>
                 <p className="font-semibold text-gray-900">Nadia Khan</p>
