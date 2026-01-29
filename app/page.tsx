@@ -24,12 +24,12 @@ export default function HomePage() {
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
 
       {/* Hero Section */}
-      <section className="relative h-[calc(100vh-64px)] items-center flex justify-center overflow-hidden">
+      <section className="relative h-[calc(100vh-64px)] items-center flex justify-center overflow-hidden isolate">
         <div 
-          className="absolute inset-0 bg-cover bg-center bg-no-repeat transition-transform duration-1000"
+          className="absolute inset-0 bg-cover bg-center bg-no-repeat transition-transform duration-1000 will-change-transform translate-z-0"
           style={{ backgroundImage: "url('/images/hero-bg.png')" }}
         />
-        <div className="absolute inset-0 bg-black/60 backdrop-blur-[2px]" />
+        <div className="absolute inset-0 bg-black/60 backdrop-blur-[1px] translate-z-0" />
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 text-center">
           <Badge className="mb-6 bg-white/10 text-white border-white/20 hover:bg-white/20 transition-colors px-4 py-1.5 text-sm font-bold rounded-full shadow-sm">
             v3.0 Now Live — The Expert Ecosystem
@@ -200,7 +200,7 @@ export default function HomePage() {
 
               <div className="grid grid-cols-2 gap-6">
                 {/* Stat 1 */}
-                <div className="group bg-white rounded-2xl p-6 border border-gray-200 hover:border-blue-300 hover:shadow-lg transition-all duration-300 hover:-translate-y-1">
+                <div className="group bg-white rounded-2xl p-6 border border-gray-200 hover:border-blue-300 hover:shadow-lg transition-all duration-300 hover:-translate-y-1 will-change-transform translate-z-0">
                   <div className="flex items-start justify-between mb-4">
                     <div className="p-3 bg-blue-100 rounded-lg group-hover:bg-blue-600 transition-all duration-300">
                       <TrendingUp className="h-6 w-6 text-blue-600 group-hover:text-white transition-colors" />
@@ -212,7 +212,7 @@ export default function HomePage() {
                 </div>
 
                 {/* Stat 2 */}
-                <div className="group bg-white rounded-2xl p-6 border border-gray-200 hover:border-indigo-300 hover:shadow-lg transition-all duration-300 hover:-translate-y-1">
+                <div className="group bg-white rounded-2xl p-6 border border-gray-200 hover:border-blue-300 hover:shadow-lg transition-all duration-300 hover:-translate-y-1 will-change-transform translate-z-0">
                   <div className="flex items-start justify-between mb-4">
                     <div className="p-3 bg-indigo-100 rounded-lg group-hover:bg-indigo-600 transition-all duration-300">
                       <Users className="h-6 w-6 text-indigo-600 group-hover:text-white transition-colors" />
@@ -224,7 +224,7 @@ export default function HomePage() {
                 </div>
 
                 {/* Stat 3 */}
-                <div className="group bg-white rounded-2xl p-6 border border-gray-200 hover:border-green-300 hover:shadow-lg transition-all duration-300 hover:-translate-y-1">
+                <div className="group bg-white rounded-2xl p-6 border border-gray-200 hover:border-green-300 hover:shadow-lg transition-all duration-300 hover:-translate-y-1 will-change-transform translate-z-0">
                   <div className="flex items-start justify-between mb-4">
                     <div className="p-3 bg-green-100 rounded-lg group-hover:bg-green-600 transition-all duration-300">
                       <Calendar className="h-6 w-6 text-green-600 group-hover:text-white transition-colors" />
@@ -236,7 +236,7 @@ export default function HomePage() {
                 </div>
 
                 {/* Stat 4 */}
-                <div className="group bg-white rounded-2xl p-6 border border-gray-200 hover:border-yellow-300 hover:shadow-lg transition-all duration-300 hover:-translate-y-1">
+                <div className="group bg-white rounded-2xl p-6 border border-gray-200 hover:border-yellow-300 hover:shadow-lg transition-all duration-300 hover:-translate-y-1 will-change-transform translate-z-0">
                   <div className="flex items-start justify-between mb-4">
                     <div className="p-3 bg-yellow-100 rounded-lg group-hover:bg-yellow-600 transition-all duration-300">
                       <Award className="h-6 w-6 text-yellow-600 group-hover:text-yellow-400 transition-colors" />
@@ -263,7 +263,7 @@ export default function HomePage() {
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
             {/* Consultant Card 1 */}
-            <div className="group bg-white rounded-2xl overflow-hidden border border-gray-200 hover:border-blue-300 hover:shadow-2xl transition-all duration-300 hover:-translate-y-2">
+            <div className="group bg-white rounded-2xl overflow-hidden border border-gray-200 hover:border-blue-300 hover:shadow-2xl transition-all duration-300 hover:-translate-y-2 will-change-transform translate-z-0">
               <div className="p-6">
                 <div className="flex items-start justify-between mb-4">
                   <div>
@@ -310,7 +310,7 @@ export default function HomePage() {
             </div>
 
             {/* Consultant Card 2 */}
-            <div className="group bg-white rounded-2xl overflow-hidden border border-gray-200 hover:border-indigo-300 hover:shadow-2xl transition-all duration-300 hover:-translate-y-2">
+            <div className="group bg-white rounded-2xl overflow-hidden border border-gray-200 hover:border-indigo-300 hover:shadow-2xl transition-all duration-300 hover:-translate-y-2 will-change-transform translate-z-0">
               <div className="p-6">
                 <div className="flex items-start justify-between mb-4">
                   <div>
@@ -357,7 +357,7 @@ export default function HomePage() {
             </div>
 
             {/* Consultant Card 3 */}
-            <div className="group bg-white rounded-2xl overflow-hidden border border-gray-200 hover:border-purple-300 hover:shadow-2xl transition-all duration-300 hover:-translate-y-2">
+            <div className="group bg-white rounded-2xl overflow-hidden border border-gray-200 hover:border-purple-300 hover:shadow-2xl transition-all duration-300 hover:-translate-y-2 will-change-transform translate-z-0">
               <div className="p-6">
                 <div className="flex items-start justify-between mb-4">
                   <div>
@@ -578,7 +578,7 @@ export default function HomePage() {
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {/* Project Mock: Product 1 */}
-            <div className="group bg-white rounded-3xl border border-gray-100 overflow-hidden hover:shadow-2xl hover:shadow-blue-100/50 transition-all duration-500 hover:-translate-y-2">
+            <div className="group bg-white rounded-3xl border border-gray-100 overflow-hidden hover:shadow-2xl hover:shadow-blue-100/50 transition-all duration-500 hover:-translate-y-2 will-change-transform translate-z-0">
               <div className="aspect-[4/3] bg-gray-200 relative overflow-hidden">
                 <img 
                   src="https://images.unsplash.com/photo-1553481187-be93c21490a9?w=600&h=450&fit=crop" 
@@ -609,7 +609,7 @@ export default function HomePage() {
             </div>
 
             {/* Project Mock: Product 2 */}
-            <div className="group bg-white rounded-3xl border border-gray-100 overflow-hidden hover:shadow-2xl hover:shadow-blue-100/50 transition-all duration-500 hover:-translate-y-2">
+            <div className="group bg-white rounded-3xl border border-gray-100 overflow-hidden hover:shadow-2xl hover:shadow-blue-100/50 transition-all duration-500 hover:-translate-y-2 will-change-transform translate-z-0">
               <div className="aspect-[4/3] bg-gray-200 relative overflow-hidden">
                 <img 
                   src="https://images.unsplash.com/photo-1587620962725-abab7fe55159?w=600&h=450&fit=crop" 
@@ -640,7 +640,7 @@ export default function HomePage() {
             </div>
 
             {/* Project Mock: Product 3 */}
-            <div className="group bg-white rounded-3xl border border-gray-100 overflow-hidden hover:shadow-2xl hover:shadow-blue-100/50 transition-all duration-500 hover:-translate-y-2">
+            <div className="group bg-white rounded-3xl border border-gray-100 overflow-hidden hover:shadow-2xl hover:shadow-blue-100/50 transition-all duration-500 hover:-translate-y-2 will-change-transform translate-z-0">
               <div className="aspect-[4/3] bg-gray-200 relative overflow-hidden">
                 <img 
                   src="https://plus.unsplash.com/premium_photo-1661719191032-79c57f9b11e6?q=80&w=1170&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D" 
@@ -674,8 +674,8 @@ export default function HomePage() {
       </section>
 
       {/* NEW: Live Masterclasses Section */}
-      <section className="py-24 bg-white overflow-hidden relative">
-        <div className="absolute top-1/2 left-0 -translate-y-1/2 w-96 h-96 bg-blue-100/40 rounded-full blur-[120px] -z-1" />
+      <section className="py-24 bg-white overflow-hidden relative isolate">
+        <div className="absolute top-1/2 left-0 -translate-y-1/2 w-96 h-96 bg-blue-100/40 rounded-full blur-[80px] -z-1 translate-z-0 will-change-[filter]" />
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
             <div>
@@ -742,7 +742,7 @@ export default function HomePage() {
       </section>
 
       {/* NEW: Global Command Feature */}
-      <section className="py-24 bg-gray-950 text-white overflow-hidden relative">
+      <section className="py-24 bg-gray-950 text-white overflow-hidden relative isolate">
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_0%,rgba(59,130,246,0.15),transparent)] pointer-events-none" />
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
           <div className="text-center mb-16">
@@ -764,7 +764,7 @@ export default function HomePage() {
               </div>
 
               {/* Mock Command Dialog */}
-              <div className="bg-[#1c1c1c] border border-white/10 rounded-[2rem] shadow-[0_0_80px_rgba(0,0,0,0.5)] overflow-hidden transition-all group-hover:border-blue-500/30">
+              <div className="bg-[#1c1c1c] border border-white/10 rounded-[2rem] shadow-[0_0_80px_rgba(0,0,0,0.5)] overflow-hidden transition-all group-hover:border-blue-500/30 will-change-transform translate-z-0">
                 <div className="px-6 py-5 border-b border-white/5 flex items-center gap-4">
                   <Search className="h-5 w-5 text-gray-500" />
                   <span className="text-lg text-gray-500 font-medium">Search for consultants, products, or commands...</span>
@@ -825,7 +825,7 @@ export default function HomePage() {
          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-20 items-center">
                <div className="order-2 lg:order-1 relative">
-                  <div className="relative bg-gray-50 rounded-[3rem] p-10 border border-gray-100 shadow-2xl">
+                  <div className="relative bg-gray-50 rounded-[3rem] p-10 border border-gray-100 shadow-2xl isolate will-change-transform translate-z-0">
                      <div className="absolute -top-6 -right-6 bg-blue-600 text-white p-4 rounded-full shadow-2xl animate-bounce">
                         <MessageCircle className="h-8 w-8" />
                      </div>
@@ -888,7 +888,7 @@ export default function HomePage() {
             <p className="text-xl text-gray-600 max-w-2xl mx-auto">Track appointments, access your library, and stay connected with your experts</p>
           </div>
 
-          <div className="bg-white border border-gray-200 rounded-3xl overflow-hidden shadow-2xl">
+          <div className="bg-white border border-gray-200 rounded-3xl overflow-hidden shadow-2xl isolate will-change-transform translate-z-0">
             {/* Dashboard Header */}
             <div className="bg-gradient-to-r from-indigo-600 via-purple-600 to-blue-600 px-8 py-8">
               <div className="flex items-center justify-between">
