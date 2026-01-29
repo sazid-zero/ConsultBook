@@ -200,7 +200,7 @@ export default function HomePage() {
 
               <div className="grid grid-cols-2 gap-6">
                 {/* Stat 1 */}
-                <div className="group bg-white rounded-2xl p-6 border border-gray-200 hover:border-blue-300 hover:shadow-lg transition-all duration-300 hover:-translate-y-1 will-change-transform translate-z-0">
+                <div className="group bg-gradient-to-br from-white to-blue-50 rounded-2xl p-6 border border-blue-100 hover:border-blue-300 shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1 will-change-transform translate-z-0">
                   <div className="flex items-start justify-between mb-4">
                     <div className="p-3 bg-blue-100 rounded-lg group-hover:bg-blue-600 transition-all duration-300">
                       <TrendingUp className="h-6 w-6 text-blue-600 group-hover:text-white transition-colors" />
@@ -212,7 +212,7 @@ export default function HomePage() {
                 </div>
 
                 {/* Stat 2 */}
-                <div className="group bg-white rounded-2xl p-6 border border-gray-200 hover:border-blue-300 hover:shadow-lg transition-all duration-300 hover:-translate-y-1 will-change-transform translate-z-0">
+                <div className="group bg-gradient-to-br from-white to-indigo-50 rounded-2xl p-6 border border-indigo-100 hover:border-indigo-300 shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1 will-change-transform translate-z-0">
                   <div className="flex items-start justify-between mb-4">
                     <div className="p-3 bg-indigo-100 rounded-lg group-hover:bg-indigo-600 transition-all duration-300">
                       <Users className="h-6 w-6 text-indigo-600 group-hover:text-white transition-colors" />
@@ -224,7 +224,7 @@ export default function HomePage() {
                 </div>
 
                 {/* Stat 3 */}
-                <div className="group bg-white rounded-2xl p-6 border border-gray-200 hover:border-green-300 hover:shadow-lg transition-all duration-300 hover:-translate-y-1 will-change-transform translate-z-0">
+                <div className="group bg-gradient-to-br from-white to-green-50 rounded-2xl p-6 border border-green-100 hover:border-green-300 shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1 will-change-transform translate-z-0">
                   <div className="flex items-start justify-between mb-4">
                     <div className="p-3 bg-green-100 rounded-lg group-hover:bg-green-600 transition-all duration-300">
                       <Calendar className="h-6 w-6 text-green-600 group-hover:text-white transition-colors" />
@@ -236,7 +236,7 @@ export default function HomePage() {
                 </div>
 
                 {/* Stat 4 */}
-                <div className="group bg-white rounded-2xl p-6 border border-gray-200 hover:border-yellow-300 hover:shadow-lg transition-all duration-300 hover:-translate-y-1 will-change-transform translate-z-0">
+                <div className="group bg-gradient-to-br from-white to-yellow-50 rounded-2xl p-6 border border-yellow-100 hover:border-yellow-300 shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1 will-change-transform translate-z-0">
                   <div className="flex items-start justify-between mb-4">
                     <div className="p-3 bg-yellow-100 rounded-lg group-hover:bg-yellow-600 transition-all duration-300">
                       <Award className="h-6 w-6 text-yellow-600 group-hover:text-yellow-400 transition-colors" />
@@ -263,7 +263,7 @@ export default function HomePage() {
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
             {/* Consultant Card 1 */}
-            <div className="group bg-white rounded-2xl overflow-hidden border border-gray-200 hover:border-blue-300 hover:shadow-2xl transition-all duration-300 hover:-translate-y-2 will-change-transform translate-z-0">
+            <div className="group bg-gradient-to-br from-white to-blue-50/50 rounded-2xl overflow-hidden border border-gray-200 hover:border-blue-300 shadow-xl hover:shadow-2xl transition-all duration-300 hover:-translate-y-2 will-change-transform translate-z-0">
               <div className="p-6">
                 <div className="flex items-start justify-between mb-4">
                   <div>
@@ -310,7 +310,7 @@ export default function HomePage() {
             </div>
 
             {/* Consultant Card 2 */}
-            <div className="group bg-white rounded-2xl overflow-hidden border border-gray-200 hover:border-indigo-300 hover:shadow-2xl transition-all duration-300 hover:-translate-y-2 will-change-transform translate-z-0">
+            <div className="group bg-gradient-to-br from-white to-indigo-50/50 rounded-2xl overflow-hidden border border-gray-200 hover:border-indigo-300 shadow-xl hover:shadow-2xl transition-all duration-300 hover:-translate-y-2 will-change-transform translate-z-0">
               <div className="p-6">
                 <div className="flex items-start justify-between mb-4">
                   <div>
@@ -357,7 +357,7 @@ export default function HomePage() {
             </div>
 
             {/* Consultant Card 3 */}
-            <div className="group bg-white rounded-2xl overflow-hidden border border-gray-200 hover:border-purple-300 hover:shadow-2xl transition-all duration-300 hover:-translate-y-2 will-change-transform translate-z-0">
+            <div className="group bg-gradient-to-br from-white to-purple-50/50 rounded-2xl overflow-hidden border border-gray-200 hover:border-purple-300 shadow-xl hover:shadow-2xl transition-all duration-300 hover:-translate-y-2 will-change-transform translate-z-0">
               <div className="p-6">
                 <div className="flex items-start justify-between mb-4">
                   <div>
@@ -578,7 +578,7 @@ export default function HomePage() {
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {/* Project Mock: Product 1 */}
-            <div className="group bg-white rounded-3xl border border-gray-100 overflow-hidden hover:shadow-2xl hover:shadow-blue-100/50 transition-all duration-500 hover:-translate-y-2 will-change-transform translate-z-0">
+            <div className="group bg-gradient-to-br from-white to-indigo-50/30 rounded-3xl border border-gray-100 overflow-hidden shadow-lg hover:shadow-2xl hover:shadow-blue-100/50 transition-all duration-500 hover:-translate-y-2 will-change-transform translate-z-0">
               <div className="aspect-[4/3] bg-gray-200 relative overflow-hidden">
                 <img 
                   src="https://images.unsplash.com/photo-1553481187-be93c21490a9?w=600&h=450&fit=crop" 
@@ -609,7 +609,7 @@ export default function HomePage() {
             </div>
 
             {/* Project Mock: Product 2 */}
-            <div className="group bg-white rounded-3xl border border-gray-100 overflow-hidden hover:shadow-2xl hover:shadow-blue-100/50 transition-all duration-500 hover:-translate-y-2 will-change-transform translate-z-0">
+            <div className="group bg-gradient-to-br from-white to-blue-50/30 rounded-3xl border border-gray-100 overflow-hidden shadow-lg hover:shadow-2xl hover:shadow-blue-100/50 transition-all duration-500 hover:-translate-y-2 will-change-transform translate-z-0">
               <div className="aspect-[4/3] bg-gray-200 relative overflow-hidden">
                 <img 
                   src="https://images.unsplash.com/photo-1587620962725-abab7fe55159?w=600&h=450&fit=crop" 
@@ -640,7 +640,7 @@ export default function HomePage() {
             </div>
 
             {/* Project Mock: Product 3 */}
-            <div className="group bg-white rounded-3xl border border-gray-100 overflow-hidden hover:shadow-2xl hover:shadow-blue-100/50 transition-all duration-500 hover:-translate-y-2 will-change-transform translate-z-0">
+            <div className="group bg-gradient-to-br from-white to-purple-50/30 rounded-3xl border border-gray-100 overflow-hidden shadow-lg hover:shadow-2xl hover:shadow-blue-100/50 transition-all duration-500 hover:-translate-y-2 will-change-transform translate-z-0">
               <div className="aspect-[4/3] bg-gray-200 relative overflow-hidden">
                 <img 
                   src="https://plus.unsplash.com/premium_photo-1661719191032-79c57f9b11e6?q=80&w=1170&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D" 
