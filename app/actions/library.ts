@@ -27,7 +27,7 @@ export async function getProducts(filters?: { consultantId?: string, type?: stri
   }
 }
 
-export async function getProduct(id: string) {
+export async function getProduct(id: string, clientId?: string) {
   try {
     console.log("Fetching product with ID:", id)
     const product = await pgDb.query.products.findFirst({
@@ -43,10 +43,54 @@ export async function getProduct(id: string) {
     })
 
     if (!product) return { success: false, error: "Product not found" }
-    return { success: true, data: product }
+
+    let isOwned = false
+    if (clientId) {
+      if (product.consultantId === clientId) {
+        isOwned = true
+      } else {
+        const order = await pgDb.query.productOrders.findFirst({
+          where: and(
+            eq(productOrders.productId, id),
+            eq(productOrders.clientId, clientId),
+            eq(productOrders.status, "completed")
+          )
+        })
+        if (order) isOwned = true
+      }
+    }
+
+    return { 
+      success: true, 
+      data: { ...product, isOwned } 
+    }
   } catch (error) {
     console.error("Error fetching product:", error)
     return { success: false, error: "Failed to fetch product" }
+  }
+}
+
+export async function isProductOwned(productId: string, clientId: string) {
+  try {
+    const product = await pgDb.query.products.findFirst({
+      where: eq(products.id, productId)
+    })
+
+    if (!product) return false
+    if (product.consultantId === clientId) return true
+
+    const order = await pgDb.query.productOrders.findFirst({
+      where: and(
+        eq(productOrders.productId, productId),
+        eq(productOrders.clientId, clientId),
+        eq(productOrders.status, "completed")
+      )
+    })
+
+    return !!order
+  } catch (error) {
+    console.error("Error checking product ownership:", error)
+    return false
   }
 }
 

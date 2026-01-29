@@ -13,7 +13,8 @@ import {
   Star, 
   ShoppingCart,
   Filter,
-  Search
+  Search,
+  CheckCircle2
 } from "lucide-react"
 import Link from "next/link"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
@@ -27,18 +28,28 @@ export default function LibraryPage() {
   const [searchQuery, setSearchQuery] = useState("")
   const [selectedCategory, setSelectedCategory] = useState<string>("all")
   const [loading, setLoading] = useState(true)
+  const [ownedProductIds, setOwnedProductIds] = useState<Set<string>>(new Set())
 
   useEffect(() => {
-    async function loadProducts() {
-      const result = await getProducts({ publishedOnly: true })
-      if (result.success) {
-        setProducts(result.data || [])
-        setFilteredProducts(result.data || [])
+    async function loadData() {
+      const productResult = await getProducts({ publishedOnly: true })
+      if (productResult.success) {
+        setProducts(productResult.data || [])
+        setFilteredProducts(productResult.data || [])
+      }
+
+      if (userData?.uid) {
+        const { getUserOrders } = await import("@/app/actions/dashboard")
+        const orderResult = await getUserOrders(userData.uid)
+        if (orderResult.success) {
+          const ownedIds = new Set(orderResult.data?.map((o: any) => o.productId))
+          setOwnedProductIds(ownedIds)
+        }
       }
       setLoading(false)
     }
-    loadProducts()
-  }, [])
+    loadData()
+  }, [userData?.uid])
 
   // Scroll to top on mount
   useEffect(() => {
@@ -215,18 +226,26 @@ export default function LibraryPage() {
                       <span className="text-xs font-bold text-gray-400 line-through">${(product.price * 1.2 / 100).toFixed(2)}</span>
                       <span className="text-2xl font-black text-gray-900">${(product.price / 100).toFixed(2)}</span>
                     </div>
-                    <AddToCartButton 
-                      item={{
-                        id: product.id,
-                        title: product.title,
-                        price: product.price,
-                        type: product.type.replace('_', ' '),
-                        consultantName: product.consultant?.name || "Consultant"
-                      }}
-                      variant="icon"
-                      className="h-12 w-12 rounded-xl bg-gray-900 hover:bg-blue-600 shadow-lg transition-all group-hover:translate-x-1"
-                      disabled={userData?.uid === product.consultantId}
-                    />
+                    {ownedProductIds.has(product.id) ? (
+                      <div className="flex items-center gap-2 bg-green-50 px-4 py-2 rounded-xl border border-green-100">
+                        <CheckCircle2 className="h-4 w-4 text-green-600" />
+                        <span className="text-[10px] font-black text-green-700 uppercase tracking-widest">Owned</span>
+                      </div>
+                    ) : (
+                      <AddToCartButton 
+                        item={{
+                          id: product.id,
+                          title: product.title,
+                          price: product.price,
+                          type: product.type.replace('_', ' '),
+                          consultantName: product.consultant?.name || "Consultant"
+                        }}
+                        variant="icon"
+                        className="h-12 w-12 rounded-xl bg-gray-900 hover:bg-blue-600 shadow-lg transition-all group-hover:translate-x-1"
+                        disabled={userData?.uid === product.consultantId}
+                        isOwned={ownedProductIds.has(product.id)}
+                      />
+                    )}
                   </CardFooter>
                 </Card>
               </Link>

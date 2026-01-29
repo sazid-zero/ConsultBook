@@ -221,7 +221,8 @@ export default async function ProductDetailsPage({ params }: { params: Promise<{
                       price: product.price,
                       type: product.type.replace('_', ' '),
                       consultantId: product.consultantId,
-                      consultantName: product.consultant?.name || "Consultant"
+                      consultantName: product.consultant?.name || "Consultant",
+                      fileUrl: product.fileUrl
                     }}
                  />
 

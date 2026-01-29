@@ -12,7 +12,6 @@ interface WorkshopRegistrationActionsProps {
     isFull: boolean
     startDate: string | Date
     registrations: any[]
-
   }
 }
 
@@ -38,7 +37,6 @@ export function WorkshopRegistrationActions({ workshop }: WorkshopRegistrationAc
         </div>
       )}
 
-      
       {!isHost && !isRegistered && !isCompleted && (
         <Link href={workshop.isFull ? "#" : `/checkout?workshopId=${workshop.id}`} className="w-full">
           <Button 
@@ -62,15 +60,6 @@ export function WorkshopRegistrationActions({ workshop }: WorkshopRegistrationAc
             <p className="text-gray-400 font-black text-sm uppercase tracking-widest leading-tight">This session has <br/> concluded</p>
         </div>
       )}
-
-      <Link href={isHost || workshop.isFull ? "#" : `/checkout?workshopId=${workshop.id}`} className="w-full">
-        <Button 
-          className="w-full h-16 bg-blue-600 hover:bg-blue-700 text-white rounded-[24px] font-black text-lg shadow-2xl shadow-blue-200 transition-all hover:scale-[1.02] active:scale-[0.98] disabled:grayscale disabled:opacity-50"
-          disabled={workshop.isFull || isHost}
-        >
-          {workshop.isFull ? "Workshop Full" : "Book Spot Now"}
-        </Button>
-      </Link>
     </div>
   )
 }

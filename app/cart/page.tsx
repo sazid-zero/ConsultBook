@@ -18,20 +18,46 @@ import {
 } from "lucide-react"
 import Link from "next/link"
 import { toast } from "sonner"
+import { useAuth } from "@/lib/auth-context"
 
 export default function CartPage() {
   const router = useRouter()
   const [items, setItems] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
 
+  const { userData } = useAuth()
+
   useEffect(() => {
-    // Load items from localStorage (mock simple cart)
-    const savedCart = localStorage.getItem("consultbook_cart")
-    if (savedCart) {
-      setItems(JSON.parse(savedCart))
+    async function loadCartAndFilter() {
+      // Load items from localStorage
+      const savedCart = localStorage.getItem("consultbook_cart")
+      let currentItems = savedCart ? JSON.parse(savedCart) : []
+      
+      // If user is logged in, filter out owned items
+      if (userData?.uid) {
+        const { getUserOrders } = await import("@/app/actions/dashboard")
+        const orderResult = await getUserOrders(userData.uid)
+        
+        if (orderResult.success) {
+          const ownedIds = new Set(orderResult.data?.map((o: any) => o.productId))
+          
+          const filtered = currentItems.filter((item: any) => !ownedIds.has(item.id))
+          
+          if (filtered.length !== currentItems.length) {
+            toast.info("Some items were removed as you already own them")
+            localStorage.setItem("consultbook_cart", JSON.stringify(filtered))
+            window.dispatchEvent(new Event("cartUpdated"))
+          }
+          currentItems = filtered
+        }
+      }
+      
+      setItems(currentItems)
+      setLoading(false)
     }
-    setLoading(false)
-  }, [])
+    
+    loadCartAndFilter()
+  }, [userData?.uid])
 
   const removeItem = (id: string) => {
     const updated = items.filter(item => item.id !== id)

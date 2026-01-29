@@ -18,9 +18,10 @@ interface AddToCartButtonProps {
   className?: string
   children?: React.ReactNode
   disabled?: boolean
+  isOwned?: boolean
 }
 
-export function AddToCartButton({ item, variant = "default", className, children, disabled }: AddToCartButtonProps) {
+export function AddToCartButton({ item, variant = "default", className, children, disabled, isOwned }: AddToCartButtonProps) {
   const { user } = useAuth()
   const router = useRouter()
   const pathname = usePathname()
@@ -29,6 +30,11 @@ export function AddToCartButton({ item, variant = "default", className, children
     if (!user) {
       toast.error("Please login to add items to your cart")
       router.push(`/login?redirect=${pathname}`)
+      return
+    }
+
+    if (isOwned) {
+      toast.info("You already own this item")
       return
     }
 
@@ -56,7 +62,7 @@ export function AddToCartButton({ item, variant = "default", className, children
       <Button 
         size="icon" 
         className={className}
-        disabled={disabled}
+        disabled={disabled || isOwned}
         onClick={(e) => {
           e.preventDefault()
           e.stopPropagation()
@@ -71,8 +77,8 @@ export function AddToCartButton({ item, variant = "default", className, children
   return (
     <Button 
       variant={variant}
-      className={`${className} ${disabled ? 'grayscale opacity-70 cursor-not-allowed' : ''}`}
-      disabled={disabled}
+      className={`${className} ${(disabled || isOwned) ? 'grayscale opacity-70 cursor-not-allowed' : ''}`}
+      disabled={disabled || isOwned}
       onClick={(e) => {
         e.preventDefault()
         e.stopPropagation()

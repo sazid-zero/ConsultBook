@@ -19,7 +19,6 @@ import {
 } from "lucide-react"
 import Link from "next/link"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { AddToCartButton } from "@/components/cart/AddToCartButton"
 import { WorkshopRegistrationActions } from "@/components/marketplace/WorkshopRegistrationActions"
 import { notFound } from "next/navigation"
 import { ScrollFix } from "@/components/scroll-fix"

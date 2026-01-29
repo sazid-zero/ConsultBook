@@ -213,19 +213,27 @@ export default function SessionsPage() {
                      </div>
                      <div className="flex items-center gap-2">
                         <Link href={`/sessions/${ws.id}`}>
-                            <Button variant="outline" className="h-11 border-gray-200 rounded-2xl px-4 font-black text-[10px] uppercase tracking-widest transition-all hover:bg-gray-50">
+                            <Button variant="outline" className="h-11 border-gray-100 rounded-2xl px-4 font-black text-[10px] uppercase tracking-widest transition-all hover:bg-gray-50">
                                Details
                             </Button>
                          </Link>
-                         <Link href={ws.consultantId === userData?.uid ? "#" : `/checkout?workshopId=${ws.id}`}>
-                           <Button 
-                             className="h-11 bg-gray-900 hover:bg-blue-600 text-white rounded-2xl px-4 font-black text-[10px] uppercase tracking-widest shadow-xl transition-all hover:translate-x-1 disabled:grayscale disabled:opacity-70 disabled:cursor-not-allowed"
-                             disabled={ws.consultantId === userData?.uid || (ws.registrations?.length >= (ws.maxParticipants || 100))}
-                           >
-                              {ws.registrations?.length >= (ws.maxParticipants || 100) ? "Sold Out" : "Book Spot"}
-                              <ArrowRight className="ml-1.5 h-3.5 w-3.5" />
-                           </Button>
-                         </Link>
+                         
+                         {userData && ws.registrations?.some((r: any) => r.clientId === userData.uid) ? (
+                           <div className="flex items-center gap-2 bg-blue-50 px-4 py-2 rounded-2xl border border-blue-100">
+                             <CheckCircle2 className="h-4 w-4 text-blue-600" />
+                             <span className="text-[10px] font-black text-blue-700 uppercase tracking-widest">Registered</span>
+                           </div>
+                         ) : (
+                           <Link href={ws.consultantId === userData?.uid ? "#" : `/checkout?workshopId=${ws.id}`}>
+                             <Button 
+                               className="h-11 bg-gray-900 hover:bg-blue-600 text-white rounded-2xl px-4 font-black text-[10px] uppercase tracking-widest shadow-xl transition-all hover:translate-x-1 disabled:grayscale disabled:opacity-70 disabled:cursor-not-allowed"
+                               disabled={ws.consultantId === userData?.uid || (ws.registrations?.length >= (ws.maxParticipants || 100))}
+                             >
+                                {ws.registrations?.length >= (ws.maxParticipants || 100) ? "Sold Out" : "Book Spot"}
+                                <ArrowRight className="ml-1.5 h-3.5 w-3.5" />
+                             </Button>
+                           </Link>
+                         )}
                      </div>
                   </div>
                 </CardContent>

@@ -349,3 +349,30 @@ export async function getClientDashboardData(userId: string) {
     return null;
   }
 }
+
+export async function getUserOrders(clientId: string) {
+  try {
+    const orders = await db.select({
+      id: productOrders.id,
+      productId: productOrders.productId,
+      amount: productOrders.amount,
+      status: productOrders.status,
+      purchaseDate: productOrders.createdAt,
+      productTitle: products.title,
+      productType: products.type,
+      thumbnailUrl: products.thumbnailUrl,
+      fileUrl: products.fileUrl,
+      consultantName: users.name,
+    })
+    .from(productOrders)
+    .leftJoin(products, eq(productOrders.productId, products.id))
+    .leftJoin(users, eq(products.consultantId, users.uid))
+    .where(and(eq(productOrders.clientId, clientId), eq(productOrders.status, "completed")))
+    .orderBy(desc(productOrders.createdAt));
+
+    return { success: true, data: orders };
+  } catch (error) {
+    console.error("Error fetching user orders:", error);
+    return { success: false, error: "Failed to fetch orders" };
+  }
+}
