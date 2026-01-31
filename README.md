@@ -1,6 +1,6 @@
 # ConsultBook - The Ultimate Expert Consultation Platform
 
-![ConsultBook Hero](https://consultbook-demo.vercel.app/og-image.png)
+![ConsultBook Hero](/public/hero.png)
 
 ## 🚀 Introduction
 
@@ -80,10 +80,10 @@ Implementing the "Global Search" required harmonizing data from multiple dispara
 
 | | |
 |:-------------------------:|:-------------------------:|
-| **Landing Page** | **Consultant Profile** |
-| ![Landing](https://placehold.co/600x400?text=Landing+Page) | ![Profile](https://placehold.co/600x400?text=Consultant+Profile) |
-| **Booking Flow** | **Expert Dashboard** |
-| ![Booking](https://placehold.co/600x400?text=Booking+Flow) | ![Dashboard](https://placehold.co/600x400?text=Expert+Dashboard) |
+| **Landing Page** | **Sessions** |
+| ![Landing](/public/landing.jpeg) | ![Sessions](/public/sessions.jpeg) |
+| **Library** | **Consultant Profiles** |
+| ![Library](/public/library.jpeg) | ![Profile](/public/consultants.jpeg) |
 
 ---
 
@@ -132,6 +132,10 @@ To run this project locally:
 
 ## 📬 Contact
 
-**Saad** - [Your Portfolio Link] - [Your Email]
+For inquiries or collaboration opportunities, please reach out:
 
-*Built with ❤️ and ☕ by a passionate full-stack developer.*
+- **Portfolio**: [https://my-portfolio-v42.vercel.app/](https://my-portfolio-v42.vercel.app/)
+- **Email**: [sharif.sazid.3@gmail.com](mailto:sharif.sazid.3@gmail.com)
+
+*Built with ❤️ by a passionate full-stack developer.
+©Sharif Mahmud Sazid*
