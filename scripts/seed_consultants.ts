@@ -19,7 +19,7 @@ const MOCK_CONSULTANTS = [
     country: "USA",
     specialties: ["Business Strategy", "Startup Mentoring"],
     bio: "10+ years helping startups scale with proven strategies and mentorship. Expertise in go-to-market strategy, fundraising, and organizational design.",
-    hourlyRate: 15000, // $150 in cents or assuming script handles conversion. Script uses raw integer. 
+    hourlyRate: 500, // $5.00 
                      // Wait, page.tsx has $150. Existing script used 2000 (BDT?). 
                      // Let's stick to consistent integer. If schema says integer, it's usually cents or raw unit.
                      // The View says "৳{consultant.hourlyRate}/hour". 
@@ -44,7 +44,7 @@ const MOCK_CONSULTANTS = [
     country: "USA",
     specialties: ["Career Coaching", "Executive Coaching"],
     bio: "Helping professionals advance their careers with personalized coaching. Specialized in resume optimization, interview prep, and leadership development.",
-    hourlyRate: 120,
+    hourlyRate: 400, // $4.00
     experience: "8 Years",
     languages: ["English", "Bengali"],
     consultationModes: ["video"],
@@ -61,7 +61,7 @@ const MOCK_CONSULTANTS = [
     country: "USA",
     specialties: ["Marketing Strategy", "Brand Growth"],
     bio: "Digital marketing specialist with expertise in growth and brand strategy. Former CMO at tech unicorn.",
-    hourlyRate: 100,
+    hourlyRate: 350, // $3.50
     experience: "7 Years",
     languages: ["English", "Hindi"],
     consultationModes: ["video", "audio"],
@@ -78,7 +78,7 @@ const MOCK_CONSULTANTS = [
     country: "USA",
     specialties: ["Startup Advisory", "Tech Strategy"],
     bio: "Tech startup advisor helping founders navigate early-stage challenges. Expertise in product-market fit and agile methodologies.",
-    hourlyRate: 180,
+    hourlyRate: 550, // $5.50
     experience: "12 Years",
     languages: ["English", "Bengali"],
     consultationModes: ["video"],
@@ -96,7 +96,7 @@ const MOCK_CONSULTANTS = [
     // Profile
     specialties: ["Cardiology", "Health Wellness"],
     bio: "Senior Consultant Cardiologist with over 15 years of experience in interventional cardiology. Dedicated to improving heart health through preventative care and advanced treatments.",
-    hourlyRate: 2000,
+    hourlyRate: 500, // $5.00
     experience: "15+ Years",
     languages: ["English", "Bengali"],
     consultationModes: ["video", "in-person"],
@@ -114,7 +114,7 @@ const MOCK_CONSULTANTS = [
     // Profile
     specialties: ["Corporate Law", "Business Consulting"],
     bio: "Experienced legal consultant specializing in corporate law and compliance. I help businesses navigate complex regulatory landscapes in Bangladesh.",
-    hourlyRate: 3500,
+    hourlyRate: 600, // $6.00
     experience: "8 Years",
     languages: ["English", "Bengali"],
     consultationModes: ["video", "audio"],
@@ -132,7 +132,7 @@ const MOCK_CONSULTANTS = [
     // Profile
     specialties: ["Business Strategy", "Startup Mentoring"],
     bio: "Serial entrepreneur and business strategist. I assist startups and SMEs in scaling their operations and optimizing revenue models.",
-    hourlyRate: 2500,
+    hourlyRate: 450, // $4.50
     experience: "12 Years",
     languages: ["English", "Bengali"],
     consultationModes: ["video"],
@@ -150,7 +150,7 @@ const MOCK_CONSULTANTS = [
     // Profile
     specialties: ["Clinical Psychology", "Mental Health"],
     bio: "Compassionate clinical psychologist focused on mental wellness, anxiety management, and relationship counseling. Providing a safe space for healing.",
-    hourlyRate: 1500,
+    hourlyRate: 300, // $3.00
     experience: "6 Years",
     languages: ["English", "Bengali"],
     consultationModes: ["video", "audio"],
@@ -168,7 +168,7 @@ const MOCK_CONSULTANTS = [
     // Profile
     specialties: ["Digital Marketing", "SEO Expert"],
     bio: "Digital marketing strategies with a proven track record of increasing online visibility and ROI for local and international brands.",
-    hourlyRate: 1800,
+    hourlyRate: 350, // $3.50
     experience: "5 Years",
     languages: ["English", "Bengali"],
     consultationModes: ["video"],

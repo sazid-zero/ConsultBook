@@ -79,7 +79,7 @@ export default function TestDataPage() {
         const consultant = consultants[Math.floor(Math.random() * consultants.length)]
         const mode = modes[Math.floor(Math.random() * modes.length)]
         const duration = [30, 60, 90, 120][Math.floor(Math.random() * 4)]
-        const hourlyRate = Math.floor(Math.random() * 2000) + 1000 // 1000-3000 taka
+        const hourlyRate = Math.floor(Math.random() * 300) + 200 // $2.00 - $5.00
         const amount = (hourlyRate * duration) / 60
 
         // Generate dates from 1-30 days ago

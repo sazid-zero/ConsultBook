@@ -93,7 +93,7 @@ async function seed() {
       description: "Join me for a 4-hour intensive session on how to move from solo-consultant to a multi-member agency without burning out.",
       startDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 1 week from now
       duration: 240,
-      price: 15000, // $150.00
+      price: 500, // $5.00
       mode: "online" as const,
       location: "https://zoom.us/j/mock-meeting-id",
       thumbnailUrl: "https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?auto=format&fit=crop&q=80&w=800",

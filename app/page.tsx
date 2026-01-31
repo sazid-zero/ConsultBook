@@ -134,7 +134,7 @@ export default function HomePage() {
                         <p className="text-xs text-gray-600 mb-2">Business Strategy Consultant</p>
                         <div className="flex items-center justify-between text-xs text-gray-500">
                           <span>📍 San Francisco</span>
-                          <span className="font-semibold text-gray-700">$150/hr</span>
+                          <span className="font-semibold text-gray-700">$5/hr</span>
                         </div>
                       </div>
                     </div>
@@ -155,7 +155,7 @@ export default function HomePage() {
                         <p className="text-xs text-gray-600 mb-2">Career & Executive Coach</p>
                         <div className="flex items-center justify-between text-xs text-gray-500">
                           <span>📍 New York</span>
-                          <span className="font-semibold text-gray-700">$120/hr</span>
+                          <span className="font-semibold text-gray-700">$4/hr</span>
                         </div>
                       </div>
                     </div>
@@ -176,7 +176,7 @@ export default function HomePage() {
                         <p className="text-xs text-gray-600 mb-2">Marketing Strategist</p>
                         <div className="flex items-center justify-between text-xs text-gray-500">
                           <span>📍 Los Angeles</span>
-                          <span className="font-semibold text-gray-700">$100/hr</span>
+                          <span className="font-semibold text-gray-700">$3/hr</span>
                         </div>
                       </div>
                     </div>
@@ -286,7 +286,7 @@ export default function HomePage() {
                   </div>
                   <div className="flex items-center gap-2 text-sm text-gray-600">
                     <DollarSign className="h-4 w-4 text-gray-400" />
-                    <span className="font-semibold text-gray-900">$150/hr</span>
+                    <span className="font-semibold text-gray-900">$5/hr</span>
                   </div>
                   <div className="flex items-center gap-2 text-sm text-gray-600">
                     <Clock className="h-4 w-4 text-gray-400" />
@@ -333,7 +333,7 @@ export default function HomePage() {
                   </div>
                   <div className="flex items-center gap-2 text-sm text-gray-600">
                     <DollarSign className="h-4 w-4 text-gray-400" />
-                    <span className="font-semibold text-gray-900">$120/hr</span>
+                    <span className="font-semibold text-gray-900">$4/hr</span>
                   </div>
                   <div className="flex items-center gap-2 text-sm text-gray-600">
                     <Clock className="h-4 w-4 text-gray-400" />
@@ -380,7 +380,7 @@ export default function HomePage() {
                   </div>
                   <div className="flex items-center gap-2 text-sm text-gray-600">
                     <DollarSign className="h-4 w-4 text-gray-400" />
-                    <span className="font-semibold text-gray-900">$100/hr</span>
+                    <span className="font-semibold text-gray-900">$3/hr</span>
                   </div>
                   <div className="flex items-center gap-2 text-sm text-gray-600">
                     <Clock className="h-4 w-4 text-gray-400" />
@@ -522,11 +522,11 @@ export default function HomePage() {
                 <div className="space-y-3 mb-8">
                   <div className="flex items-center justify-between">
                     <span className="text-gray-700 font-medium">Hourly Rate</span>
-                    <span className="text-gray-900 font-semibold">$150/hr</span>
+                    <span className="text-gray-900 font-semibold">$5/hr</span>
                   </div>
                   <div className="flex items-center justify-between text-lg font-bold border-t border-blue-200 pt-4 mt-4">
                     <span className="text-gray-900">Total</span>
-                    <span className="text-blue-600">$150.00</span>
+                    <span className="text-blue-600">$5.00</span>
                   </div>
                 </div>
 
@@ -586,7 +586,7 @@ export default function HomePage() {
                   className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" 
                 />
                 <div className="absolute top-4 right-4 bg-white/90 backdrop-blur-md px-3 py-1.5 rounded-xl font-black text-gray-900 shadow-sm">
-                  $49.00
+                  $3.00
                 </div>
               </div>
               <div className="p-8">
@@ -617,7 +617,7 @@ export default function HomePage() {
                   className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" 
                 />
                 <div className="absolute top-4 right-4 bg-white/90 backdrop-blur-md px-3 py-1.5 rounded-xl font-black text-gray-900 shadow-sm">
-                  $99.00
+                  $5.00
                 </div>
               </div>
               <div className="p-8">
@@ -648,7 +648,7 @@ export default function HomePage() {
                   className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" 
                 />
                 <div className="absolute top-4 right-4 bg-white/90 backdrop-blur-md px-3 py-1.5 rounded-xl font-black text-gray-900 shadow-sm">
-                  $25.00
+                  $1.50
                 </div>
               </div>
               <div className="p-8">
@@ -724,7 +724,7 @@ export default function HomePage() {
                     <div className="absolute bottom-12 left-12 right-12 bg-white/95 backdrop-blur-md p-6 rounded-3xl shadow-2xl -rotate-3 border border-indigo-50">
                        <div className="flex items-center justify-between mb-4">
                           <Badge className="bg-indigo-600 text-white border-transparent">TODAY • 4:00 PM</Badge>
-                          <span className="text-indigo-600 font-black">$25.00</span>
+                          <span className="text-indigo-600 font-black">$1.50</span>
                        </div>
                        <h4 className="text-xl font-black text-gray-900 mb-2">Public Speaking for Introverts</h4>
                        <div className="flex items-center gap-2">
@@ -991,7 +991,7 @@ export default function HomePage() {
                       </div>
                       <div className="flex items-center gap-2 text-sm">
                         <DollarSign className="h-4 w-4 text-green-500" />
-                        <span className="font-bold text-gray-900">$150</span>
+                        <span className="font-bold text-gray-900">$5</span>
                       </div>
                     </div>
 
@@ -1044,7 +1044,7 @@ export default function HomePage() {
                       </div>
                       <div className="flex items-center gap-2 text-sm">
                         <DollarSign className="h-4 w-4 text-green-500" />
-                        <span className="font-bold text-gray-900">$120</span>
+                        <span className="font-bold text-gray-900">$4</span>
                       </div>
                     </div>
 
