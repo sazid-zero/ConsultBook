@@ -958,7 +958,7 @@ export default function HomePage() {
                     <div className="flex items-start justify-between mb-5">
                       <div className="flex items-start gap-4">
                         <div className="relative">
-                          <img src="https://technicalraju.com/wp-content/uploads/2024/07/Muslim-Beautiful-Girl-Pic-and-Hijab-Girl-Pic-for-Profile-Sample-1024x1024.jpg" alt="Fatima Ahmed" className="w-14 h-14 rounded-full object-cover ring-4 ring-indigo-50" />
+                          <img src="https://maktoobmedia.com/wp-content/uploads/2022/11/104FD38A-094F-450C-A692-642863917874-1024x864.jpeg" alt="Fatima Ahmed" className="w-14 h-14 rounded-full object-cover ring-4 ring-indigo-50" />
                           <div className="absolute -bottom-1 -right-1 w-5 h-5 bg-green-500 rounded-full border-2 border-white"></div>
                         </div>
                         <div>
