@@ -32,15 +32,14 @@ export default function HomePage() {
         <div className="absolute inset-0 bg-black/60 backdrop-blur-[1px] translate-z-0" />
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 text-center">
           <Badge className="mb-6 bg-white/10 text-white border-white/20 hover:bg-white/20 transition-colors px-4 py-1.5 text-sm font-bold rounded-full shadow-sm">
-            v3.0 Now Live — The Expert Ecosystem
+            v3.0 Now Live — The All-in-One Advisory Platform
           </Badge>
           <h1 className="text-5xl lg:text-7xl font-black text-white mb-8 tracking-tight leading-tight">
-            The World's Most <br className="hidden lg:block" /> 
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-indigo-400">Powerful Knowledge Hub</span>
+            The Complete Ecosystem for <br className="hidden lg:block" /> 
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-indigo-400">Expert Advisory & Consultations</span>
           </h1>
           <p className="text-xl text-gray-300 mb-12 max-w-3xl mx-auto leading-relaxed">
-            From 1-on-1 consultations to exclusive digital masterclasses and expert-led workshops. 
-            Everything you need to accelerate your growth in one unified platform.
+            Seamless 1-on-1 consultation booking, live interactive workshops, and an expert digital resource library — everything you need to connect with top consultants and accelerate your growth.
           </p>
           <div className="flex flex-col sm:flex-row justify-center gap-4 mb-16">
             {!loading && user ? (
@@ -70,15 +69,19 @@ export default function HomePage() {
           <div className="flex flex-wrap justify-center gap-6 opacity-80">
             <div className="flex items-center gap-2">
               <CheckCircle className="h-5 w-5 text-green-400" />
-              <span className="text-sm font-bold text-gray-300">Verified Professionals</span>
+              <span className="text-sm font-bold text-gray-300">1-on-1 Video Booking</span>
             </div>
             <div className="flex items-center gap-2">
               <CheckCircle className="h-5 w-5 text-green-400" />
-              <span className="text-sm font-bold text-gray-300">Secure Payments</span>
+              <span className="text-sm font-bold text-gray-300">Live Workshops & Sessions</span>
             </div>
             <div className="flex items-center gap-2">
               <CheckCircle className="h-5 w-5 text-green-400" />
-              <span className="text-sm font-bold text-gray-300">Lifetime Access</span>
+              <span className="text-sm font-bold text-gray-300">Expert Digital Library</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <CheckCircle className="h-5 w-5 text-green-400" />
+              <span className="text-sm font-bold text-gray-300">Verified Consultants</span>
             </div>
           </div>
         </div>
