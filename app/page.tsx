@@ -36,7 +36,7 @@ export default function HomePage() {
           </Badge>
           <h1 className="text-5xl lg:text-7xl font-black text-white mb-8 tracking-tight leading-tight">
             The Complete Ecosystem for <br className="hidden lg:block" /> 
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-indigo-400">Expert Advisory & Consultations</span>
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-indigo-400">Expert Consultations</span>
           </h1>
           <p className="text-xl text-gray-300 mb-12 max-w-3xl mx-auto leading-relaxed">
             Seamless 1-on-1 consultation booking, live interactive workshops, and an expert digital resource library — everything you need to connect with top consultants and accelerate your growth.
